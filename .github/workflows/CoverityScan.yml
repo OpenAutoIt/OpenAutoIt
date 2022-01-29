@@ -38,7 +38,7 @@ jobs:
 
       - name: Download Coverity Build Tool
         run: |
-          wget -q https://scan.coverity.com/download/cxx/linux64 --post-data "token=$TOKEN&project=OpenAutoit" -O cov-analysis-linux64.tar.gz
+          wget -q https://scan.coverity.com/download/cxx/linux64 --post-data "token=$TOKEN&project=OpenAutoIt" -O cov-analysis-linux64.tar.gz
           mkdir -p cov-analysis-linux64
           tar xzf cov-analysis-linux64.tar.gz --strip 1 -C cov-analysis-linux64
         env:
@@ -72,12 +72,12 @@ jobs:
       - name: Submit the result to Coverity Scan
         run: |
           cd build
-          tar czvf OpenAutoit.tgz cov-int
+          tar czvf OpenAutoIt.tgz cov-int
           curl --form token=$TOKEN \
                --form email=hansfritzenmeister@protonmail.com \
-               --form file=@OpenAutoit.tgz \
+               --form file=@OpenAutoIt.tgz \
                --form version="develop" \
                --form description="Automatic submission" \
-               https://scan.coverity.com/builds?project=OpenAutoit
+               https://scan.coverity.com/builds?project=OpenAutoIt
         env:
           TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}

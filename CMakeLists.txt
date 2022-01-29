@@ -1,3 +1,5 @@
+# OpenAutoIt
+
 cmake_minimum_required(VERSION 3.10.2)
 
 # Set version
@@ -14,7 +16,7 @@ execute_process(COMMAND git branch --show-current  WORKING_DIRECTORY ${CMAKE_CUR
 execute_process(COMMAND uname -s -r -m -o OUTPUT_VARIABLE OPENAUT_UNAME OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # Project
-project("OpenAutoit" LANGUAGES CXX VERSION ${OPENAUT_VERSION_MAJOR}.${OPENAUT_VERSION_MINOR}.${OPENAUT_VERSION_PATCH})
+project("OpenAutoIt" LANGUAGES CXX VERSION ${OPENAUT_VERSION_MAJOR}.${OPENAUT_VERSION_MINOR}.${OPENAUT_VERSION_PATCH})
 
 # Dependencies
 add_subdirectory(external)
