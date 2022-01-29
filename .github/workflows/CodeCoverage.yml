@@ -1,0 +1,73 @@
+name: CodeCoverage
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-20.04
+    env:
+      LLVM_VERSION: "13"
+      LLVM_PROFILE_FILE: "profile-%p.profraw"
+      CMAKE_BUILD_PARALLEL_LEVEL: "2"
+      CTEST_PARALLEL_LEVEL: "2"
+      CTEST_OUTPUT_ON_FAILURE: "ON"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          submodules: recursive
+
+      - name: Install cmake
+        uses: lukka/get-cmake@v3.21.2
+
+      - name: Install tools
+        run: |
+          # Add clang repo
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{ env.LLVM_VERSION }} main"
+
+          # Update repo list
+          sudo apt-get update -m
+
+          # Install clang/LLVM
+          sudo apt-get install "clang-${{ env.LLVM_VERSION }}" "llvm-${{ env.LLVM_VERSION }}" g++-multilib -y
+
+          # export compiler
+          echo "CC=clang-${{ env.LLVM_VERSION }}" >> $GITHUB_ENV
+          echo "CXX=clang++-${{ env.LLVM_VERSION }}" >> $GITHUB_ENV
+
+      - name: Build coverage data
+        run: |
+          # Create build directory
+          mkdir build
+          cd build
+
+          # Build it
+          cmake -DCMAKE_BUILD_TYPE=Debug -DPHI_COVERAGE_BUILD=ON ..
+          cmake --build . --clean-first
+
+          # Generate coverage data
+          ctest . -C Debug
+
+      - name: Process coverage data
+        run: |
+          cd build
+
+          files=$(find OpenAutParser -iname "*.hpp" -or -iname "*.cpp" -printf "%p ")
+
+          llvm-profdata-${{ env.LLVM_VERSION }} merge -sparse $(find . -iname "*.profraw" -type f) -o coverage.profdata
+          find bin -type f -exec bash -c 'llvm-cov-${{ env.LLVM_VERSION }} show ${0} $files -instr-profile=coverage.profdata -show-expansions -show-regions -show-line-counts -use-color=false >> coverage.info' {} \;
+
+          # List coverage data
+          find bin -type f -exec bash -c 'echo ${0}; llvm-cov-${{ env.LLVM_VERSION }} report ${0} $files -instr-profile=coverage.profdata' {} \;
+          cat coverage.info
+
+      - name: Upload coverage data
+        uses: codecov/codecov-action@v2.1.0
+        with:
+          file: ./build/coverage.info
+          name: ${{ runner.os }}-clang++-${{ env.LLVM_VERSION }}
+          fail_ci_if_error: true

@@ -1,0 +1,266 @@
+name: StaticAnalysis
+
+on:
+  push:
+    branches-ignore:
+      - 'fuzz/**'
+  pull_request:
+
+jobs:
+  cppcheck:
+    runs-on: ubuntu-20.04
+    env:
+      LLVM_VERSION: 13
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          submodules: recursive
+          fetch-depth: 2
+
+      - uses: reviewdog/action-setup@v1.0.3
+        with:
+          reviewdog_version: latest
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -m
+          sudo apt-get install xorg-dev libglu1-mesa-dev libxrandr-dev
+
+      - name: Install cmake
+        uses: lukka/get-cmake@v3.21.2
+
+      - name: Install clang
+        run: |
+          # Add repository
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{ env.LLVM_VERSION }} main"
+
+          # Install
+          sudo apt-get update -m
+          sudo apt-get install clang-${{ env.LLVM_VERSION }}
+
+          echo "CXX=clang++-${{ env.LLVM_VERSION }}" >> $GITHUB_ENV
+
+      - name: Install cppcheck
+        env:
+          CPPCHECK_VERSION: "2.6"
+        run: |
+          mkdir cppcheck
+          wget --no-check-certificate -O - "https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.gz" | tar --strip-components=1 -xz -C cppcheck
+
+          # Build CppCheck
+          cd cppcheck
+
+          mkdir build
+          cd build
+
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_MATCHCOMPILER=ON
+          cmake --build . -j2
+
+          # Install CppCheck
+          sudo make install
+
+      - name: Configure
+        run: |
+          # Create build directory
+          mkdir build
+          cd build
+
+          # Generate compile_commands.json
+          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Run cppcheck
+        run: |
+          cppcheck --project=build/compile_commands.json --enable=all --inconclusive --force --inline-suppr --max-ctu-depth=25 --template='{file}:{line}:{column}: {severity}: {message} [{id}](CWE {cwe})' -DPHI_CONFIG_ALWAYS_INLINE_OVERWRITE=inline -DPHI_CONFIG_NEVER_INLINE_OVERWRITE="" --suppress=missingInclude --suppress=unusedFunction --suppress=unmatchedSuppression 2> cppcheck.log
+
+          # Filter out external libraries and test code
+          cat cppcheck.log | grep -Ev "OpenAutoit/external|tests" > cppcheck_filtered.log || true
+
+      - name: Print results
+        run: cat cppcheck_filtered.log
+
+      - name: ReviewDog check
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat cppcheck_filtered.log | reviewdog -efm="%f:%l:%c: %m" -diff="git diff FETCH_HEAD" -reporter=github-check -name CppCheck -level warning
+
+  clang-tidy:
+    runs-on: ubuntu-20.04
+    env:
+      LLVM_VERSION: 13
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          submodules: recursive
+          fetch-depth: 2
+
+      - uses: reviewdog/action-setup@v1.0.3
+        with:
+          reviewdog_version: latest
+
+      - uses: actions/setup-python@v2.3.1
+        with:
+          python-version: '3.x'
+
+      - name: Install cmake
+        uses: lukka/get-cmake@v3.21.2
+
+      - name: Install clang tidy
+        run: |
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{ env.LLVM_VERSION }} main"
+          sudo apt-get update -m
+          sudo apt-get install clang-${{ env.LLVM_VERSION }} clang-tidy-${{ env.LLVM_VERSION }}
+
+          echo "CXX=clang++-${{ env.LLVM_VERSION }}" >> $GITHUB_ENV
+
+      - name: Run clang-tidy
+        run: |
+          # Create build directory
+          mkdir build
+          cd build
+
+          # Generate compile_commands.json
+          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+          # Build glad so it generates the required files
+          cmake --build . --target glad --clean-first
+
+          # Run clang-tidy
+          run-clang-tidy-${{ env.LLVM_VERSION }} -quiet -header-filter ".*" > clang_tidy.log
+
+          # Filter out external libraries and test code
+          cat clang_tidy.log | grep -Ev "OpenAutoit/external|tests" > clang_tidy_filtered.log || true
+
+          # Remove duplicate entries
+          sort clang_tidy_filtered.log | uniq -d > clang_tidy_output.log
+
+      - name: Print results
+        run: cat build/clang_tidy_output.log
+
+      - name: ReviewDog check
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat build/clang_tidy_output.log | reviewdog -efm="%f:%l:%c: warning: %m" -diff="git diff FETCH_HEAD" -reporter=github-check -name Clang-Tidy -level warning
+
+  include-what-you-use:
+    runs-on: ubuntu-20.04
+    env:
+      LLVM_VERSION: 13
+      CMAKE_BUILD_PARALLEL_LEVEL: "2"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          submodules: recursive
+          fetch-depth: 2
+
+      - uses: actions/setup-python@v2.3.1
+        with:
+          python-version: '3.x'
+
+      - uses: reviewdog/action-setup@v1.0.3
+        with:
+          reviewdog_version: latest
+
+      - name: Install cmake
+        uses: lukka/get-cmake@v3.21.2
+
+      - name: Install llvm
+        run: |
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{ env.LLVM_VERSION }} main"
+          sudo apt-get update -m
+          sudo apt-get install clang-${{ env.LLVM_VERSION }} llvm-${{ env.LLVM_VERSION }} llvm-${{ env.LLVM_VERSION }}-dev libclang-${{ env.LLVM_VERSION }}-dev
+
+          echo "CXX=clang++-${{ env.LLVM_VERSION }}" >> $GITHUB_ENV
+
+      - name: Install Include-What-You-Use
+        run: |
+          # Download Include-what-you-use
+          git clone https://github.com/include-what-you-use/include-what-you-use.git
+          cd "include-what-you-use"
+
+          # Checkout branch
+          git checkout clang_${{ env.LLVM_VERSION }}
+
+          # Build Include-what-you-use
+          mkdir build
+          cd build
+
+          cmake .. -G "Unix Makefiles" -DCMAKE_PREFIX_PATH=/usr/lib/llvm-${{ env.LLVM_VERSION }} -DCMAKE_BUILD_TYPE=Release
+          cmake --build .
+
+          # Install Include-what-you-use
+          sudo make install
+
+      - name: Verify installation
+        run: |
+          iwyu_tool.py --help
+          include-what-you-use --version
+
+      - name: Run Include-What-You-Use
+        run: |
+          # Create build directory
+          mkdir build
+          cd build
+
+          # Configure
+          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+          # Run include-what-you-use
+          iwyu_tool.py -p . -o clang -- -Xiwyu --cxx17ns | tee iwyu.log || true
+
+          # Filter out correct includes and generated code
+          cat iwyu.log | grep -Ev "#includes/fwd-decls are correct" | tee iwyu_filtered.log || true
+
+      - name: Print results
+        run: cat build/iwyu_filtered.log
+
+      - name: ReviewDog check
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat build/iwyu_filtered.log | reviewdog -efm="%Z%A%f:%l:%c: error: %m" -efm="%C%m" -diff="git diff FETCH_HEAD" -reporter=github-check -name include-what-you-use -level warning
+
+  cmake-lint:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          fetch-depth: 2
+
+      - uses: reviewdog/action-setup@v1.0.3
+        with:
+          reviewdog_version: latest
+
+      - uses: actions/setup-python@v2.3.1
+        with:
+          python-version: '3.x'
+
+      - name: Install cmake-lint
+        run: |
+          sudo -H pip3 install --upgrade pip
+          sudo -H pip3 install cmake-format
+
+      - name: Run cmake-lint
+        run: |
+          cmake-lint $(find -iregex "./.*\.cmake" -or -iregex "./.*\CMakeLists\.txt") -c ".cmake-format.yaml" --suppress-decorations --outfile-path cmake_lint.log || true
+
+      - name: Print results
+        run: cat cmake_lint.log
+
+      - name: ReviewDog check
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat cmake_lint.log | reviewdog -efm="%f:%l: %m" -diff="git diff FETCH_HEAD" -reporter=github-check -name cmake-lint -level warning

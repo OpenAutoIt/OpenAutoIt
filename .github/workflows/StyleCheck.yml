@@ -1,0 +1,168 @@
+name: StyleCheck
+
+on: pull_request
+
+jobs:
+  format:
+    runs-on: ubuntu-20.04
+    env:
+      LLVM_VERSION: 13
+      CMAKE_BUILD_PARALLEL_LEVEL: "2"
+      CTEST_PARALLEL_LEVEL: "2"
+      CTEST_OUTPUT_ON_FAILURE: "ON"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: actions/setup-python@v2.3.1
+        with:
+          python-version: '3.x'
+
+      - name: Install cmake
+        uses: lukka/get-cmake@v3.21.2
+
+      - name: Install clang-format
+        run: |
+          # Install clang-format
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+
+          sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{ env.LLVM_VERSION }} main"
+          sudo apt-get update -m
+          sudo apt-get install clang-format-${{ env.LLVM_VERSION }}
+
+      - name: Run clang-format
+        run: |
+          clang-format-${{ env.LLVM_VERSION }} -i $(find -iname "*.[hc]pp" -type f)
+
+      - name: Install cmake-format
+        run: |
+          # Install cmake-format
+          sudo -H pip3 install --upgrade pip
+          sudo -H pip3 install cmake-format
+
+      - name: Run cmake-format
+        run: |
+          cmake-format -c ".cmake-format.yaml" -i $(find -iregex "./.*\.cmake" -or -iregex "./.*\CMakeLists\.txt")
+
+      - name: Fix spacing
+        run: |
+          # Install moreutils
+          sudo apt-get install moreutils
+
+          # Fix mixed tabs and spaces
+          find . -iregex '.*\.\(hpp\|cpp\|yaml\|yml\|md\|txt\|cmake\)' -type f -exec bash -c 'expand -t 4 "$0" | sponge "$0"' {} \;
+          # Fix trailing white spaces
+          find . -iregex '.*\.\(hpp\|cpp\|yaml\|yml\|md\|txt\|cmake\)' -type f -exec bash -c 'sed -i '' -e's/[[:space:]]*$//' "$0"' {} \;
+          # Ensure files end with new line
+          find . -iregex '.*\.\(hpp\|cpp\|yaml\|yml\|md\|txt\|cmake\)' -type f -exec bash -c 'tail -c1 < "$0" | read -r _ || echo >> "$0"' {} \;
+
+      - name: Fix encoding
+        run: |
+          # Install 'dos2unix' and 'recode'
+          sudo apt-get install dos2unix recode
+
+          # Ensure that files are UTF-8 formatted
+          find . -iregex '.*\.\(hpp\|cpp\|yaml\|yml\|md\|txt\|cmake\)' -type f -exec bash -c 'recode UTF-8 "$0" 2> /dev/null' {} \;
+          # Ensure that files have LF line endings and do not contain a BOM.
+          find . -iregex '.*\.\(hpp\|cpp\|yaml\|yml\|md\|txt\|cmake\)' -type f -exec bash -c 'dos2unix "$0" 2> /dev/null' {} \;
+
+      - name: Display diff
+        run: git diff
+
+      - name: Report result
+        run: |
+          git_dirty=$(git status -s)
+          if [ -z "$git_dirty" ]; then
+            echo Everything seems to be in order
+          else
+            echo Formatting problems found!
+            echo Check 'Display diff' for further information
+            exit 1
+          fi
+
+  misspell:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+
+      - name: Run misspell with reviewdog
+        uses: reviewdog/action-misspell@v1.10
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          locale: US
+          reporter: github-pr-check
+          level: warning
+
+  yamllint:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+
+      - name: yamllint
+        uses: reviewdog/action-yamllint@v1.4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
+          yamllint_flags: '-d "{extends: relaxed, rules: {line-length: {max: 100}}}"'
+          level: warning
+
+  markdownlint:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+
+      - name: markdownlint
+        uses: prologic/action-markdownlint@v0.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
+          level: warning
+
+  remark-lint:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+
+      - name: remark-lint
+        uses: prologic/action-remark-lint@v5.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
+          level: warning
+
+  languagetool:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+
+      - uses: reviewdog/action-languagetool@v1.7.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
+          level: warning
+
+  alex:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+
+      - uses: reviewdog/action-alex@v1.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
+          level: warning

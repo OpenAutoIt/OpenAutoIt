@@ -1,0 +1,8 @@
+[submodule "external/Phi"]
+	path = external/Phi
+	url = https://github.com/AMS21/Phi.git
+	branch = develop
+[submodule "external/Catch2"]
+	path = external/Catch2
+	url = https://github.com/catchorg/Catch2.git
+	branch = devel
