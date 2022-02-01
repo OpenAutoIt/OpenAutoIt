@@ -2,6 +2,9 @@ name: "CodeQL"
 
 on:
   push:
+    branches-ignore:
+      - 'fuzz/**'
+      - 'dependabot/**'
   pull_request:
   schedule:
     - cron: '0 4 * * 1'
