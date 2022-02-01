@@ -6,3 +6,9 @@
 	path = external/Catch2
 	url = https://github.com/catchorg/Catch2.git
 	branch = devel
+[submodule "external/fmt"]
+	path = external/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "external/magic_enum"]
+	path = external/magic_enum
+	url = https://github.com/Neargye/magic_enum.git
