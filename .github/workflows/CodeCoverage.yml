@@ -2,6 +2,9 @@ name: CodeCoverage
 
 on:
   push:
+    branches-ignore:
+      - 'fuzz/**'
+      - 'dependabot/**'
   pull_request:
 
 jobs:
