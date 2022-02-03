@@ -22,6 +22,7 @@ project("OpenAutoIt" LANGUAGES CXX VERSION ${OPENAUT_VERSION_MAJOR}.${OPENAUT_VE
 add_subdirectory(external)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/external/Phi/scripts/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake)
 
 include(StandardProjectSettings)
 include(Environment)
@@ -33,4 +34,4 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Targets
-add_subdirectory("OpenAutParser")
+add_subdirectory("OpenAutoItParser")

@@ -1,0 +1,6 @@
+function(oa_define_fuzzer name source libraries)
+  add_executable(${name} ${source})
+  target_link_libraries(${name} PRIVATE Phi::ProjectOptions -fsanitize=fuzzer ${libraries})
+  target_compile_options(${name} PRIVATE -fsanitize=fuzzer)
+  target_include_directories(${name} PRIVATE "include")
+endfunction()

@@ -59,7 +59,7 @@ jobs:
         run: |
           cd build
 
-          files=$(find OpenAutParser -iname "*.hpp" -or -iname "*.cpp" -printf "%p ")
+          files=$(find OpenAutoItParser -iname "*.hpp" -or -iname "*.cpp" -printf "%p ")
 
           llvm-profdata-${{ env.LLVM_VERSION }} merge -sparse $(find . -iname "*.profraw" -type f) -o coverage.profdata
           find bin -type f -exec bash -c 'llvm-cov-${{ env.LLVM_VERSION }} show ${0} $files -instr-profile=coverage.profdata -show-expansions -show-regions -show-line-counts -use-color=false >> coverage.info' {} \;
