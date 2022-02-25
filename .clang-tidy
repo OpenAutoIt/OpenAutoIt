@@ -1,5 +1,5 @@
 ---
-Checks:                'clang-diagnostic-*,clang-analyzer-*,bugprone-*,cert-*,cppcoreguidelines-*,hicpp-*,misc-*,modernize-*,performance-*,portability-*,readability-*,-modernize-use-trailing-return-type,-hicpp-no-array-decay,-*-uppercase-literal-suffix,-*-unused-parameters,-cppcoreguidelines-avoid-magic-numbers,-*-avoid-c-arrays,-*-use-auto,-cert-dcl16-c,-cppcoreguidelines-macro-usage,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-reinterpret-cast,-readability-magic-numbers,-hicpp-signed-bitwise,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-readability-function-cognitive-complexity'
+Checks:                'clang-diagnostic-*,clang-analyzer-*,bugprone-*,cert-*,cppcoreguidelines-*,hicpp-*,misc-*,modernize-*,performance-*,portability-*,readability-*,-modernize-use-trailing-return-type,-hicpp-no-array-decay,-*-uppercase-literal-suffix,-*-unused-parameters,-cppcoreguidelines-avoid-magic-numbers,-*-avoid-c-arrays,-*-use-auto,-cert-dcl16-c,-cppcoreguidelines-macro-usage,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-reinterpret-cast,-readability-magic-numbers,-hicpp-signed-bitwise,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-readability-function-cognitive-complexity,-readability-function-size,-hicpp-function-size'
 WarningsAsErrors:      ''
 HeaderFilterRegex:     '*.hpp'
 AnalyzeTemporaryDtors: false
@@ -18,7 +18,7 @@ CheckOptions:
   - key:   readability-identifier-naming.MemberPrefix
     value: 'm_'
   - key:   readability-identifier-naming.NamespaceCase
-    value: 'lower_case'
+    value: 'CamelCase'
   - key:   readability-identifier-naming.ParameterCase
     value: 'lower_case'
   - key:   readability-identifier-naming.StructCase

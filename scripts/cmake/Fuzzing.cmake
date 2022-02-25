@@ -1,4 +1,8 @@
 function(oa_define_fuzzer name source libraries)
+  if (NOT PHI_COMPILER_CLANG)
+    return()
+  endif()
+
   add_executable(${name} ${source})
   target_link_libraries(${name} PRIVATE Phi::ProjectOptions -fsanitize=fuzzer ${libraries})
   target_compile_options(${name} PRIVATE -fsanitize=fuzzer)

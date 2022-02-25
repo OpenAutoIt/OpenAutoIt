@@ -3,7 +3,7 @@ project("OpenAutoItParserTests" CXX)
 
 # Files
 file(GLOB OPENAUTOITPARSER_TEST_SOURCES
-     "src/Tokenizer.test.cpp")
+     "src/Lexer.test.cpp")
 file(GLOB OPENAUTOITPARSER_TEST_HEADERS)
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${OPENAUTOITPARSER_TEST_SOURCES} ${OPENAUTOITPARSER_TEST_HEADERS})
