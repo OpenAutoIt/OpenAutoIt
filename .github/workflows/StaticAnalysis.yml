@@ -30,7 +30,7 @@ jobs:
           sudo apt-get install xorg-dev libglu1-mesa-dev libxrandr-dev
 
       - name: Install cmake
-        uses: lukka/get-cmake@v3.21.2
+        uses: lukka/get-cmake@v3.22.2
 
       - name: Install clang
         run: |
@@ -106,7 +106,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install cmake
-        uses: lukka/get-cmake@v3.21.2
+        uses: lukka/get-cmake@v3.22.2
 
       - name: Install clang tidy
         run: |
@@ -166,7 +166,7 @@ jobs:
           reviewdog_version: latest
 
       - name: Install cmake
-        uses: lukka/get-cmake@v3.21.2
+        uses: lukka/get-cmake@v3.22.2
 
       - name: Install llvm
         run: |
