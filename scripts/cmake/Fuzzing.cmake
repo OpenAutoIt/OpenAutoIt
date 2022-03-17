@@ -9,9 +9,11 @@ function(oa_define_fuzzer name source libraries)
   endif()
 
   add_executable(${name} ${source})
-  target_link_libraries(${name} PRIVATE Phi::ProjectOptions -coverage -fsanitize=fuzzer,undefined,address -fno-omit-frame-pointer -fno-common -g ${libraries})
-  target_compile_options(${name} PRIVATE -fsanitize=fuzzer,undefined,address)
+  target_link_libraries(${name} PRIVATE Phi::ProjectOptions -fsanitize=fuzzer ${libraries})
+  target_compile_options(${name} PRIVATE -fsanitize=fuzzer)
   target_include_directories(${name} PRIVATE "include")
+  # Don't inline functions defined as always inline
+  target_compile_definitions(${name} PRIVATE PHI_CONFIG_ALWAYS_INLINE_OVERWRITE=PHI_NEVER_INLINE)
 
   add_test(NAME ${name}_run COMMAND ${name} -max_total_time=${FUZZ_RUNTIME})
 endfunction()
