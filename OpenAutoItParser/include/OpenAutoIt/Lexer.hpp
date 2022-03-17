@@ -76,6 +76,8 @@ namespace OpenAutoIt
         // Lexer state
         iterator m_Iterator;
 
+        phi::boolean m_InsideMultiLineComment{false};
+
         phi::u64 m_LineNumber{1u};
         phi::u64 m_Column{1u};
         phi::u64 m_CurrentTokenBegin{0u};

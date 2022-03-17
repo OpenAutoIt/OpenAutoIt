@@ -612,39 +612,39 @@ TEST_CASE("Lexer - Lex FunctionIdentifier")
 
 TEST_CASE("Lexer - Lex PreProcessorIdentifier")
 {
-    res = lexer.ProcessString("#Comments-Start");
+    res = lexer.ProcessString("#include");
     REQUIRE(res.size().get() == 1u);
 
-    TOKEN_MATCHES(res.at(0u), PP_CommentsStart, "#Comments-Start", 1u, 1u);
+    TOKEN_MATCHES(res.at(0u), PP_Include, "#include", 1u, 1u);
 
-    res = lexer.ProcessString(" #Comments-Start");
+    res = lexer.ProcessString(" #include");
     REQUIRE(res.size().get() == 1u);
 
-    TOKEN_MATCHES(res.at(0u), PP_CommentsStart, "#Comments-Start", 1u, 2u);
+    TOKEN_MATCHES(res.at(0u), PP_Include, "#include", 1u, 2u);
 
-    res = lexer.ProcessString("#Comments-Start ");
+    res = lexer.ProcessString("#include ");
     REQUIRE(res.size().get() == 1u);
 
-    TOKEN_MATCHES(res.at(0u), PP_CommentsStart, "#Comments-Start", 1u, 1u);
+    TOKEN_MATCHES(res.at(0u), PP_Include, "#include", 1u, 1u);
 
-    res = lexer.ProcessString(" #Comments-Start ");
+    res = lexer.ProcessString(" #include ");
     REQUIRE(res.size().get() == 1u);
 
-    TOKEN_MATCHES(res.at(0u), PP_CommentsStart, "#Comments-Start", 1u, 2u);
+    TOKEN_MATCHES(res.at(0u), PP_Include, "#include", 1u, 2u);
 
-    res = lexer.ProcessString("#Comments-Start\n#comments-start");
+    res = lexer.ProcessString("#include\n#include");
     REQUIRE(res.size().get() == 3u);
 
-    TOKEN_MATCHES(res.at(0u), PP_CommentsStart, "#Comments-Start", 1u, 1u);
-    TOKEN_MATCHES(res.at(1u), NewLine, "\n", 1u, 16u);
-    TOKEN_MATCHES(res.at(2u), PP_CommentsStart, "#comments-start", 2u, 1u);
+    TOKEN_MATCHES(res.at(0u), PP_Include, "#include", 1u, 1u);
+    TOKEN_MATCHES(res.at(1u), NewLine, "\n", 1u, 9u);
+    TOKEN_MATCHES(res.at(2u), PP_Include, "#include", 2u, 1u);
 
-    res = lexer.ProcessString("\n#Comments-Start\n");
+    res = lexer.ProcessString("\n#include\n");
     REQUIRE(res.size().get() == 3u);
 
     TOKEN_MATCHES(res.at(0u), NewLine, "\n", 1u, 1u);
-    TOKEN_MATCHES(res.at(1u), PP_CommentsStart, "#Comments-Start", 2u, 1u);
-    TOKEN_MATCHES(res.at(2u), NewLine, "\n", 2u, 16u);
+    TOKEN_MATCHES(res.at(1u), PP_Include, "#include", 2u, 1u);
+    TOKEN_MATCHES(res.at(2u), NewLine, "\n", 2u, 9u);
 
     SECTION("Test all available macros")
     {
@@ -660,6 +660,30 @@ TEST_CASE("Lexer - Lex PreProcessorIdentifier")
         test_all_spellings_of("#pragma", OpenAutoIt::TokenKind::PP_Pragma);
         test_all_spellings_of("#RequireAdmin", OpenAutoIt::TokenKind::PP_RequireAdmin);
     }
+}
+
+TEST_CASE("Lexer - Lex Multiline comments")
+{
+    res = lexer.ProcessString("#cs Hello This is a comment#ce");
+    REQUIRE(res.size().get() == 3u);
+
+    TOKEN_MATCHES(res.at(0u), PP_CS, "#cs", 1u, 1u);
+    TOKEN_MATCHES(res.at(1u), Comment, " Hello This is a comment", 1u, 4u);
+    TOKEN_MATCHES(res.at(2u), PP_CE, "#ce", 1u, 28u);
+
+    res = lexer.ProcessString("#cs\n#ce");
+    REQUIRE(res.size().get() == 3u);
+
+    TOKEN_MATCHES(res.at(0u), PP_CS, "#cs", 1u, 1u);
+    TOKEN_MATCHES(res.at(1u), Comment, "\n", 1u, 4u);
+    TOKEN_MATCHES(res.at(2u), PP_CE, "#ce", 2u, 1u);
+
+    res = lexer.ProcessString("#cs\nHello i am a comment\n#ce");
+    REQUIRE(res.size().get() == 3u);
+
+    TOKEN_MATCHES(res.at(0u), PP_CS, "#cs", 1u, 1u);
+    TOKEN_MATCHES(res.at(1u), Comment, "\nHello i am a comment\n", 1u, 4u);
+    TOKEN_MATCHES(res.at(2u), PP_CE, "#ce", 3u, 1u);
 }
 
 TEST_CASE("Lexer - Lex Keywords")

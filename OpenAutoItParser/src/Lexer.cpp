@@ -3,11 +3,12 @@
 #include "OpenAutoIt/Token.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
-#include "phi/container/string_view.hpp"
-#include "phi/core/optional.hpp"
 #include <phi/container/array.hpp>
+#include <phi/container/string_view.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/boolean.hpp>
+#include <phi/core/optional.hpp>
+#include <phi/core/types.hpp>
 #include <algorithm>
 #include <array>
 #include <map>
@@ -380,6 +381,8 @@ namespace OpenAutoIt
     {
         m_Iterator = m_Source.begin();
 
+        m_InsideMultiLineComment = false;
+
         m_LineNumber        = 1u;
         m_Column            = 1u;
         m_CurrentTokenBegin = 0u;
@@ -409,6 +412,69 @@ namespace OpenAutoIt
             {
                 // TODO: Warn embeded null character
                 SkipCurrentCharacter();
+            }
+
+            /* Multiline comments */
+
+            else if (m_InsideMultiLineComment)
+            {
+                iterator begin_of_multiline_comment           = m_Iterator;
+                phi::u64 begining_line_of_multiline_comment   = m_LineNumber;
+                phi::u64 begining_column_of_multiline_comment = m_Column;
+
+                while (!IsFinished())
+                {
+                    current_character = *m_Iterator;
+
+                    // Check for end comment multiline
+                    if (current_character == '#')
+                    {
+                        iterator begin_of_token = m_Iterator;
+                        ConsumeCurrentCharacter();
+
+                        while (!IsFinished())
+                        {
+                            current_character = *m_Iterator;
+
+                            if (is_valid_pp_char(current_character))
+                            {
+                                ConsumeCurrentCharacter();
+                                continue;
+                            }
+
+                            break;
+                        }
+
+                        TokenKind pre_processor_token_kind =
+                                lookup_pre_processor(TokenText(begin_of_token));
+
+                        if (pre_processor_token_kind == TokenKind::PP_CE ||
+                            pre_processor_token_kind == TokenKind::PP_CommentsEnd)
+                        {
+                            m_InsideMultiLineComment = false;
+
+                            // Go back the size of the parsed end token so we can reparse it in the normal pre processor parser
+                            m_Iterator -= TokenText(begin_of_token).length().get();
+
+                            Token token{TokenKind::Comment, TokenText(begin_of_multiline_comment),
+                                        begining_line_of_multiline_comment,
+                                        begining_column_of_multiline_comment};
+
+                            return token;
+                        }
+                    }
+                    else if (current_character == '\n')
+                    {
+                        ConsumeCurrentCharacter();
+                        AdvanceToNextLine();
+                    }
+                    else
+                    {
+                        // Otherwise simply consume the character
+                        ConsumeCurrentCharacter();
+                        m_Column += 1u;
+                    }
+                }
             }
 
             /* Skip characters */
@@ -521,8 +587,17 @@ namespace OpenAutoIt
                     break;
                 }
 
-                return ConstructToken(lookup_pre_processor(TokenText(begin_of_token)),
-                                      begin_of_token);
+                // Check for start of multiline comment
+                TokenKind pre_processor_token_kind =
+                        lookup_pre_processor(TokenText(begin_of_token));
+
+                if (pre_processor_token_kind == TokenKind::PP_CS ||
+                    pre_processor_token_kind == TokenKind::PP_CommentsStart)
+                {
+                    m_InsideMultiLineComment = true;
+                }
+
+                return ConstructToken(pre_processor_token_kind, begin_of_token);
             }
 
             /* SingleQuoteStringLiteral */
