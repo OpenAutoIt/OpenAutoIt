@@ -383,9 +383,8 @@ namespace OpenAutoIt
 
         m_InsideMultiLineComment = false;
 
-        m_LineNumber        = 1u;
-        m_Column            = 1u;
-        m_CurrentTokenBegin = 0u;
+        m_LineNumber = 1u;
+        m_Column     = 1u;
     }
 
     phi::boolean Lexer::IsFinished() const noexcept

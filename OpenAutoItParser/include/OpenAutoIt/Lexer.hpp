@@ -80,6 +80,5 @@ namespace OpenAutoIt
 
         phi::u64 m_LineNumber{1u};
         phi::u64 m_Column{1u};
-        phi::u64 m_CurrentTokenBegin{0u};
     };
 } // namespace OpenAutoIt
