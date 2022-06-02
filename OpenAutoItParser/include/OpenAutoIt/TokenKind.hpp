@@ -1,5 +1,9 @@
 #pragma once
 
+#include <magic_enum.hpp>
+#include <phi/core/size_t.hpp>
+#include <string_view>
+
 namespace OpenAutoIt
 {
     enum class TokenKind
@@ -151,7 +155,7 @@ namespace OpenAutoIt
         // https://www.autoitscript.com/autoit3/docs/keywords/pragma.htm
         PP_Pragma, // #pragma
         // https://www.autoitscript.com/autoit3/docs/keywords/RequireAdmin.htm
-        PP_RequireAdmin, // # RequireAdmin
+        PP_RequireAdmin, // #RequireAdmin
 
         /* Keywords */
         // https://www.autoitscript.com/autoit3/docs/keywords.htm
@@ -247,5 +251,21 @@ namespace OpenAutoIt
         OP_LessThanEqual,     // <=
         OP_TernaryIf,         // ?
         OP_TernaryElse,       // :
+
+        // NOTE: Always keep last
+        NumberOfTokens,
     };
+
+    static constexpr phi::size_t NumberOfTokens = static_cast<int>(TokenKind::NumberOfTokens);
+
+    [[nodiscard]] constexpr const char* get_token_name(TokenKind token_kind) noexcept
+    {
+        switch (token_kind)
+        {
+            case TokenKind::OP_Plus:
+                return "OP_Plus";
+            default:
+                return magic_enum::enum_name<TokenKind>(token_kind).data();
+        }
+    }
 } // namespace OpenAutoIt

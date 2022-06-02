@@ -24,9 +24,9 @@ add_subdirectory(external)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/external/Phi/scripts/cmake)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake)
 
-include(StandardProjectSettings)
 include(Environment)
 include(Testing)
+include(ProjectOptions)
 
 # Set output directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -35,3 +35,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # Targets
 add_subdirectory("OpenAutoItParser")
+
+add_subdirectory("tools")
+
+# Configure
+phi_configure_project(DEBUG_FLAGS IPO OPTIMIZATION_FLAGS WARNINGS WARNINGS_AS_ERRORS PEDANTIC NO_EXCEPTIONS STANDARD "latest" EXTERNAL "external" SANITIZER "address;undefined")

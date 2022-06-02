@@ -1,5 +1,8 @@
 #include "OpenAutoIt/TokenStream.hpp"
+#include "OpenAutoIt/TokenKind.hpp"
 #include "phi/core/assert.hpp"
+#include <phi/core/types.hpp>
+#include <iterator>
 
 namespace OpenAutoIt
 {
@@ -27,7 +30,7 @@ namespace OpenAutoIt
         PHI_ASSERT(!m_Finialized);
 #endif
 
-        m_Iterator = m_Tokens.begin();
+        m_Index = 0u;
 #if defined(PHI_DEBUG)
         m_Finialized = true;
 #endif
@@ -39,19 +42,18 @@ namespace OpenAutoIt
         PHI_ASSERT(m_Finialized);
 #endif
 
-        m_Iterator = m_Tokens.begin();
+        m_Index = 0u;
     }
 
-    phi::boolean TokenStream::has_x_more(phi::usize x) const noexcept
+    phi::boolean TokenStream::has_x_more(phi::usize amount) const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
 #endif
 
-        auto it = m_Iterator;
-        for (; x > 0u; ++it, --x)
+        for (phi::usize index = m_Index; amount > 0u; ++index, --amount)
         {
-            if (it == m_Tokens.end())
+            if (index < m_Tokens.size())
             {
                 return false;
             }
@@ -66,7 +68,7 @@ namespace OpenAutoIt
         PHI_ASSERT(m_Finialized);
 #endif
 
-        return m_Iterator != m_Tokens.end();
+        return m_Index < m_Tokens.size();
     }
 
     phi::boolean TokenStream::reached_end() const noexcept
@@ -75,7 +77,7 @@ namespace OpenAutoIt
         PHI_ASSERT(m_Finialized);
 #endif
 
-        return m_Iterator == m_Tokens.end();
+        return m_Index >= m_Tokens.size();
     }
 
     const Token& TokenStream::look_ahead() const noexcept
@@ -85,17 +87,17 @@ namespace OpenAutoIt
         PHI_ASSERT(m_Finialized);
 #endif
 
-        return *m_Iterator;
+        return m_Tokens[m_Index.unsafe()];
     }
 
-    const Token& TokenStream::consume() noexcept
+    void TokenStream::consume() noexcept
     {
         PHI_ASSERT(!reached_end());
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
 #endif
 
-        return *m_Iterator++;
+        m_Index += 1u;
     }
 
     void TokenStream::skip(phi::usize n) noexcept
@@ -107,7 +109,7 @@ namespace OpenAutoIt
         PHI_ASSERT(has_x_more(n));
         PHI_DBG_ASSERT(n != 0u);
 
-        for (; n > 0u; --n, ++m_Iterator)
+        for (; n > 0u; --n, ++m_Index)
         {}
     }
 
@@ -154,7 +156,7 @@ namespace OpenAutoIt
 #endif
         PHI_DBG_ASSERT(index < m_Tokens.size());
 
-        return m_Tokens.at(index.get());
+        return m_Tokens[index.unsafe()];
     }
 
     phi::usize TokenStream::size() const noexcept
@@ -171,31 +173,22 @@ namespace OpenAutoIt
         return m_Tokens.empty();
     }
 
-    [[nodiscard]] TokenStream::iterator TokenStream::current_position() noexcept
+    [[nodiscard]] phi::usize TokenStream::current_position() noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
 #endif
 
-        return m_Iterator;
+        return m_Index;
     }
 
-    [[nodiscard]] TokenStream::const_iterator TokenStream::current_position() const noexcept
+    void TokenStream::set_position(phi::usize index) noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
 #endif
 
-        return m_Iterator;
-    }
-
-    void TokenStream::set_position(TokenStream::iterator it) noexcept
-    {
-#if defined(PHI_DEBUG)
-        PHI_ASSERT(m_Finialized);
-#endif
-
-        m_Iterator = it;
+        m_Index = index;
     }
 
     TokenStream::const_iterator TokenStream::begin() const noexcept

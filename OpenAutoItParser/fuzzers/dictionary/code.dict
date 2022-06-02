@@ -1,0 +1,6 @@
+var_assign_to_int="$var = 1"
+var_assign_to_string="$var = \"String\""
+var_increment="$var = $var + 1"
+var_plus_eq_1="$var += 1"
+
+func_ret_1="Func _func_ret_1() return 1 EndFunc"

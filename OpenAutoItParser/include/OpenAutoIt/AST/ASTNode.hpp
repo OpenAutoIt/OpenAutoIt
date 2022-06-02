@@ -1,5 +1,10 @@
 #pragma once
 
+#include "OpenAutoIt/Utililty.hpp"
+#include <phi/core/assert.hpp>
+#include <phi/core/types.hpp>
+#include <string>
+
 namespace OpenAutoIt
 {
     class ASTNode
@@ -9,11 +14,8 @@ namespace OpenAutoIt
 
         virtual ~ASTNode() = default;
 
-        [[nodiscard]] virtual const char* Name() noexcept
-        {
-            return "ASTNode";
-        }
+        [[nodiscard]] virtual const char* Name() const noexcept = 0;
 
-    private:
+        [[nodiscard]] virtual std::string DumpAST(phi::usize indent = 0u) const noexcept = 0;
     };
 } // namespace OpenAutoIt

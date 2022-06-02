@@ -41,7 +41,7 @@ namespace OpenAutoIt
 
         [[nodiscard]] const Token& look_ahead() const noexcept;
 
-        [[nodiscard]] const Token& consume() noexcept;
+        void consume() noexcept;
 
         void skip(phi::usize n = 1u) noexcept;
 
@@ -94,11 +94,9 @@ namespace OpenAutoIt
         [[nodiscard]] phi::boolean is_empty() const noexcept;
 
         // Iterator
-        [[nodiscard]] iterator current_position() noexcept;
+        [[nodiscard]] phi::usize current_position() noexcept;
 
-        [[nodiscard]] const_iterator current_position() const noexcept;
-
-        void set_position(iterator it) noexcept;
+        void set_position(phi::usize index) noexcept;
 
         [[nodiscard]] const_iterator begin() const noexcept;
 
@@ -118,7 +116,7 @@ namespace OpenAutoIt
 
     private:
         storage_type m_Tokens;
-        iterator     m_Iterator = m_Tokens.begin();
+        phi::usize   m_Index = 0u;
 #if defined(PHI_DEBUG)
         phi::boolean m_Finialized{false};
 #endif

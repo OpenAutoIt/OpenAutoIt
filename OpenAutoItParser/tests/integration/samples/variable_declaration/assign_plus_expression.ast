@@ -1,0 +1,9 @@
+Document:
+VariableDeclaration: [Auto] $foo =
+[
+  BinaryExpression [OP_Plus]
+  [
+    IntegerLiteral [1]
+    IntegerLiteral [3]
+  ]
+]

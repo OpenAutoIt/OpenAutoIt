@@ -1,0 +1,5 @@
+Document:
+VariableDeclaration: [Auto] $foo =
+[
+  IntegerLiteral [1]
+]

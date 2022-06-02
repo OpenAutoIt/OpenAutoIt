@@ -280,6 +280,8 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
         case ' ':
         case '\v':
         case '\t':
+        case '\b':
+        case '\f':
             return true;
         default:
             return false;
@@ -453,7 +455,7 @@ namespace OpenAutoIt
                             m_InsideMultiLineComment = false;
 
                             // Go back the size of the parsed end token so we can reparse it in the normal pre processor parser
-                            m_Iterator -= TokenText(begin_of_token).length().get();
+                            m_Iterator -= TokenText(begin_of_token).length().unsafe();
 
                             Token token{TokenKind::Comment, TokenText(begin_of_multiline_comment),
                                         begining_line_of_multiline_comment,
