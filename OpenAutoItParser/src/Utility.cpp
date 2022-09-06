@@ -38,7 +38,13 @@ namespace OpenAutoIt
         std::string str(size, '\0');
 
         // Read data
-        (void)std::fread(str.data(), sizeof(std::string::value_type), size, file);
+        const std::size_t objects_read =
+                std::fread(str.data(), sizeof(std::string::value_type), size, file);
+        if (objects_read < size)
+        {
+            // Failed to read the file for some reason
+            return {};
+        }
 
         return phi::move(str);
     }
@@ -53,7 +59,14 @@ namespace OpenAutoIt
             return false;
         }
 
-        (void)std::fwrite(data.data(), sizeof(data.front()), data.size(), file);
+        const std::size_t objects_wrote =
+                std::fwrite(data.data(), sizeof(data.front()), data.size(), file);
+        if (objects_wrote < data.size())
+        {
+            // Failed to write the file for some reason
+            return false;
+        }
+
         return true;
     }
 } // namespace OpenAutoIt
