@@ -12,7 +12,7 @@ on:
 jobs:
   analyse:
     name: Analyse
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     env:
       GCC_VERSION: "12"
@@ -34,16 +34,7 @@ jobs:
         languages: cpp
 
     - name: Install
-      run: |
-        # Update repo list
-        sudo apt-get update -m
-
-        # Install g++
-        sudo apt-get install "g++-${{ env.GCC_VERSION }}" "g++-${{ env.GCC_VERSION }}-multilib" -y
-
-        # export compiler
-        echo "CC=gcc-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
-        echo "CXX=g++-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
+      run: external/Phi/scripts/ci/InstallTools.sh gcc-${{ env.GCC_VERSION }}
 
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
