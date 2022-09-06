@@ -57,7 +57,7 @@ namespace OpenAutoIt
 
         [[nodiscard]] constexpr phi::u32 GetHint() const noexcept
         {
-            PHI_DBG_ASSERT(HasHint(), "Token doesn not have a hint");
+            PHI_ASSERT(HasHint(), "Token doesn not have a hint");
 
             return m_Hint.value();
         }

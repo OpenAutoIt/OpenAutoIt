@@ -19,7 +19,7 @@ namespace OpenAutoIt
         void emplace_back(ArgsT&&... args) noexcept
         {
 #if defined(PHI_DEBUG)
-            PHI_DBG_ASSERT(!m_Finialized);
+            PHI_ASSERT(!m_Finialized);
 #endif
 
             m_Tokens.emplace_back(std::forward<ArgsT>(args)...);

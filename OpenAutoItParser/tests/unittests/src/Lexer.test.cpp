@@ -1,12 +1,15 @@
-#include <catch2/catch_test_macros.hpp>
+#include <phi/test/test_macros.hpp>
 
 #include <OpenAutoIt/Lexer.hpp>
 #include <OpenAutoIt/Token.hpp>
 #include <OpenAutoIt/TokenKind.hpp>
 #include <OpenAutoIt/TokenStream.hpp>
-#include <catch2/catch_message.hpp>
+#include <phi/compiler_support/unused.hpp>
+#include <phi/compiler_support/warning.hpp>
 #include <phi/container/string_view.hpp>
 #include <phi/core/types.hpp>
+#include <phi/text/to_lower_case.hpp>
+#include <phi/text/to_upper_case.hpp>
 #include <cmath>
 
 #define TOKEN_MATCHES(token, kind, text, line_number, column)                                      \
@@ -31,29 +34,26 @@ TEST_CASE("Lexer - construct with source")
     CHECK(lexer.HasInput());
 }
 
+PHI_CLANG_SUPPRESS_WARNING_PUSH()
+PHI_CLANG_SUPPRESS_WARNING("-Wglobal-constructors")
+PHI_CLANG_SUPPRESS_WARNING("-Wexit-time-destructors")
+
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables))
 static OpenAutoIt::Lexer lexer;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables))
 static OpenAutoIt::TokenStream res;
 
-constexpr static char lower_to_upper_difference{'A' - 'a'};
-
-[[nodiscard]] constexpr char char_to_upper(char c) noexcept
-{
-    return (c >= 'a' && c <= 'z') ? c + lower_to_upper_difference : c;
-}
-
-[[nodiscard]] constexpr char char_to_lower(char c) noexcept
-{
-    return (c >= 'A' && c <= 'Z') ? c - lower_to_upper_difference : c;
-}
+PHI_CLANG_SUPPRESS_WARNING_POP()
 
 void test_all_spellings_of(phi::string_view text, OpenAutoIt::TokenKind expected_kind)
 {
-    return;
-
+    // Don't run these tests for debug builds since there VERY slow
+#if defined(PHI_DEBUG)
+    PHI_UNUSED_PARAMETER(text);
+    PHI_UNUSED_PARAMETER(expected_kind);
+#else
     std::string str;
-    std::size_t max_index = std::pow(2u, text.length().unsafe());
+    std::size_t max_index = static_cast<std::size_t>(std::pow(2u, text.length().unsafe()));
 
     for (phi::usize index{0u}; index < max_index; ++index)
     {
@@ -65,21 +65,20 @@ void test_all_spellings_of(phi::string_view text, OpenAutoIt::TokenKind expected
         {
             if ((index.unsafe() >> str_index.unsafe()) & 0x1)
             {
-                str.push_back(char_to_upper(text.at(str_index)));
+                str.push_back(phi::to_upper_case(text.at(str_index)));
             }
             else
             {
-                str.push_back(char_to_lower(text.at(str_index)));
+                str.push_back(phi::to_lower_case(text.at(str_index)));
             }
         }
-
-        CAPTURE(str);
 
         res = lexer.ProcessString({str.data(), str.length()});
         REQUIRE(res.size().unsafe() == 1u);
 
         CHECK(res.at(0u).GetTokenKind() == expected_kind);
     }
+#endif
 }
 
 TEST_CASE("Lexer - Lex empty")
@@ -652,8 +651,8 @@ TEST_CASE("Lexer - Lex PreProcessorIdentifier")
     {
         test_all_spellings_of("#Comments-Start", OpenAutoIt::TokenKind::PP_CommentsStart);
         test_all_spellings_of("#Comments-End", OpenAutoIt::TokenKind::PP_CommentsEnd);
-        test_all_spellings_of("#cs", OpenAutoIt::TokenKind::PP_CS);
-        test_all_spellings_of("#ce", OpenAutoIt::TokenKind::PP_CE);
+        test_all_spellings_of("#cs", OpenAutoIt::TokenKind::PP_CommentsStart);
+        test_all_spellings_of("#ce", OpenAutoIt::TokenKind::PP_CommentsEnd);
         test_all_spellings_of("#include", OpenAutoIt::TokenKind::PP_Include);
         test_all_spellings_of("#include-once", OpenAutoIt::TokenKind::PP_IncludeOnce);
         test_all_spellings_of("#NoTrayIcon", OpenAutoIt::TokenKind::PP_NoTrayIcon);
@@ -669,23 +668,23 @@ TEST_CASE("Lexer - Lex Multiline comments")
     res = lexer.ProcessString("#cs Hello This is a comment#ce");
     REQUIRE(res.size().unsafe() == 3u);
 
-    TOKEN_MATCHES(res.at(0u), PP_CS, "#cs", 1u, 1u);
+    TOKEN_MATCHES(res.at(0u), PP_CommentsStart, "#cs", 1u, 1u);
     TOKEN_MATCHES(res.at(1u), Comment, " Hello This is a comment", 1u, 4u);
-    TOKEN_MATCHES(res.at(2u), PP_CE, "#ce", 1u, 28u);
+    TOKEN_MATCHES(res.at(2u), PP_CommentsEnd, "#ce", 1u, 28u);
 
     res = lexer.ProcessString("#cs\n#ce");
     REQUIRE(res.size().unsafe() == 3u);
 
-    TOKEN_MATCHES(res.at(0u), PP_CS, "#cs", 1u, 1u);
+    TOKEN_MATCHES(res.at(0u), PP_CommentsStart, "#cs", 1u, 1u);
     TOKEN_MATCHES(res.at(1u), Comment, "\n", 1u, 4u);
-    TOKEN_MATCHES(res.at(2u), PP_CE, "#ce", 2u, 1u);
+    TOKEN_MATCHES(res.at(2u), PP_CommentsEnd, "#ce", 2u, 1u);
 
     res = lexer.ProcessString("#cs\nHello i am a comment\n#ce");
     REQUIRE(res.size().unsafe() == 3u);
 
-    TOKEN_MATCHES(res.at(0u), PP_CS, "#cs", 1u, 1u);
+    TOKEN_MATCHES(res.at(0u), PP_CommentsStart, "#cs", 1u, 1u);
     TOKEN_MATCHES(res.at(1u), Comment, "\nHello i am a comment\n", 1u, 4u);
-    TOKEN_MATCHES(res.at(2u), PP_CE, "#ce", 3u, 1u);
+    TOKEN_MATCHES(res.at(2u), PP_CommentsEnd, "#ce", 3u, 1u);
 }
 
 TEST_CASE("Lexer - Lex Keywords")
@@ -744,6 +743,7 @@ TEST_CASE("Lexer - Lex Keywords")
         test_all_spellings_of("In", OpenAutoIt::TokenKind::KW_In);
         test_all_spellings_of("Func", OpenAutoIt::TokenKind::KW_Func);
         test_all_spellings_of("Return", OpenAutoIt::TokenKind::KW_Return);
+        test_all_spellings_of("ByRef", OpenAutoIt::TokenKind::KW_ByRef);
         test_all_spellings_of("EndFunc", OpenAutoIt::TokenKind::KW_EndFunc);
         test_all_spellings_of("If", OpenAutoIt::TokenKind::KW_If);
         test_all_spellings_of("Then", OpenAutoIt::TokenKind::KW_Then);
@@ -886,6 +886,39 @@ TEST_CASE("Lexer - Lex IntegerLiterals")
     TOKEN_MATCHES(res.at(0u), IntegerLiteral, "1", 1u, 1u);
     TOKEN_MATCHES(res.at(1u), NewLine, "\n", 1u, 2u);
     TOKEN_MATCHES(res.at(2u), IntegerLiteral, "1", 2u, 1u);
+}
+
+TEST_CASE("Lexer - Hex Literals")
+{
+    res = lexer.ProcessString("0x0");
+    REQUIRE(res.size().unsafe() == 1u);
+
+    TOKEN_MATCHES(res.at(0u), IntegerLiteral, "0x0", 1u, 1u);
+
+    res = lexer.ProcessString("0X0");
+    REQUIRE(res.size().unsafe() == 1u);
+
+    TOKEN_MATCHES(res.at(0u), IntegerLiteral, "0X0", 1u, 1u);
+
+    res = lexer.ProcessString("0x1");
+    REQUIRE(res.size().unsafe() == 1u);
+
+    TOKEN_MATCHES(res.at(0u), IntegerLiteral, "0x1", 1u, 1u);
+
+    res = lexer.ProcessString("0X1");
+    REQUIRE(res.size().unsafe() == 1u);
+
+    TOKEN_MATCHES(res.at(0u), IntegerLiteral, "0X1", 1u, 1u);
+
+    res = lexer.ProcessString("0x1234567890");
+    REQUIRE(res.size().unsafe() == 1u);
+
+    TOKEN_MATCHES(res.at(0u), IntegerLiteral, "0x1234567890", 1u, 1u);
+
+    res = lexer.ProcessString("0xabcdefABCDEF");
+    REQUIRE(res.size().unsafe() == 1u);
+
+    TOKEN_MATCHES(res.at(0u), IntegerLiteral, "0xabcdefABCDEF", 1u, 1u);
 }
 
 TEST_CASE("Lexer - Lex Operator")

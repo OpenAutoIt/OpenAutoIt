@@ -18,7 +18,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          ref: 'develop'
           submodules: recursive
 
       - name: Install cmake
@@ -66,8 +65,7 @@ jobs:
           cov-build --dir cov-int make
 
       - name: Print build log
-        run: |
-          cat build/cov-int/build-log.txt
+        run: cat build/cov-int/build-log.txt
 
       - name: Submit the result to Coverity Scan
         run: |
@@ -76,7 +74,7 @@ jobs:
           curl --form token=$TOKEN \
                --form email=hansfritzenmeister@protonmail.com \
                --form file=@OpenAutoIt.tgz \
-               --form version="develop" \
+               --form version="$(git branch --show-current)" \
                --form description="Automatic submission" \
                https://scan.coverity.com/builds?project=OpenAutoIt
         env:

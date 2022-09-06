@@ -1,0 +1,2 @@
+Func empty()
+EndFunc

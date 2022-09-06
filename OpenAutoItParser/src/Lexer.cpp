@@ -9,6 +9,9 @@
 #include <phi/core/boolean.hpp>
 #include <phi/core/optional.hpp>
 #include <phi/core/types.hpp>
+#include <phi/text/is_alpha_numeric.hpp>
+#include <phi/text/is_digit.hpp>
+#include <phi/text/is_hex_digit.hpp>
 #include <algorithm>
 #include <array>
 #include <map>
@@ -163,8 +166,8 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
         PreProcessorValues{{
                 {"#comments-start", OpenAutoIt::TokenKind::PP_CommentsStart},
                 {"#comments-end", OpenAutoIt::TokenKind::PP_CommentsEnd},
-                {"#cs", OpenAutoIt::TokenKind::PP_CS},
-                {"#ce", OpenAutoIt::TokenKind::PP_CE},
+                {"#cs", OpenAutoIt::TokenKind::PP_CommentsStart},
+                {"#ce", OpenAutoIt::TokenKind::PP_CommentsEnd},
                 {"#include", OpenAutoIt::TokenKind::PP_Include},
                 {"#include-once", OpenAutoIt::TokenKind::PP_IncludeOnce},
                 {"#notrayicon", OpenAutoIt::TokenKind::PP_NoTrayIcon},
@@ -185,7 +188,7 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
     return map.at({str});
 }
 
-static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 43u> KeyWordsValues{
+static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 44u> KeyWordsValues{
         {{"false", OpenAutoIt::TokenKind::KW_False},
          {"true", OpenAutoIt::TokenKind::KW_True},
          {"continuecase", OpenAutoIt::TokenKind::KW_ContinueCase},
@@ -206,6 +209,7 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
          {"next", OpenAutoIt::TokenKind::KW_Next},
          {"in", OpenAutoIt::TokenKind::KW_In},
          {"func", OpenAutoIt::TokenKind::KW_Func},
+         {"byref", OpenAutoIt::TokenKind::KW_ByRef},
          {"return", OpenAutoIt::TokenKind::KW_Return},
          {"endfunc", OpenAutoIt::TokenKind::KW_EndFunc},
          {"if", OpenAutoIt::TokenKind::KW_If},
@@ -288,44 +292,14 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
     }
 }
 
-[[nodiscard]] constexpr phi::boolean is_numeric(const char c) noexcept
-{
-    switch (c)
-    {
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            return true;
-        default:
-            return false;
-    }
-}
-
-[[nodiscard]] constexpr phi::boolean is_alpha(const char c) noexcept
-{
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-
-[[nodiscard]] constexpr phi::boolean is_alpha_numeric(const char c) noexcept
-{
-    return is_numeric(c) || is_alpha(c);
-}
-
 [[nodiscard]] constexpr phi::boolean is_valid_identifier_char(const char c) noexcept
 {
-    return is_alpha_numeric(c) || c == '_';
+    return phi::is_alpha_numeric(c) || c == '_';
 }
 
 [[nodiscard]] constexpr phi::boolean is_valid_pp_char(const char c) noexcept
 {
-    return is_alpha_numeric(c) || c == '-';
+    return phi::is_alpha_numeric(c) || c == '-';
 }
 
 [[nodiscard]] constexpr phi::boolean is_two_part_operator(const char c) noexcept
@@ -401,8 +375,6 @@ namespace OpenAutoIt
 
     phi::optional<Token> Lexer::GetNextToken() noexcept
     {
-        // TODO: #cs and #ce are not correctly parsed as comments
-
         while (!IsFinished())
         {
             char current_character = *m_Iterator;
@@ -449,7 +421,7 @@ namespace OpenAutoIt
                         TokenKind pre_processor_token_kind =
                                 lookup_pre_processor(TokenText(begin_of_token));
 
-                        if (pre_processor_token_kind == TokenKind::PP_CE ||
+                        if (pre_processor_token_kind == TokenKind::PP_CommentsEnd ||
                             pre_processor_token_kind == TokenKind::PP_CommentsEnd)
                         {
                             m_InsideMultiLineComment = false;
@@ -592,7 +564,7 @@ namespace OpenAutoIt
                 TokenKind pre_processor_token_kind =
                         lookup_pre_processor(TokenText(begin_of_token));
 
-                if (pre_processor_token_kind == TokenKind::PP_CS ||
+                if (pre_processor_token_kind == TokenKind::PP_CommentsStart ||
                     pre_processor_token_kind == TokenKind::PP_CommentsStart)
                 {
                     m_InsideMultiLineComment = true;
@@ -657,10 +629,12 @@ namespace OpenAutoIt
 
             /* Number Literals */
 
-            else if (is_numeric(current_character))
+            else if (phi::is_digit(current_character))
             {
                 // TODO: Support float literals
                 // TODO: Suppport hex literals
+                phi::boolean start_with_zero{current_character == '0'};
+                phi::boolean parsing_hex{false};
 
                 iterator begin_of_token = m_Iterator;
                 ConsumeCurrentCharacter();
@@ -669,7 +643,28 @@ namespace OpenAutoIt
                 {
                     current_character = *m_Iterator;
 
-                    if (is_numeric(current_character))
+                    // Is the second character
+                    if (m_Iterator - begin_of_token == 1u)
+                    {
+                        // Hex character
+                        if (current_character == 'x' || current_character == 'X')
+                        {
+                            parsing_hex = true;
+                            ConsumeCurrentCharacter();
+                            continue;
+                        }
+                    }
+
+                    // Actually parsing
+                    if (parsing_hex)
+                    {
+                        if (phi::is_hex_digit(current_character))
+                        {
+                            ConsumeCurrentCharacter();
+                            continue;
+                        }
+                    }
+                    else if (phi::is_digit(current_character))
                     {
                         ConsumeCurrentCharacter();
                         continue;
@@ -702,7 +697,7 @@ namespace OpenAutoIt
 
             else if (is_single_operator(current_character))
             {
-                Token token = ConstructToken(lookup_operator({m_Iterator}));
+                Token token = ConstructToken(lookup_operator({m_Iterator, 1u}));
 
                 ConsumeCurrentCharacter();
 

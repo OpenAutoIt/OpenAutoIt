@@ -107,7 +107,7 @@ namespace OpenAutoIt
         PHI_ASSERT(m_Finialized);
 #endif
         PHI_ASSERT(has_x_more(n));
-        PHI_DBG_ASSERT(n != 0u);
+        PHI_ASSERT(n != 0u);
 
         for (; n > 0u; --n, ++m_Index)
         {}
@@ -154,7 +154,7 @@ namespace OpenAutoIt
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
 #endif
-        PHI_DBG_ASSERT(index < m_Tokens.size());
+        PHI_ASSERT(index < m_Tokens.size());
 
         return m_Tokens[index.unsafe()];
     }

@@ -1,14 +1,12 @@
 [submodule "external/Phi"]
-	path = external/Phi
-	url = https://github.com/AMS21/Phi.git
-	branch = develop
-[submodule "external/Catch2"]
-	path = external/Catch2
-	url = https://github.com/catchorg/Catch2.git
-	branch = devel
+path = external/Phi
+url = https://github.com/AMS21/Phi.git
+branch = develop
 [submodule "external/fmt"]
-	path = external/fmt
-	url = https://github.com/fmtlib/fmt.git
+path = external/fmt
+url = https://github.com/fmtlib/fmt.git
+branch = master
 [submodule "external/magic_enum"]
-	path = external/magic_enum
-	url = https://github.com/Neargye/magic_enum.git
+path = external/magic_enum
+url = https://github.com/Neargye/magic_enum.git
+branch = master

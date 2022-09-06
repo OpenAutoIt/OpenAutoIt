@@ -1,2 +1,3 @@
 Document:
-VariableDeclaration: [Auto] $foo = Uninitialized
+Statements:
+VariableAssignment: [Auto] $foo = Uninitialized

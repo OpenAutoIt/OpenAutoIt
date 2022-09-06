@@ -9,7 +9,7 @@ on:
 
 jobs:
   Build:
-    runs-on: macos-latest
+    runs-on: macos-12
 
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: "2"
@@ -25,16 +25,16 @@ jobs:
       fail-fast: false
       matrix:
         cfg:
-          # gcc-11
-          - { compiler: g++, compiler_version: "11" }
-          - { compiler: g++, compiler_version: "11", dynamic_test: "asan" }
-          - { compiler: g++, compiler_version: "11", dynamic_test: "lsan" }
-          - { compiler: g++, compiler_version: "11", dynamic_test: "ubsan" }
-          # AppleClang 13.2
-          - { compiler: clang++, compiler_version: "13.2" }
-          - { compiler: clang++, compiler_version: "13.2", dynamic_test: "asan" }
-          - { compiler: clang++, compiler_version: "13.2", dynamic_test: "tsan" }
-          - { compiler: clang++, compiler_version: "13.2", dynamic_test: "ubsan" }
+          # gcc-12
+          - { compiler: g++, compiler_version: "12" }
+          - { compiler: g++, compiler_version: "12", dynamic_test: "asan" }
+          - { compiler: g++, compiler_version: "12", dynamic_test: "lsan" }
+          - { compiler: g++, compiler_version: "12", dynamic_test: "ubsan" }
+          # AppleClang 13.4.1
+          - { compiler: clang++, compiler_version: "13.4.1" }
+          - { compiler: clang++, compiler_version: "13.4.1", dynamic_test: "asan" }
+          - { compiler: clang++, compiler_version: "13.4.1", dynamic_test: "tsan" }
+          - { compiler: clang++, compiler_version: "13.4.1", dynamic_test: "ubsan" }
 
     steps:
       - name: Checkout

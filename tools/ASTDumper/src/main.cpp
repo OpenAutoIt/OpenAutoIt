@@ -1,67 +1,31 @@
 #include <OpenAutoIt/Lexer.hpp>
 #include <OpenAutoIt/Parser.hpp>
+#include <phi/compiler_support/warning.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/scope_guard.hpp>
 #include <cstdio>
 #include <filesystem>
 #include <iostream>
 
-OpenAutoIt::Lexer  lexer;
+PHI_CLANG_SUPPRESS_WARNING_PUSH()
+PHI_CLANG_SUPPRESS_WARNING("-Wglobal-constructors")
+PHI_CLANG_SUPPRESS_WARNING("-Wexit-time-destructors")
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+OpenAutoIt::Lexer lexer;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 OpenAutoIt::Parser parser;
 
-phi::optional<std::string> read_file(const std::filesystem::path& file_path) noexcept
-{
-    // Check that the file actually exists
-    if (!std::filesystem::exists(file_path))
-    {
-        return {};
-    }
-    std::FILE* file        = std::fopen(file_path.c_str(), "r");
-    auto       scope_guard = phi::make_scope_guard([&file]() { (void)std::fclose(file); });
-
-    if (file != nullptr)
-    {
-        (void)std::fseek(file, 0, SEEK_END);
-
-        const std::size_t size = std::ftell(file);
-        if (size != -1)
-        {
-            std::rewind(file);
-
-            // Create empty string of desired size
-            std::string str(size, '\0');
-
-            // Read data
-            (void)std::fread(str.data(), sizeof(std::string::value_type), size, file);
-
-            return phi::move(str);
-        }
-    }
-
-    return {};
-}
-
-phi::boolean write_file(const std::filesystem::path& file_path, std::string_view data) noexcept
-{
-    std::FILE* file        = std::fopen(file_path.c_str(), "w");
-    auto       scope_guard = phi::make_scope_guard([&file]() { (void)std::fclose(file); });
-
-    if (file != nullptr)
-    {
-        (void)std::fwrite(data.data(), sizeof(data.front()), data.size(), file);
-        return true;
-    }
-
-    return false;
-}
+PHI_CLANG_SUPPRESS_WARNING_POP()
 
 phi::boolean process_file(const std::filesystem::path& file_path) noexcept
 {
     const std::string base_name = file_path.filename().replace_extension().string();
 
-    const phi::optional<std::string> file_content_opt = read_file(file_path);
+    const phi::optional<std::string> file_content_opt = OpenAutoIt::read_file(file_path);
     if (!file_content_opt)
     {
+        std::cout << "Failed to read file " << file_path << "\n";
         return false;
     }
     const std::string& file_content = file_content_opt.value();
@@ -82,7 +46,7 @@ phi::boolean process_file(const std::filesystem::path& file_path) noexcept
     std::filesystem::path ast_file_path = file_path;
     ast_file_path.replace_extension(".ast");
 
-    write_file(ast_file_path, ast_dump);
+    OpenAutoIt::write_file(ast_file_path, ast_dump);
 
     std::cout << "AST Dumped to \"" << ast_file_path.string() << "\"\n";
 

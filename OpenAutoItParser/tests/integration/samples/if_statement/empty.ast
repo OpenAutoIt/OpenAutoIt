@@ -1,0 +1,8 @@
+Document:
+Statements:
+IfStatement:
+condition [
+  IntegerLiteral [1]
+]
+Body:
+[]

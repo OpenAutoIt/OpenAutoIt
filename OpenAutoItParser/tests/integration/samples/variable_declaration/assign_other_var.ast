@@ -1,0 +1,10 @@
+Document:
+Statements:
+VariableAssignment: [Auto] $var =
+[
+  IntegerLiteral [123]
+]
+VariableAssignment: [Auto] $other =
+[
+  VariableExpression [var]
+]

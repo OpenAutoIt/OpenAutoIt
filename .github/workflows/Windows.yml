@@ -9,7 +9,7 @@ on:
 
 jobs:
   Build:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: "2"

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <magic_enum.hpp>
+#include <phi/compiler_support/warning.hpp>
 #include <phi/core/size_t.hpp>
 #include <string_view>
 
@@ -139,11 +140,8 @@ namespace OpenAutoIt
         // https://www.autoitscript.com/autoit3/docs/intro/lang_directives.htm
 
         // https://www.autoitscript.com/autoit3/docs/keywords/comments-start.htm
-        // TODO: Do we really need both variants as seperate tokens?
-        PP_CommentsStart, // #Comments-Start
-        PP_CommentsEnd,   // #Comments-End
-        PP_CS,            // #cs
-        PP_CE,            // #ce
+        PP_CommentsStart, // #Comments-Start, #cs
+        PP_CommentsEnd,   // #Comments-End, #ce
         // https://www.autoitscript.com/autoit3/docs/keywords/include.htm
         PP_Include, // #include
         // https://www.autoitscript.com/autoit3/docs/keywords/include-once.htm
@@ -193,6 +191,7 @@ namespace OpenAutoIt
         KW_In, // In
         // https://www.autoitscript.com/autoit3/docs/keywords/Func.htm
         KW_Func,    // Func
+        KW_ByRef,   // ByRef
         KW_Return,  // Return
         KW_EndFunc, // EndFunc
         // https://www.autoitscript.com/autoit3/docs/keywords/If.htm
@@ -256,7 +255,12 @@ namespace OpenAutoIt
         NumberOfTokens,
     };
 
-    static constexpr phi::size_t NumberOfTokens = static_cast<int>(TokenKind::NumberOfTokens);
+    PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wunused-const-variable")
+
+    static constexpr const phi::size_t NumberOfTokens =
+            static_cast<phi::size_t>(TokenKind::NumberOfTokens);
+
+    PHI_GCC_SUPPRESS_WARNING_POP()
 
     [[nodiscard]] constexpr const char* get_token_name(TokenKind token_kind) noexcept
     {

@@ -1,0 +1,12 @@
+Document:
+Statements:
+ExpressionStatement
+[
+  FunctionCallExpression: "IniRead"
+  [
+    StringLiteral ["Filename.ini"],
+    StringLiteral ["Section"],
+    StringLiteral ["Key"],
+    StringLiteral ["Default"],
+  ]
+]

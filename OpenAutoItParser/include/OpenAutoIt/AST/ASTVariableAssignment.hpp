@@ -2,6 +2,7 @@
 
 #include "OpenAutoIt/AST/ASTExpression.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
+#include "OpenAutoIt/AST/ASTStatement.hpp"
 #include "OpenAutoIt/Utililty.hpp"
 #include "OpenAutoIt/VariableScope.hpp"
 #include <magic_enum.hpp>
@@ -11,12 +12,13 @@
 
 namespace OpenAutoIt
 {
-    class ASTVariableDeclaration : public ASTNode
+    // TODO: Is an variableAssigment also an Expression like in C/C++?
+    class ASTVariableAssignment : public ASTStatement
     {
     public:
         [[nodiscard]] const char* Name() const noexcept override
         {
-            return "ASTVariableDeclaration";
+            return "ASTVariableAssigment";
         }
 
         [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
@@ -24,7 +26,7 @@ namespace OpenAutoIt
             std::string ret;
 
             ret += indent_times(indent);
-            ret += "VariableDeclaration: [";
+            ret += "VariableAssignment: [";
             ret += (m_IsStatic ? "static, " : "");
             ret += (m_IsConst ? "const, " : "");
             ret += magic_enum::enum_name(m_Scope);

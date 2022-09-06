@@ -1,0 +1,19 @@
+Document:
+Statements:
+ExpressionStatement
+[
+  FunctionCallExpression: "foo"
+  [
+    FunctionCallExpression: "bar"
+    [],
+    IntegerLiteral [3],
+    FunctionCallExpression: "baz"
+    [
+      FunctionCallExpression: "fob"
+      [
+        StringLiteral ["String"],
+        IntegerLiteral [42],
+      ],
+    ],
+  ]
+]

@@ -6,7 +6,7 @@ jobs:
   format:
     runs-on: ubuntu-20.04
     env:
-      LLVM_VERSION: 13
+      LLVM_VERSION: 15
       CMAKE_BUILD_PARALLEL_LEVEL: "2"
       CTEST_PARALLEL_LEVEL: "2"
       CTEST_OUTPUT_ON_FAILURE: "ON"
@@ -25,13 +25,7 @@ jobs:
         uses: lukka/get-cmake@v3.23.0
 
       - name: Install clang-format
-        run: |
-          # Install clang-format
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-
-          sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{ env.LLVM_VERSION }} main"
-          sudo apt-get update -m
-          sudo apt-get install clang-format-${{ env.LLVM_VERSION }}
+        run: external/Phi/scripts/ci/InstallTools.sh clang-format-${{ env.LLVM_VERSION }} ninja
 
       - name: Run clang-format
         run: |

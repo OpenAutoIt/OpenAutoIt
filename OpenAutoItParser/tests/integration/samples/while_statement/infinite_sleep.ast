@@ -1,0 +1,12 @@
+Document:
+Statements:
+WhileStatement [IntegerLiteral [1]]
+[
+  ExpressionStatement
+  [
+    FunctionCallExpression: "Sleep"
+    [
+      IntegerLiteral [1000],
+    ]
+  ]
+]

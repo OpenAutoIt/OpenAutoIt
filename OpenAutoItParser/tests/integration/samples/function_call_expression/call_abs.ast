@@ -1,0 +1,9 @@
+Document:
+Statements:
+ExpressionStatement
+[
+  FunctionCallExpression: "Abs"
+  [
+    IntegerLiteral [3],
+  ]
+]

@@ -1,0 +1,6 @@
+Document:
+Statements:
+VariableAssignment: [Auto] $foo =
+[
+  StringLiteral ["bar"]
+]

@@ -11,7 +11,7 @@ jobs:
   linux:
     runs-on: ubuntu-20.04
     env:
-      LLVM_VERSION: "13"
+      LLVM_VERSION: "15"
       LLVM_PROFILE_FILE: "profile-%p.profraw"
       CMAKE_BUILD_PARALLEL_LEVEL: "2"
       CTEST_PARALLEL_LEVEL: "2"
@@ -27,20 +27,7 @@ jobs:
         uses: lukka/get-cmake@v3.23.0
 
       - name: Install tools
-        run: |
-          # Add clang repo
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{ env.LLVM_VERSION }} main"
-
-          # Update repo list
-          sudo apt-get update -m
-
-          # Install clang/LLVM
-          sudo apt-get install "clang-${{ env.LLVM_VERSION }}" "llvm-${{ env.LLVM_VERSION }}" g++-multilib -y
-
-          # export compiler
-          echo "CC=clang-${{ env.LLVM_VERSION }}" >> $GITHUB_ENV
-          echo "CXX=clang++-${{ env.LLVM_VERSION }}" >> $GITHUB_ENV
+        run: external/Phi/scripts/ci/InstallTools.sh clang-${{ env.LLVM_VERSION }}
 
       - name: Build coverage data
         run: |

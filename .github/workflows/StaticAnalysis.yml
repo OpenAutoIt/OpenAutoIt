@@ -11,7 +11,7 @@ jobs:
   cppcheck:
     runs-on: ubuntu-20.04
     env:
-      LLVM_VERSION: 13
+      LLVM_VERSION: 15
 
     steps:
       - name: Checkout
@@ -33,16 +33,7 @@ jobs:
         uses: lukka/get-cmake@v3.23.0
 
       - name: Install clang
-        run: |
-          # Add repository
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{ env.LLVM_VERSION }} main"
-
-          # Install
-          sudo apt-get update -m
-          sudo apt-get install clang-${{ env.LLVM_VERSION }}
-
-          echo "CXX=clang++-${{ env.LLVM_VERSION }}" >> $GITHUB_ENV
+        run: run: external/Phi/scripts/ci/InstallTools.sh clang-${{ env.LLVM_VERSION }}
 
       - name: Install cppcheck
         env:
@@ -88,7 +79,7 @@ jobs:
   clang-tidy:
     runs-on: ubuntu-20.04
     env:
-      LLVM_VERSION: 13
+      LLVM_VERSION: 15
 
     steps:
       - name: Checkout
@@ -109,13 +100,7 @@ jobs:
         uses: lukka/get-cmake@v3.23.0
 
       - name: Install clang tidy
-        run: |
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{ env.LLVM_VERSION }} main"
-          sudo apt-get update -m
-          sudo apt-get install clang-${{ env.LLVM_VERSION }} clang-tidy-${{ env.LLVM_VERSION }}
-
-          echo "CXX=clang++-${{ env.LLVM_VERSION }}" >> $GITHUB_ENV
+        run: external/Phi/scripts/ci/InstallTools.sh clang-tidy-${{ env.LLVM_VERSION }}
 
       - name: Run clang-tidy
         run: |
@@ -147,7 +132,7 @@ jobs:
   include-what-you-use:
     runs-on: ubuntu-20.04
     env:
-      LLVM_VERSION: 13
+      LLVM_VERSION: 14
       CMAKE_BUILD_PARALLEL_LEVEL: "2"
 
     steps:
@@ -168,33 +153,8 @@ jobs:
       - name: Install cmake
         uses: lukka/get-cmake@v3.23.0
 
-      - name: Install llvm
-        run: |
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{ env.LLVM_VERSION }} main"
-          sudo apt-get update -m
-          sudo apt-get install clang-${{ env.LLVM_VERSION }} llvm-${{ env.LLVM_VERSION }} llvm-${{ env.LLVM_VERSION }}-dev libclang-${{ env.LLVM_VERSION }}-dev
-
-          echo "CXX=clang++-${{ env.LLVM_VERSION }}" >> $GITHUB_ENV
-
       - name: Install Include-What-You-Use
-        run: |
-          # Download Include-what-you-use
-          git clone https://github.com/include-what-you-use/include-what-you-use.git
-          cd "include-what-you-use"
-
-          # Checkout branch
-          git checkout clang_${{ env.LLVM_VERSION }}
-
-          # Build Include-what-you-use
-          mkdir build
-          cd build
-
-          cmake .. -G "Unix Makefiles" -DCMAKE_PREFIX_PATH=/usr/lib/llvm-${{ env.LLVM_VERSION }} -DCMAKE_BUILD_TYPE=Release
-          cmake --build .
-
-          # Install Include-what-you-use
-          sudo make install
+        run: external/Phi/scripts/ci/InstallTools.sh iwyu-${{ env.LLVM_VERSION }} ninja
 
       - name: Verify installation
         run: |

@@ -1,0 +1,10 @@
+Document:
+Statements:
+VariableAssignment: [Auto] $true =
+[
+  BooleanLiteral [True]
+]
+VariableAssignment: [Auto] $false =
+[
+  BooleanLiteral [False]
+]

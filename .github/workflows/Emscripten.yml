@@ -19,7 +19,7 @@ jobs:
 
     strategy:
       matrix:
-        em_version: ["3.1.2", "3.0.1", "2.0.34"]
+        em_version: ["3.1.20", "3.0.1", "2.0.34"]
 
     steps:
       - name: Checkout

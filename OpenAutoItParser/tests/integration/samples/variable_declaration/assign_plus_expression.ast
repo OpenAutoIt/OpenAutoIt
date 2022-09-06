@@ -1,5 +1,6 @@
 Document:
-VariableDeclaration: [Auto] $foo =
+Statements:
+VariableAssignment: [Auto] $foo =
 [
   BinaryExpression [OP_Plus]
   [
