@@ -33,7 +33,7 @@ jobs:
         uses: lukka/get-cmake@v3.23.0
 
       - name: Install clang
-        run: run: external/Phi/scripts/ci/InstallTools.sh clang-${{ env.LLVM_VERSION }}
+        run: external/Phi/scripts/ci/InstallTools.sh clang-${{ env.LLVM_VERSION }}
 
       - name: Install cppcheck
         env:
