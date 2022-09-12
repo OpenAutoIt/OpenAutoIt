@@ -51,7 +51,14 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+if(DEFINED PHI_PLATFORM_EMSCRIPTEN)
+  set(_lto_default OFF)
+else()
+  set(_lto_default ON)
+endif()
+
 option(OA_SANATIZERS "" OFF)
+option(OA_LTO "" ${_lto_default})
 
 # Targets
 add_subdirectory("OpenAutoItParser")
@@ -63,10 +70,13 @@ if(${OA_SANATIZERS})
   message(STATUS "Enabling sanitizers")
 endif()
 
+if(${OA_LTO})
+  set(_extra ${_extra} IPO)
+endif()
+
 # Configure
 phi_configure_project(
   DEBUG_FLAGS
-  IPO
   OPTIMIZATION_FLAGS
   WARNINGS
   WARNINGS_AS_ERRORS
