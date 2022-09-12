@@ -59,6 +59,7 @@ endif()
 
 option(OA_SANATIZERS "" OFF)
 option(OA_LTO "" ${_lto_default})
+option(OA_COVERAGE "" OFF)
 
 # Targets
 add_subdirectory("OpenAutoItParser")
@@ -72,6 +73,10 @@ endif()
 
 if(${OA_LTO})
   set(_extra ${_extra} IPO)
+endif()
+
+if(${OA_COVERAGE})
+  set(_extra ${_extra} COVERAGE)
 endif()
 
 # Configure
