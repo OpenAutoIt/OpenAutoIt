@@ -45,7 +45,7 @@ phi::boolean process_file(const std::filesystem::path& file_path) noexcept
             parser.ParseDocument(phi::move(token_stream));
 
     // Generate AST Dump
-    std::string ast_dump = document->DumpAST();
+    const std::string ast_dump = document->DumpAST();
 
     // Read AST Dump file
     std::filesystem::path ast_file_path = file_path;
@@ -103,9 +103,9 @@ int main(int argc, char* argv[])
             continue;
         }
 
-        std::cout << file << '\n';
-        phi::boolean result = process_file(path);
-        all_tests_passed    = all_tests_passed && result;
+        std::cout << file.path().string() << '\n';
+        const phi::boolean result = process_file(path);
+        all_tests_passed          = all_tests_passed && result;
     }
 
     if (!all_tests_passed)
