@@ -27,11 +27,14 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Setup Environment
+        run: external/Phi/scripts/ci/SetupEnvironment.sh
+
       - name: Install cmake
         uses: lukka/get-cmake@v3.23.0
 
       - name: Install tools
-        run: external/Phi/scripts/ci/InstallTools.sh clang-${{ env.LLVM_VERSION }}
+        run: external/Phi/scripts/ci/InstallTools.sh clang-${{ env.LLVM_VERSION }} gcovr
 
       - name: Build coverage data
         run: |
@@ -40,24 +43,15 @@ jobs:
           cd build
 
           # Build it
-          cmake -DCMAKE_BUILD_TYPE=Debug -DPHI_COVERAGE_BUILD=ON ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DOA_COVERAGE=ON ..
           cmake --build . --clean-first
 
           # Generate coverage data
           ctest . -C Debug
 
       - name: Process coverage data
-        run: |
-          cd build
-
-          files=$(find OpenAutoItParser -iname "*.hpp" -or -iname "*.cpp" -printf "%p ")
-
-          llvm-profdata-${{ env.LLVM_VERSION }} merge -sparse $(find . -iname "*.profraw" -type f) -o coverage.profdata
-          find bin -type f -exec bash -c 'llvm-cov-${{ env.LLVM_VERSION }} show ${0} $files -instr-profile=coverage.profdata -show-expansions -show-regions -show-line-counts -use-color=false >> coverage.info' {} \;
-
-          # List coverage data
-          find bin -type f -exec bash -c 'echo ${0}; llvm-cov-${{ env.LLVM_VERSION }} report ${0} $files -instr-profile=coverage.profdata' {} \;
-          cat coverage.info
+        working-directory: ./build
+        run: gcovr -j $PROC_COUNT --delete --root ../ --print-summary --xml-pretty --xml coverage.xml . --gcov-executable '$GCOV_EXECUTABLE'
 
       - name: Upload coverage data
         uses: codecov/codecov-action@v3.1.0
