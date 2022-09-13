@@ -1,0 +1,27 @@
+name: Cleanup
+
+on:
+  push:
+    paths:
+      # Workflow file itself
+      - '.github/workflows/Cleanup.yml'
+  schedule:
+    - cron: 0 0 * * 1 # Run weekly on monday, at 00:00
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  cleanup_runs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 90
+          keep_minimum_runs: 1

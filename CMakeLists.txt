@@ -57,26 +57,63 @@ else()
   set(_lto_default ON)
 endif()
 
-option(OA_SANATIZERS "" OFF)
 option(OA_LTO "" ${_lto_default})
-option(OA_COVERAGE "" OFF)
+option(OA_COVERAGE_BUILD "" OFF)
+option(OA_ENABLE_SANITIZER_ADDRESS "" OFF)
+option(OA_ENABLE_SANITIZER_LEAK "" OFF)
+option(OA_ENABLE_SANITIZER_THREAD "" OFF)
+option(OA_ENABLE_SANITIZER_UNDEFINED "" OFF)
 
 # Targets
 add_subdirectory("OpenAutoItParser")
 
 add_subdirectory("tools")
 
-if(${OA_SANATIZERS})
-  set(_extra SANITIZER "address;undefined")
-  message(STATUS "Enabling sanitizers")
+# Check for settings passed through the environment
+if(DEFINED ENV{OA_DYNAMIC_TEST})
+  set(dyn_test $OA{PHI_DYNAMIC_TEST})
+  phi_log("Configuring dynamic testing ${dyn_test}")
+
+  if(${dyn_test} STREQUAL "none")
+    # Nothing to configure
+  elseif(${dyn_test} STREQUAL "asan")
+    phi_set_cache_value(NAME OA_ENABLE_SANITIZER_ADDRESS VALUE TRUE)
+  elseif(${dyn_test} STREQUAL "lsan")
+    phi_set_cache_value(NAME OA_ENABLE_SANITIZER_LEAK VALUE TRUE)
+  elseif(${dyn_test} STREQUAL "tsan")
+    phi_set_cache_value(NAME OA_ENABLE_SANITIZER_THREAD VALUE TRUE)
+  elseif(${dyn_test} STREQUAL "ubsan")
+    phi_set_cache_value(NAME OA_ENABLE_SANITIZER_UNDEFINED VALUE TRUE)
+  else()
+    phi_error("No dynamic testing options called \"${dyn_test}\" supported")
+  endif()
 endif()
 
 if(${OA_LTO})
   set(_extra ${_extra} IPO)
 endif()
 
-if(${OA_COVERAGE})
+if(${OA_COVERAGE_BUILD})
   set(_extra ${_extra} COVERAGE)
+endif()
+
+# Configure sanitizers
+set(_list_of_sanitizers)
+if(${OA_ENABLE_SANITIZER_ADDRESS})
+  set(_list_of_sanitizers "address")
+endif()
+if(${OA_ENABLE_SANITIZER_LEAK})
+  set(_list_of_sanitizers ${_list_of_sanitizers} "leak")
+endif()
+if(${OA_ENABLE_SANITIZER_THREAD})
+  set(_list_of_sanitizers ${_list_of_sanitizers} "thread")
+endif()
+if(${OA_ENABLE_SANITIZER_UNDEFINED})
+  set(_list_of_sanitizers ${_list_of_sanitizers} "undefined")
+endif()
+
+if(_list_of_sanitizers)
+  set(_extra ${_extra} SANITIZER ${_list_of_sanitizers})
 endif()
 
 # Configure

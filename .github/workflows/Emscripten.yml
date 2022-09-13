@@ -2,28 +2,51 @@ name: Emscripten
 
 on:
   push:
+    paths:
+      # Workflow file itself
+      - '.github/workflows/Emscripten.yml'
+      # C++ files
+      - '**.cpp'
+      - '**.hpp'
+      # CMake files
+      - '**.cmake'
+      - '**.txt'
+      # Script files
+      - '**.sh'
+      # external libraries
+      - 'external/**'
+    tags:
     branches-ignore:
-      - 'fuzz/**'
       - 'dependabot/**'
   pull_request:
+    branches:
+      - main
+      - develop
+  release:
+    types: [published]
+  workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.head_ref || github.run_number }}-${{ github.ref }}-${{ github.workflow }}
+  group: ci-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
   Build:
     runs-on: ubuntu-20.04
 
-    env:
-      CMAKE_BUILD_PARALLEL_LEVEL: "2"
-      CTEST_PARALLEL_LEVEL: "2"
-      CTEST_OUTPUT_ON_FAILURE: "ON"
-      EM_CACHE_FOLDER: 'emsdk-cache'
-
     strategy:
+      fail-fast: false
+
       matrix:
-        em_version: ["3.1.20", "3.0.1", "2.0.34"]
+        em_version:
+          - "3.1.20"
+          - "3.0.1"
+          - "2.0.34"
+
+        build_type:
+          - "Debug"
+          - "RelWithDebInfo"
+          - "Release"
 
     steps:
       - name: Checkout
@@ -31,38 +54,39 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Setup Environment
+        run: external/Phi/scripts/ci/SetupEnvironment.sh
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: emscripten-${{ matrix.em_version }}
+
       - name: Setup Emscripten
         uses: mymindstorm/setup-emsdk@v11
+        # Continue on error to ignore problems with caching
+        continue-on-error: true
         with:
           version: ${{ matrix.em_version }}
-          actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}
+          no-cache: true
 
-      - name: Install cmake
-        uses: lukka/get-cmake@v3.23.0
+      - name: Verify version
+        run: emcc --version
+
+      - name: Install ninja
+        run: external/Phi/scripts/ci/InstallTools.sh ninja
 
       - name: Configure build directory
         run: |
-          mkdir build
+          mkdir -p build
           cd build
-          emcmake cmake -DCMAKE_VERBOSE_MAKEFILE=ON ..
 
-      - name: Build Debug
-        run: |
-          cd build
-          emcmake cmake .. -DCMAKE_BUILD_TYPE=Debug
-          emmake cmake --build . --clean-first
-          ctest . -C Debug
+          emcmake cmake -DCMAKE_BUILD_TYPE:STRING=${{ matrix.build_type }} ..
 
-      - name: Build RelWithDebInfo
-        run: |
-          cd build
-          emcmake cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          emmake cmake --build . --clean-first
-          ctest . -C RelWithDebInfo
+      - name: Build
+        working-directory: ./build
+        run: emmake cmake --build . --config ${{ matrix.build_type }}
 
-      - name: Build Release
-        run: |
-          cd build
-          emcmake cmake .. -DCMAKE_BUILD_TYPE=Release
-          emmake cmake --build . --clean-first
-          ctest . -C Release
+      - name: Run tests
+        working-directory: ./build
+        run: ctest . -C ${{ matrix.build_type }}

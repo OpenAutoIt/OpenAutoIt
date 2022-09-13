@@ -4,11 +4,13 @@ on:
   schedule:
     - cron: '0 4 * * 1' # Every monday at 4:00 UTC
   push:
-    branches:
-      - 'coverity/**'
+    paths:
+      # Workflow file itself
+      - '.github/workflows/CoverityScan.yml'
+  workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.head_ref || github.run_number }}-${{ github.ref }}-${{ github.workflow }}
+  group: ci-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
@@ -24,11 +26,11 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install cmake
-        uses: lukka/get-cmake@v3.23.0
+      - name: Setup Environment
+        run: external/Phi/scripts/ci/SetupEnvironment.sh
 
       - name: Install
-        run: external/Phi/scripts/ci/InstallTools.sh gcc-${{ env.GCC_VERSION }}
+        run: scripts/ci/InstallTools.sh gcc-${{ env.GCC_VERSION }} ninja
 
       - name: Download Coverity Build Tool
         run: |
@@ -42,7 +44,8 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          cmake ..
+
+          cmake -DCMAKE_BUILD_TYPE:STRING="Debug"  ..
 
       - name: Configure cov-build
         run: |
@@ -57,14 +60,14 @@ jobs:
           export PATH=`pwd`/cov-analysis-linux64/bin:$PATH
 
           cd build
-          cov-build --dir cov-int make
+          cov-build --dir cov-int ninja
 
       - name: Print build log
         run: cat build/cov-int/build-log.txt
 
       - name: Submit the result to Coverity Scan
+        working-directory: ./build
         run: |
-          cd build
           tar czvf OpenAutoIt.tgz cov-int
           curl --form token=$TOKEN \
                --form email=hansfritzenmeister@protonmail.com \

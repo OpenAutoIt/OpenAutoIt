@@ -2,13 +2,21 @@ name: StaticAnalysis
 
 on:
   push:
+    tags:
     branches-ignore:
-      - 'fuzz/**'
       - 'dependabot/**'
   pull_request:
+    branches:
+      - main
+      - develop
+  release:
+    types: [published]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 1'
 
 concurrency:
-  group: ci-${{ github.head_ref || github.run_number }}-${{ github.ref }}-${{ github.workflow }}
+  group: ci-${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
@@ -24,61 +32,47 @@ jobs:
           submodules: recursive
           fetch-depth: 2
 
-      - uses: reviewdog/action-setup@v1.0.3
+      - name: Setup Reviewdog
+        uses: reviewdog/action-setup@v1.0.3
         with:
           reviewdog_version: latest
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -m
-          sudo apt-get install xorg-dev libglu1-mesa-dev libxrandr-dev
-
-      - name: Install cmake
-        uses: lukka/get-cmake@v3.23.0
-
-      - name: Install clang
-        run: external/Phi/scripts/ci/InstallTools.sh clang-${{ env.LLVM_VERSION }}
-
-      - name: Install cppcheck
+      - name: Install
         env:
-          CPPCHECK_VERSION: "2.6"
-        run: |
-          mkdir cppcheck
-          wget --no-check-certificate -O - "https://github.com/danmar/cppcheck/archive/${CPPCHECK_VERSION}.tar.gz" | tar --strip-components=1 -xz -C cppcheck
-
-          # Build CppCheck
-          cd cppcheck
-
-          mkdir build
-          cd build
-
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_MATCHCOMPILER=ON
-          cmake --build . -j2
-
-          # Install CppCheck
-          sudo make install
+          CPPCHECK_VERSION: "2.9"
+        run: external/Phi/scripts/ci/InstallTools.sh clang-${{ env.LLVM_VERSION }} cppcheck-${{ env.CPPCHECK_VERSION }} ninja
 
       - name: Configure
         run: |
           # Create build directory
-          mkdir build
+          mkdir build -p
           cd build
 
           # Generate compile_commands.json
-          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON
 
       - name: Run cppcheck
+        env:
+          CPPCHECK_SUPPRESSIONS: "--suppress=missingInclude --suppress=unusedFunction --suppress=unmatchedSuppression --suppress=syntaxError --suppress=cppcheckError --suppress=templateRecursion --suppress=noExplicitConstructor"
         run: |
-          cppcheck --project=build/compile_commands.json --enable=all --inconclusive --force --inline-suppr --max-ctu-depth=25 --template='{file}:{line}:{column}: {severity}: {message} [{id}](CWE {cwe})' -DPHI_CONFIG_ALWAYS_INLINE_OVERWRITE=inline -DPHI_CONFIG_NEVER_INLINE_OVERWRITE="" --suppress=missingInclude --suppress=unusedFunction --suppress=unmatchedSuppression -i external 2> cppcheck.log
+          cppcheck --project=build/compile_commands.json --enable=all --inconclusive --inline-suppr --template='{file}:{line}:{column}: {severity}: {message} [{id}](CWE {cwe})' -DPHI_CONFIG_ALWAYS_INLINE_OVERWRITE=inline -DPHI_CONFIG_NEVER_INLINE_OVERWRITE="" ${{ env.CPPCHECK_SUPPRESSIONS }} --output-file=cppcheck.log
 
       - name: Print results
         run: cat cppcheck.log
+
+      - name: Determine reporter
+        uses: haya14busa/action-cond@v1
+        id: reporter
+        with:
+          cond: ${{ github.event_name == 'pull_request' }}
+          if_true:  'github-pr-check'
+          if_false: 'github-check'
 
       - name: ReviewDog check
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat cppcheck.log | reviewdog -efm="%f:%l:%c: %m" -diff="git diff FETCH_HEAD" -reporter=github-check -name CppCheck -level warning
+          cat cppcheck.log | reviewdog -efm="%f:%l:%c: %m" -diff="git diff HEAD~1" -reporter=${{ steps.reporter.outputs.value }} -name CppCheck -level warning
 
   clang-tidy:
     runs-on: ubuntu-20.04
@@ -92,46 +86,54 @@ jobs:
           submodules: recursive
           fetch-depth: 2
 
-      - uses: reviewdog/action-setup@v1.0.3
+      - name: Setup Reviewdog
+        uses: reviewdog/action-setup@v1.0.3
         with:
           reviewdog_version: latest
 
-      - uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      - name: Install cmake
-        uses: lukka/get-cmake@v3.23.0
-
       - name: Install clang tidy
-        run: external/Phi/scripts/ci/InstallTools.sh clang-tidy-${{ env.LLVM_VERSION }}
+        run: external/Phi/scripts/ci/InstallTools.sh clang-tidy-${{ env.LLVM_VERSION }} ninja
 
       - name: Run clang-tidy
         run: |
           # Create build directory
-          mkdir build
+          mkdir build -p
           cd build
 
           # Generate compile_commands.json
-          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON
 
           # Run clang-tidy
-          run-clang-tidy-${{ env.LLVM_VERSION }} -quiet -header-filter ".*" > clang_tidy.log
+          run-clang-tidy-${{ env.LLVM_VERSION }} -quiet -header-filter=.* -j $(nproc) | tee clang_tidy.log
 
           # Filter out external libraries and test code
-          cat clang_tidy.log | grep -Ev "OpenAutoIt/external|tests" > clang_tidy_filtered.log || true
+          cat clang_tidy.log | grep -E "warning: |error: " > clang_tidy_filtered.log || true
 
           # Remove duplicate entries
-          sort clang_tidy_filtered.log | uniq -d > clang_tidy_output.log
+          sort clang_tidy_filtered.log | uniq > clang_tidy_output.log
 
       - name: Print results
         run: cat build/clang_tidy_output.log
+
+      - name: Determine reporter
+        uses: haya14busa/action-cond@v1
+        id: reporter
+        with:
+          cond: ${{ github.event_name == 'pull_request' }}
+          if_true:  'github-pr-check'
+          if_false: 'github-check'
 
       - name: ReviewDog check
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat build/clang_tidy_output.log | reviewdog -efm="%f:%l:%c: warning: %m" -diff="git diff FETCH_HEAD" -reporter=github-check -name Clang-Tidy -level warning
+          cat build/clang_tidy_output.log | reviewdog -efm="%f:%l:%c: warning: %m" -diff="git diff HEAD~1" -reporter=${{ steps.reporter.outputs.value }} -name Clang-Tidy -level warning
+
 
   include-what-you-use:
     runs-on: ubuntu-20.04
@@ -144,50 +146,51 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
-          fetch-depth: 2
 
-      - uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      - uses: reviewdog/action-setup@v1.0.3
+      - name: Setup Reviewdog
+        uses: reviewdog/action-setup@v1.0.3
         with:
           reviewdog_version: latest
 
-      - name: Install cmake
-        uses: lukka/get-cmake@v3.23.0
-
-      - name: Install Include-What-You-Use
+      - name: Install
         run: external/Phi/scripts/ci/InstallTools.sh iwyu-${{ env.LLVM_VERSION }} ninja
-
-      - name: Verify installation
-        run: |
-          iwyu_tool.py --help
-          include-what-you-use --version
 
       - name: Run Include-What-You-Use
         run: |
           # Create build directory
-          mkdir build
+          mkdir build -p
           cd build
 
           # Configure
-          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON
 
           # Run include-what-you-use
-          iwyu_tool.py -p . -o clang -- -Xiwyu --cxx17ns | tee iwyu.log || true
+          iwyu_tool.py ../OpenAutoItParser ../tools --jobs $(nproc) -p . -o clang -- -Xiwyu --cxx17ns | tee iwyu.log
 
           # Filter out correct includes and generated code
-          cat iwyu.log | grep -Ev "#includes/fwd-decls are correct" | tee iwyu_filtered.log || true
+          cat iwyu.log | grep -Ev "#includes/fwd-decls are correct" > iwyu_filtered.log || true
 
       - name: Print results
         run: cat build/iwyu_filtered.log
+
+      - name: Determine reporter
+        uses: haya14busa/action-cond@v1
+        id: reporter
+        with:
+          cond: ${{ github.event_name == 'pull_request' }}
+          if_true:  'github-pr-check'
+          if_false: 'github-check'
 
       - name: ReviewDog check
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat build/iwyu_filtered.log | reviewdog -efm="%Z%A%f:%l:%c: error: %m" -efm="%C%m" -diff="git diff FETCH_HEAD" -reporter=github-check -name include-what-you-use -level warning
+          cat build/iwyu_filtered.log | reviewdog -efm="%Z%A%f:%l:%c: error: %m" -efm="%C%m" -diff="git diff HEAD~1" -reporter=${{ steps.reporter.outputs.value }} -name include-what-you-use -level warning
 
   cmake-lint:
     runs-on: ubuntu-20.04
@@ -196,30 +199,388 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 2
+          submodules: recursive
 
-      - uses: reviewdog/action-setup@v1.0.3
+      - name: Setup Reviewdog
+        uses: reviewdog/action-setup@v1.0.3
         with:
           reviewdog_version: latest
 
-      - uses: actions/setup-python@v4
+      - name: Setup python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      - name: Install cmake-lint
-        run: |
-          sudo -H pip3 install --upgrade pip
-          sudo -H pip3 install cmake-format
+      - name: Install
+        run: external/Phi/scripts/ci/InstallTools.sh cmake-format
 
       - name: Run cmake-lint
-        run: |
-          cmake-lint $(find -iregex "./.*\.cmake" -or -iregex "./.*\CMakeLists\.txt") -c ".cmake-format.yaml" --suppress-decorations --outfile-path cmake_lint.log || true
+        run: cmake-lint $(find -iregex "./.*\.cmake" -or -iregex "./.*\CMakeLists\.txt") -c ".cmake-format.yaml" --suppress-decorations --outfile-path cmake_lint.log || true
 
       - name: Print results
         run: cat cmake_lint.log
+
+      - name: Determine reporter
+        uses: haya14busa/action-cond@v1
+        id: reporter
+        with:
+          cond: ${{ github.event_name == 'pull_request' }}
+          if_true:  'github-pr-check'
+          if_false: 'github-check'
 
       - name: ReviewDog check
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat cmake_lint.log | reviewdog -efm="%f:%l: %m" -diff="git diff FETCH_HEAD" -reporter=github-check -name cmake-lint -level warning
+          cat cmake_lint.log | reviewdog -efm="%f:%l: %m" -diff="git diff HEAD~1" -reporter=${{ steps.reporter.outputs.value }} -name cmake-lint -level warning
+
+  pvs-studio:
+    runs-on: ubuntu-20.04
+    env:
+      LLVM_VERSION: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Setup Environment
+        run: external/Phi/scripts/ci/SetupEnvironment.sh
+
+      - name: Setup Reviewdog
+        uses: reviewdog/action-setup@v1.0.2
+        with:
+          reviewdog_version: latest
+
+      - name: Install
+        run: external/Phi/scripts/ci/InstallTools.sh clang-${{ env.LLVM_VERSION }} pvs-studio ninja
+
+      - name: Configure build directory
+        run: |
+          mkdir build -p
+          cd build
+
+          # Configure
+          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON
+
+      - name: Run PVS-Studio
+        working-directory: ./build
+        run: |
+          # Create License
+          pvs-studio-analyzer credentials ${{ secrets.PVS_USERNAME }} ${{ secrets.PVS_KEY }} -o PVS-Studio.lic
+
+          # Run analysis
+          pvs-studio-analyzer analyze --threads $(nproc) --lic-file PVS-Studio.lic --output-file PVS-Studio.log --exclude-path ../external
+
+          # Convert to readable format
+          plog-converter --renderTypes errorfile PVS-Studio.log --analyzer "GA:1,2,3;OP:1,2,3;64:1,2,3;CS:1,2,3" --output PVS-Studio.err
+
+          # Filter out external libraries, test code and help message
+          cat PVS-Studio.err | grep -Ev "external|https://www.viva64.com/en/w/" > PVS-Studio_filtered.err || true
+
+      - name: Print results
+        run: cat build/PVS-Studio_filtered.err
+
+      - name: Determine reporter
+        uses: haya14busa/action-cond@v1
+        id: reporter
+        with:
+          cond: ${{ github.event_name == 'pull_request' }}
+          if_true:  'github-pr-check'
+          if_false: 'github-check'
+
+      - name: ReviewDog check
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat build/PVS-Studio_filtered.err | reviewdog -efm="%f:%l:%c: %m" -diff="git diff HEAD~1" -reporter=${{ steps.reporter.outputs.value }} -name PVS-Studio -level warning
+
+  code-ql:
+    runs-on: ubuntu-22.04
+
+    env:
+      CODEQL_ACTION_EXTRA_OPTIONS: '{"database": {"run-queries": ["--off-heap-ram=0"]}}'
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        language: [ 'cpp' ]
+
+        compiler:
+          - 'gcc-12'
+          - 'clang-15'
+
+        build_type:
+          - 'Debug'
+          - 'RelWithDebInfo'
+          - 'Release'
+
+    steps:
+      # NOTE: We won't cache the compiliation since CodeQL requires a full rebuild for analysis to work
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Setup Environment
+        run: external/Phi/scripts/ci/SetupEnvironment.sh
+
+      - name: Install compiler
+        run: external/Phi/scripts/ci/InstallTools.sh ${{ matrix.compiler }} ninja
+
+      - name: Configure build directory
+        run: |
+          mkdir build -p
+          cd build
+
+          cmake -DCMAKE_BUILD_TYPE:STRING=${{ matrix.build_type }} -DOA_COVERAGE_BUILD:BOOL=${{ matrix.build_type == 'Debug' }} ..
+
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        # Override language selection by uncommenting this and choosing your languages
+        with:
+          languages: ${{ matrix.language }}
+          # If you wish to specify custom queries, you can do so here or in a config file.
+          # By default, queries listed here will override any specified in a config file.
+          # Prefix the list here with "+" to use these queries and those in the config file.
+          # queries: ./path/to/local/query, your-org/your-repo/queries@main
+
+      - name: Build
+        working-directory: ./build
+        run: cmake --build . --config ${{ matrix.build_type }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  mull:
+    runs-on: ubuntu-20.04
+    env:
+      LLVM_VERSION: 12
+      MULL_VERSION: 12
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Setup Environment
+        run: external/Phi/scripts/ci/SetupEnvironment.sh
+
+      - name: Setup Reviewdog
+        uses: reviewdog/action-setup@v1.0.3
+        with:
+          reviewdog_version: latest
+
+      - name: Install compiler / mull
+        run: external/Phi/scripts/ci/InstallTools.sh clang-${{ env.LLVM_VERSION }} mull-${{ env.MULL_VERSION }} ninja
+
+      - name: Configure
+        run: |
+          # Create build directory
+          mkdir build -p
+          cd build
+
+          # Generate compile_commands.json
+          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON -DCMAKE_CXX_FLAGS:STRING="-O0 -fexperimental-new-pass-manager -fpass-plugin=/usr/lib/mull-ir-frontend-${{ env.MULL_VERSION }} -g -grecord-command-line -fprofile-instr-generate -fcoverage-mapping" -DCMAKE_BUILD_TYPE:STRING=Debug
+
+          # Create mull.yml
+          echo "mutators:"  >> mull.yml
+          echo " - cxx_all" >> mull.yml
+
+      - name: Build
+        working-directory: ./build
+        run: cmake --build .
+
+      - name: Run mull
+        working-directory: ./build
+        run: |
+          # Print all executables we found
+          echo "Executables to test:"
+          find bin -type f -iname "OpenAutoIt*"
+
+          find bin -type f -iname "OpenAutoIt*" -exec bash -c 'mull-runner-${{ env.MULL_VERSION }} $0' {} \; 2>&1 | tee --append mull_report.log
+
+          # Remove status lines
+          cat mull_report.log | grep "warning: Survived:" > mull_report_clean.log || true
+
+          # Remove cxx_remove_void_call
+          cat mull_report_clean.log | grep -Ev "\[cxx_remove_void_call\]" > mull_report_clean2.log || true
+
+          # Remove duplicate entries
+          sort mull_report_clean2.log | uniq -d > mull_report_filtered.log || true
+
+      - name: Print results
+        run: cat build/mull_report_filtered.log
+
+      - name: Determine reporter
+        uses: haya14busa/action-cond@v1
+        id: reporter
+        with:
+          cond: ${{ github.event_name == 'pull_request' }}
+          if_true:  'github-pr-check'
+          if_false: 'github-check'
+
+      - name: ReviewDog check
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat build/mull_report_filtered.log | reviewdog -efm="%f:%l:%c: warning: %m" -diff="git diff" -reporter=${{ steps.reporter.outputs.value }} -name mull -level warning
+
+  msvc-code-analysis:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+    runs-on: windows-latest
+
+    # Default windows to use bash
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        build_type:
+          - 'Debug'
+          - 'RelWithDebInfo'
+          - 'Release'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Configure
+        run: |
+          # Create build directory
+          mkdir build -p
+          cd build
+
+          # Configure
+          cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+      - name: Build
+        working-directory: ./build
+        run: cmake --build . --config ${{ matrix.build_type }}
+
+      - name: Initialize MSVC Code Analysis
+        uses: microsoft/msvc-code-analysis-action@v0.1.1
+        # Provide a unique ID to access the sarif output path
+        id: run-analysis
+        with:
+          cmakeBuildDirectory: '${{ github.workspace }}/build'
+          buildConfiguration: ${{ matrix.build_type }}
+          # Ruleset file that will determine what checks will be run
+          ruleset: NativeRecommendedRules.ruleset
+
+      # Upload SARIF file to GitHub Code Scanning Alerts
+      - name: Upload SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: ${{ steps.run-analysis.outputs.sarif }}
+
+      # Upload SARIF file as an Artifact to download and view
+      - name: Upload SARIF as an Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: sarif-file
+          path: ${{ steps.run-analysis.outputs.sarif }}
+
+  dev-skim:
+    name: DevSkim
+    runs-on: ubuntu-20.04
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Run DevSkim scanner
+        uses: microsoft/DevSkim-Action@v1
+
+      - name: Upload DevSkim scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: devskim-results.sarif
+
+  codacy-security-scan:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+
+    name: Codacy Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
+      - name: Run Codacy Analysis CLI
+        uses: codacy/codacy-analysis-cli-action@v4.1.0
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          verbose: true
+          output: results.sarif
+          format: sarif
+          # Adjust severity of non-security issues
+          gh-code-scanning-compat: true
+          # Force 0 exit code to allow SARIF file generation
+          # This will handover control about PR rejection to the GitHub side
+          max-allowed-issues: 2147483647
+          run-staticcheck: "true"
+
+      # Upload the SARIF file generated in the previous step
+      - name: Upload SARIF results file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: results.sarif
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Determine reporter
+        uses: haya14busa/action-cond@v1
+        id: reporter
+        with:
+          cond: ${{ github.event_name == 'pull_request' }}
+          if_true:  'github-pr-check'
+          if_false: 'github-check'
+
+      - name: Run shellcheck with reviewdog
+        uses: reviewdog/action-shellcheck@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: ${{ steps.reporter.outputs.value }}
+          level: warning
+          path: "./scripts"
+          pattern: "*.sh"
+          exclude: "./.git/*"
