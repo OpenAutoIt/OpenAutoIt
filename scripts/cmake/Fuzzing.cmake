@@ -15,8 +15,6 @@ function(oa_define_fuzzer name source libraries)
   target_link_libraries(${name} PRIVATE -fsanitize=fuzzer ${libraries})
   target_compile_options(${name} PRIVATE -fsanitize=fuzzer)
   target_include_directories(${name} PRIVATE "include")
-  # Don't inline functions defined as always inline
-  target_compile_definitions(${name} PRIVATE PHI_CONFIG_ALWAYS_INLINE_OVERWRITE=PHI_NEVER_INLINE)
 
   phi_target_enable_sanitizer(TARGET ${name} SANITIZERS "address;undefined")
 
