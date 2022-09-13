@@ -35,6 +35,10 @@ jobs:
       - name: Run clang-format
         run: clang-format-${{ env.LLVM_VERSION }} -i $(find -iname "*.[hc]pp" -type f)
 
+      - name: Reset external
+        working-directory: ./external
+        run: git reset --hard
+
       - name: Display diff
         run: git diff
 
@@ -68,6 +72,10 @@ jobs:
 
       - name: Run cmake-format
         run: cmake-format -c ".cmake-format.yaml" -i $(find -iregex "./.*\.cmake" -or -iregex "./.*\CMakeLists\.txt")
+
+      - name: Reset external
+        working-directory: ./external
+        run: git reset --hard
 
       - name: Display diff
         run: git diff
@@ -105,6 +113,10 @@ jobs:
 
           # Ensure files end with a new line
           find . -iregex '.*\.\(hpp\|cpp\|yaml\|yml\|md\|txt\|cmake\|sh\)' -type f -exec bash -c 'tail -c1 < "$0" | read -r _ || echo >> "$0"' {} \;
+
+      - name: Reset external
+        working-directory: ./external
+        run: git reset --hard
 
       - name: Display diff
         run: git diff
