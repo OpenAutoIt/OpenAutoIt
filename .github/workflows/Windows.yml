@@ -30,6 +30,11 @@ concurrency:
   group: ci-${{ github.workflow }}
   cancel-in-progress: true
 
+# Default windows to use bash
+defaults:
+  run:
+    shell: bash
+
 jobs:
   Build:
     runs-on: windows-2022
