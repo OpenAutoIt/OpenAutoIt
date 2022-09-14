@@ -505,8 +505,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Run DevSkim scanner
         uses: microsoft/DevSkim-Action@v1
@@ -559,8 +557,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Determine reporter
         uses: haya14busa/action-cond@v1
