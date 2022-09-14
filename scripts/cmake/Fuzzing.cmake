@@ -19,7 +19,12 @@ function(oa_define_fuzzer name source libraries)
   target_compile_options(${name} PRIVATE -fsanitize=fuzzer)
   target_include_directories(${name} PRIVATE "include")
 
-  phi_target_enable_sanitizer(TARGET ${name} SANITIZERS "address;undefined")
+  if(${OA_ENABLE_SANITIZER_THREAD})
+    # address sanitizer and threads sanitizer are not compatible
+    phi_target_enable_sanitizer(TARGET ${name} SANITIZERS "undefined")
+  else()
+    phi_target_enable_sanitizer(TARGET ${name} SANITIZERS "address;undefined")
+  endif()
 
   add_test(NAME ${name}_run COMMAND ${name} -max_total_time=${FUZZ_RUNTIME})
   add_test(NAME ${name}_run_only_ascii COMMAND ${name} -max_total_time=${FUZZ_RUNTIME}
