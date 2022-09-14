@@ -3,10 +3,11 @@
 #include "OpenAutoIt/AST/ASTExpression.hpp"
 #include "OpenAutoIt/AST/ASTStatement.hpp"
 #include "OpenAutoIt/Utililty.hpp"
+#include <phi/core/scope_ptr.hpp>
 
 namespace OpenAutoIt
 {
-    class ASTExpressionStatement : public ASTStatement
+    class ASTExpressionStatement final : public ASTStatement
     {
     public:
         [[nodiscard]] const char* Name() const noexcept override

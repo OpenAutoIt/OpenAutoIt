@@ -8,7 +8,7 @@
 
 namespace OpenAutoIt
 {
-    class ASTArraySubscriptExpression : public ASTExpression
+    class ASTArraySubscriptExpression final : public ASTExpression
     {
     public:
         [[nodiscard]] const char* Name() const noexcept override

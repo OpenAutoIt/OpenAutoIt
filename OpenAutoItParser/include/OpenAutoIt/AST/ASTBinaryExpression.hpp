@@ -8,7 +8,7 @@
 
 namespace OpenAutoIt
 {
-    class ASTBinaryExpression : public ASTExpression
+    class ASTBinaryExpression final : public ASTExpression
     {
     public:
         [[nodiscard]] const char* Name() const noexcept override

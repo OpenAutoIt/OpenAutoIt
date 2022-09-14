@@ -7,7 +7,7 @@
 
 namespace OpenAutoIt
 {
-    class ASTVariableExpression : public ASTExpression
+    class ASTVariableExpression final : public ASTExpression
     {
     public:
         [[nodiscard]] virtual const char* Name() const noexcept override

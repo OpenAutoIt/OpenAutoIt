@@ -7,7 +7,7 @@
 
 namespace OpenAutoIt
 {
-    class ASTIntegerLiteral : public ASTExpression
+    class ASTIntegerLiteral final : public ASTExpression
     {
     public:
         ASTIntegerLiteral(phi::i64 value) noexcept

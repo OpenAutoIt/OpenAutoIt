@@ -19,7 +19,7 @@ namespace OpenAutoIt
         phi::boolean                  as_const = false;
     };
 
-    class ASTFunctionDefinition : public ASTNode
+    class ASTFunctionDefinition final : public ASTNode
     {
     public:
         [[nodiscard]] const char* Name() const noexcept override

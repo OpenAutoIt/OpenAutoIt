@@ -9,7 +9,7 @@
 
 namespace OpenAutoIt
 {
-    class ASTWhileStatement : public ASTStatement
+    class ASTWhileStatement final : public ASTStatement
     {
     public:
         [[nodiscard]] virtual const char* Name() const noexcept override

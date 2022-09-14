@@ -9,7 +9,7 @@
 
 namespace OpenAutoIt
 {
-    class ASTFunctionCallExpression : public ASTExpression
+    class ASTFunctionCallExpression final : public ASTExpression
     {
     public:
         [[nodiscard]] const char* Name() const noexcept override

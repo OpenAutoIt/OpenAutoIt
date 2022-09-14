@@ -16,7 +16,7 @@ namespace OpenAutoIt
         std::vector<phi::scope_ptr<ASTStatement>> body;
     };
 
-    class ASTIfStatement : public ASTStatement
+    class ASTIfStatement final : public ASTStatement
     {
     public:
         [[nodiscard]] const char* Name() const noexcept override

@@ -13,7 +13,7 @@
 namespace OpenAutoIt
 {
     // TODO: Is an variableAssigment also an Expression like in C/C++?
-    class ASTVariableAssignment : public ASTStatement
+    class ASTVariableAssignment final : public ASTStatement
     {
     public:
         [[nodiscard]] const char* Name() const noexcept override

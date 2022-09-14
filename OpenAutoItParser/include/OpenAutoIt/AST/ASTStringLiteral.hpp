@@ -7,7 +7,7 @@
 
 namespace OpenAutoIt
 {
-    class ASTStringLiteral : public ASTExpression
+    class ASTStringLiteral final : public ASTExpression
     {
     public:
         [[nodiscard]] virtual const char* Name() const noexcept override

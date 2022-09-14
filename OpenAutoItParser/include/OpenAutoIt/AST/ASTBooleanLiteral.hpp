@@ -8,7 +8,7 @@
 
 namespace OpenAutoIt
 {
-    class ASTBooleanLiteral : public ASTExpression
+    class ASTBooleanLiteral final : public ASTExpression
     {
     public:
         ASTBooleanLiteral(phi::boolean value) noexcept

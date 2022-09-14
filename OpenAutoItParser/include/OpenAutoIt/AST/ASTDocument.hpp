@@ -10,7 +10,7 @@
 namespace OpenAutoIt
 {
     // TODO: Add file name, path maybe?
-    class ASTDocument : public ASTNode
+    class ASTDocument final : public ASTNode
     {
     public:
         [[nodiscard]] const char* Name() const noexcept override
