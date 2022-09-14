@@ -134,7 +134,6 @@ jobs:
         run: |
           cat build/clang_tidy_output.log | reviewdog -efm="%f:%l:%c: warning: %m" -diff="git diff HEAD~1" -reporter=${{ steps.reporter.outputs.value }} -name Clang-Tidy -level warning
 
-
   include-what-you-use:
     runs-on: ubuntu-20.04
     env:
