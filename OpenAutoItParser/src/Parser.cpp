@@ -182,66 +182,6 @@ namespace OpenAutoIt
         return phi::move(ParseDocument());
     }
 
-    Associativity Parser::GetOperatorAssociativity(const TokenKind token_kind) noexcept
-    {
-        switch (token_kind)
-        {
-            case TokenKind::OP_Raise:
-                return Associativity::Right;
-
-            default:
-                return Associativity::Left;
-        }
-    }
-
-    Associativity Parser::GetTokenAssociativity(const Token& token) noexcept
-    {
-        return GetOperatorAssociativity(token.GetTokenKind());
-    }
-
-    phi::boolean Parser::IsUnaryOperator(const TokenKind token_kind) noexcept
-    {
-        switch (token_kind)
-        {
-            case TokenKind::OP_Plus:
-            case TokenKind::OP_Minus:
-            case TokenKind::KW_Not:
-                return true;
-
-            default:
-                return false;
-        }
-    }
-
-    phi::boolean Parser::IsBinaryOperator(const TokenKind token_kind) noexcept
-    {
-        switch (token_kind)
-        {
-            case TokenKind::KW_And:
-            case TokenKind::KW_Or:
-            case TokenKind::OP_Equals:
-            case TokenKind::OP_PlusEquals:
-            case TokenKind::OP_MinusEquals:
-            case TokenKind::OP_MultiplyEquals:
-            case TokenKind::OP_DivideEquals:
-            case TokenKind::OP_Plus:
-            case TokenKind::OP_Minus:
-            case TokenKind::OP_Multiply:
-            case TokenKind::OP_Divide:
-            case TokenKind::OP_Raise:
-            case TokenKind::OP_EqualsEquals:
-            case TokenKind::OP_NotEqual:
-            case TokenKind::OP_GreaterThan:
-            case TokenKind::OP_GreaterThanEqual:
-            case TokenKind::OP_LessThan:
-            case TokenKind::OP_LessThanEqual:
-                return true;
-
-            default:
-                return false;
-        }
-    }
-
     const Token& Parser::CurrentToken() const noexcept
     {
         PHI_ASSERT(m_TokenStream.has_more());

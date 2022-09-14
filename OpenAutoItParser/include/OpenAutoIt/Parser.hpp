@@ -41,15 +41,68 @@ namespace OpenAutoIt
         phi::scope_ptr<ASTDocument> ParseDocument(TokenStream&& stream) noexcept;
 
     private:
-        [[nodiscard]] PHI_ATTRIBUTE_CONST static Associativity GetOperatorAssociativity(
-                const TokenKind token_kind) noexcept;
-        [[nodiscard]] PHI_ATTRIBUTE_CONST static Associativity GetTokenAssociativity(
-                const Token& token) noexcept;
+        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static Associativity GetOperatorAssociativity(
+                const TokenKind token_kind) noexcept
+        {
+            switch (token_kind)
+            {
+                case TokenKind::OP_Raise:
+                    return Associativity::Right;
 
-        [[nodiscard]] PHI_ATTRIBUTE_CONST static phi::boolean IsUnaryOperator(
-                const TokenKind token_kind) noexcept;
-        [[nodiscard]] PHI_ATTRIBUTE_CONST static phi::boolean IsBinaryOperator(
-                const TokenKind token_kind) noexcept;
+                default:
+                    return Associativity::Left;
+            }
+        }
+        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static Associativity GetTokenAssociativity(
+                const Token& token) noexcept
+        {
+            return GetOperatorAssociativity(token.GetTokenKind());
+        }
+
+        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static phi::boolean IsUnaryOperator(
+                const TokenKind token_kind) noexcept
+        {
+            switch (token_kind)
+            {
+                case TokenKind::OP_Plus:
+                case TokenKind::OP_Minus:
+                case TokenKind::KW_Not:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static phi::boolean IsBinaryOperator(
+                const TokenKind token_kind) noexcept
+        {
+            switch (token_kind)
+            {
+                case TokenKind::KW_And:
+                case TokenKind::KW_Or:
+                case TokenKind::OP_Equals:
+                case TokenKind::OP_PlusEquals:
+                case TokenKind::OP_MinusEquals:
+                case TokenKind::OP_MultiplyEquals:
+                case TokenKind::OP_DivideEquals:
+                case TokenKind::OP_Plus:
+                case TokenKind::OP_Minus:
+                case TokenKind::OP_Multiply:
+                case TokenKind::OP_Divide:
+                case TokenKind::OP_Raise:
+                case TokenKind::OP_EqualsEquals:
+                case TokenKind::OP_NotEqual:
+                case TokenKind::OP_GreaterThan:
+                case TokenKind::OP_GreaterThanEqual:
+                case TokenKind::OP_LessThan:
+                case TokenKind::OP_LessThanEqual:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
 
         [[nodiscard]] const Token& CurrentToken() const noexcept;
 
