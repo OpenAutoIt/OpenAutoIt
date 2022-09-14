@@ -12,8 +12,6 @@ add_executable(${PROJECT_NAME} ${OPENAUTOITPARSER_TEST_SOURCES} ${OPENAUTOITPARS
 
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenAutoItParser Phi::Test)
 
-target_include_directories(${PROJECT_NAME} PRIVATE "include")
-
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Tests")
 
 phi_add_test(TARGET ${PROJECT_NAME})
