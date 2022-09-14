@@ -421,8 +421,7 @@ namespace OpenAutoIt
                         TokenKind pre_processor_token_kind =
                                 lookup_pre_processor(TokenText(begin_of_token));
 
-                        if (pre_processor_token_kind == TokenKind::PP_CommentsEnd ||
-                            pre_processor_token_kind == TokenKind::PP_CommentsEnd)
+                        if (pre_processor_token_kind == TokenKind::PP_CommentsEnd)
                         {
                             m_InsideMultiLineComment = false;
 
@@ -564,8 +563,7 @@ namespace OpenAutoIt
                 TokenKind pre_processor_token_kind =
                         lookup_pre_processor(TokenText(begin_of_token));
 
-                if (pre_processor_token_kind == TokenKind::PP_CommentsStart ||
-                    pre_processor_token_kind == TokenKind::PP_CommentsStart)
+                if (pre_processor_token_kind == TokenKind::PP_CommentsStart)
                 {
                     m_InsideMultiLineComment = true;
                 }
