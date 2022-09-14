@@ -3,10 +3,10 @@
 #include "OpenAutoIt/Token.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
 #include "TokenStream.hpp"
+#include <phi/container/string_view.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/sized_types.hpp>
 #include <phi/core/types.hpp>
-#include <phi/container/string_view.hpp>
 
 namespace OpenAutoIt
 {

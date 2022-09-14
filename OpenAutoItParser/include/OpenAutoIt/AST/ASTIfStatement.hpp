@@ -39,7 +39,7 @@ namespace OpenAutoIt
             ret += indent_times(indent);
             ret += "Body:\n";
             ret += indent_times(indent);
-            
+
             if (m_IfCase.body.empty())
             {
                 ret += "[]\n";
