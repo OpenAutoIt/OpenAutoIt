@@ -76,6 +76,8 @@ if(DEFINED ENV{OA_DYNAMIC_TEST})
 
   if(${dyn_test} STREQUAL "none")
     # Nothing to configure
+  elseif(${dyn_test} STREQUAL "coverage")
+    phi_set_cache_value(NAME OA_COVERAGE_BUILD VALUE TRUE)
   elseif(${dyn_test} STREQUAL "asan")
     phi_set_cache_value(NAME OA_ENABLE_SANITIZER_ADDRESS VALUE TRUE)
   elseif(${dyn_test} STREQUAL "lsan")
