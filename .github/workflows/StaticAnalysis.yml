@@ -317,9 +317,7 @@ jobs:
           - 'clang-15'
 
         build_type:
-          - 'Debug'
           - 'RelWithDebInfo'
-          - 'Release'
 
     steps:
       # NOTE: We won't cache the compiliation since CodeQL requires a full rebuild for analysis to work
