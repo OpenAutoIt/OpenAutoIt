@@ -363,7 +363,7 @@ namespace OpenAutoIt
                 }
                 case TokenKind::Comma:
                 case TokenKind::RParen: {
-                    return parameter;
+                    return phi::move(parameter);
                 }
                 default: {
                     // TODO: Report error
