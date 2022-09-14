@@ -63,7 +63,7 @@ jobs:
 
           # Build it
           cmake -DCMAKE_BUILD_TYPE=Debug -DOA_COVERAGE_BUILD=ON ..
-          cmake --build . --clean-first
+          cmake --build .
 
           # Generate coverage data
           ctest . -C Debug
