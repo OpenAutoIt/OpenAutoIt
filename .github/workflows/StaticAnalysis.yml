@@ -449,9 +449,7 @@ jobs:
 
       matrix:
         build_type:
-          - 'Debug'
           - 'RelWithDebInfo'
-          - 'Release'
 
     steps:
       - name: Checkout repository
