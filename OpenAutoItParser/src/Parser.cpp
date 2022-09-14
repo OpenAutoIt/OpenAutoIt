@@ -1002,6 +1002,7 @@ namespace OpenAutoIt
     }
 
     PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wsuggest-attribute=const")
+    PHI_GCC_SUPPRESS_WARNING("-Wsuggest-attribute=pure")
 
     phi::scope_ptr<ASTArraySubscriptExpression> ParseArraySubscriptExpression() noexcept
     {
