@@ -36,9 +36,6 @@ jobs:
     env:
       LLVM_VERSION: "15"
       LLVM_PROFILE_FILE: "profile-%p.profraw"
-      CMAKE_BUILD_PARALLEL_LEVEL: "2"
-      CTEST_PARALLEL_LEVEL: "2"
-      CTEST_OUTPUT_ON_FAILURE: "ON"
 
     steps:
       - name: Checkout
