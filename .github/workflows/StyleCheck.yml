@@ -37,7 +37,7 @@ jobs:
 
       - name: Reset external
         working-directory: ./external
-        run: git reset --hard
+        run: git submodule foreach --recursive git reset --hard
 
       - name: Display diff
         run: git diff
@@ -75,7 +75,7 @@ jobs:
 
       - name: Reset external
         working-directory: ./external
-        run: git reset --hard
+        run: git submodule foreach --recursive git reset --hard
 
       - name: Display diff
         run: git diff
@@ -116,7 +116,7 @@ jobs:
 
       - name: Reset external
         working-directory: ./external
-        run: git reset --hard
+        run: git submodule foreach --recursive git reset --hard
 
       - name: Display diff
         run: git diff
@@ -150,6 +150,10 @@ jobs:
           find . -iregex '.*\.\(hpp\|cpp\|yaml\|yml\|md\|txt\|cmake\|sh\)' -type f -exec bash -c 'recode UTF-8 "$0" 2> /dev/null' {} \;
           # Ensure that files have LF line endings and do not contain a BOM.
           find . -iregex '.*\.\(hpp\|cpp\|yaml\|yml\|md\|txt\|cmake\|sh\)' -type f -exec bash -c 'dos2unix "$0" 2> /dev/null' {} \;
+
+      - name: Reset external
+        working-directory: ./external
+        run: git submodule foreach --recursive git reset --hard
 
       - name: Display diff
         run: git diff
