@@ -71,7 +71,7 @@ add_subdirectory("tools")
 
 # Check for settings passed through the environment
 if(DEFINED ENV{OA_DYNAMIC_TEST})
-  set(dyn_test ${OA_DYNAMIC_TEST})
+  set(dyn_test $ENV{OA_DYNAMIC_TEST})
   phi_log("Configuring dynamic testing ${dyn_test}")
 
   if(${dyn_test} STREQUAL "none")
