@@ -29,6 +29,7 @@
 #include <phi/core/scope_ptr.hpp>
 #include <phi/core/size_t.hpp>
 #include <phi/core/sized_types.hpp>
+#include <phi/text/hex_digit_value.hpp>
 #include <phi/text/is_digit.hpp>
 #include <phi/text/is_hex_digit.hpp>
 #include <cstddef>
@@ -858,28 +859,6 @@ namespace OpenAutoIt
         return {};
     }
 
-    constexpr phi::uint8_t HexCharValue(const char c) noexcept
-    {
-        if (phi::is_digit(c))
-        {
-            return c - '0';
-        }
-
-        if (c >= 'a' && c <= 'f')
-        {
-            return 10 + (c - 'a');
-        }
-
-        if (c >= 'A' && c <= 'F')
-        {
-            return 10 + (c - 'A');
-        }
-
-#if !defined(DLXEMU_COVERAGE_BUILD)
-        PHI_ASSERT_NOT_REACHED();
-#endif
-    }
-
     phi::scope_ptr<ASTIntegerLiteral> Parser::ParseIntegerLiteral() noexcept
     {
         const Token& token = CurrentToken();
@@ -915,7 +894,7 @@ namespace OpenAutoIt
                 PHI_ASSERT(phi::is_hex_digit(character));
 
                 value <<= 4;
-                value |= HexCharValue(character);
+                value |= phi::hex_digit_value(character).unsafe();
             }
             else
             {
