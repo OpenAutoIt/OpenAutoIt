@@ -97,8 +97,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Install
         run: sudo apt-get install moreutils
@@ -113,10 +111,6 @@ jobs:
 
           # Ensure files end with a new line
           find . -iregex '.*\.\(hpp\|cpp\|yaml\|yml\|md\|txt\|cmake\|sh\)' -type f -exec bash -c 'tail -c1 < "$0" | read -r _ || echo >> "$0"' {} \;
-
-      - name: Reset external
-        working-directory: ./external
-        run: git submodule foreach --recursive git reset --hard
 
       - name: Display diff
         run: git diff
@@ -138,8 +132,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Install
         run: sudo apt-get install dos2unix recode
@@ -148,12 +140,9 @@ jobs:
         run: |
           # Ensure that files are UTF-8 formatted
           find . -iregex '.*\.\(hpp\|cpp\|yaml\|yml\|md\|txt\|cmake\|sh\)' -type f -exec bash -c 'recode UTF-8 "$0" 2> /dev/null' {} \;
+
           # Ensure that files have LF line endings and do not contain a BOM.
           find . -iregex '.*\.\(hpp\|cpp\|yaml\|yml\|md\|txt\|cmake\|sh\)' -type f -exec bash -c 'dos2unix "$0" 2> /dev/null' {} \;
-
-      - name: Reset external
-        working-directory: ./external
-        run: git submodule foreach --recursive git reset --hard
 
       - name: Display diff
         run: git diff
@@ -175,8 +164,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Determine reporter
         uses: haya14busa/action-cond@v1
@@ -200,8 +187,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Determine reporter
         uses: haya14busa/action-cond@v1
@@ -225,8 +210,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Determine reporter
         uses: haya14busa/action-cond@v1
@@ -249,8 +232,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Determine reporter
         uses: haya14busa/action-cond@v1
@@ -273,8 +254,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Determine reporter
         uses: haya14busa/action-cond@v1
@@ -297,8 +276,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          submodules: recursive
 
       - name: Determine reporter
         uses: haya14busa/action-cond@v1
