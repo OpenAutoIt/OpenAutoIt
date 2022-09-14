@@ -1,6 +1,7 @@
 #pragma once
 
 #include <magic_enum.hpp>
+#include <phi/compiler_support/extended_attributes.hpp>
 #include <phi/compiler_support/warning.hpp>
 #include <phi/core/size_t.hpp>
 #include <string_view>
@@ -262,7 +263,8 @@ namespace OpenAutoIt
 
     PHI_GCC_SUPPRESS_WARNING_POP()
 
-    [[nodiscard]] constexpr const char* get_token_name(TokenKind token_kind) noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE constexpr const char* get_token_name(
+            TokenKind token_kind) noexcept
     {
         switch (token_kind)
         {

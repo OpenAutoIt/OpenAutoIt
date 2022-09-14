@@ -3,6 +3,7 @@
 #include "OpenAutoIt/Token.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
+#include <phi/compiler_support/extended_attributes.hpp>
 #include <phi/container/array.hpp>
 #include <phi/container/string_view.hpp>
 #include <phi/core/assert.hpp>
@@ -268,7 +269,8 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
          {"?", OpenAutoIt::TokenKind::OP_TernaryIf},
          {":", OpenAutoIt::TokenKind::OP_TernaryElse}}};
 
-[[nodiscard]] OpenAutoIt::TokenKind lookup_operator(phi::string_view token) noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE OpenAutoIt::TokenKind lookup_operator(
+        phi::string_view token) noexcept
 {
     static constexpr auto map =
             LookUpMap<phi::string_view, OpenAutoIt::TokenKind, OperatorValues.size()>(
@@ -363,12 +365,12 @@ namespace OpenAutoIt
         m_Column     = 1u;
     }
 
-    phi::boolean Lexer::IsFinished() const noexcept
+    PHI_ATTRIBUTE_PURE phi::boolean Lexer::IsFinished() const noexcept
     {
         return m_Iterator == m_Source.end();
     }
 
-    phi::boolean Lexer::HasInput() const noexcept
+    PHI_ATTRIBUTE_PURE phi::boolean Lexer::HasInput() const noexcept
     {
         return !m_Source.is_empty();
     }

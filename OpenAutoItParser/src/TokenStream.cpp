@@ -1,6 +1,7 @@
 #include "OpenAutoIt/TokenStream.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
 #include "phi/core/assert.hpp"
+#include <phi/compiler_support/extended_attributes.hpp>
 #include <phi/core/types.hpp>
 #include <iterator>
 
@@ -45,7 +46,8 @@ namespace OpenAutoIt
         m_Index = 0u;
     }
 
-    phi::boolean TokenStream::has_x_more(phi::usize amount) const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::has_x_more(
+            phi::usize amount) const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -62,7 +64,7 @@ namespace OpenAutoIt
         return true;
     }
 
-    phi::boolean TokenStream::has_more() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::has_more() const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -71,7 +73,7 @@ namespace OpenAutoIt
         return m_Index < m_Tokens.size();
     }
 
-    phi::boolean TokenStream::reached_end() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::reached_end() const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -80,7 +82,7 @@ namespace OpenAutoIt
         return m_Index >= m_Tokens.size();
     }
 
-    const Token& TokenStream::look_ahead() const noexcept
+    PHI_ATTRIBUTE_PURE const Token& TokenStream::look_ahead() const noexcept
     {
         PHI_ASSERT(!reached_end());
 #if defined(PHI_DEBUG)
@@ -113,7 +115,8 @@ namespace OpenAutoIt
         {}
     }
 
-    const Token* TokenStream::find_first_token_of_type(TokenKind type) const noexcept
+    PHI_ATTRIBUTE_PURE const Token* TokenStream::find_first_token_of_type(
+            TokenKind type) const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -130,7 +133,8 @@ namespace OpenAutoIt
         return nullptr;
     }
 
-    const Token* TokenStream::find_last_token_of_type(TokenKind type) const noexcept
+    PHI_ATTRIBUTE_PURE const Token* TokenStream::find_last_token_of_type(
+            TokenKind type) const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -149,7 +153,7 @@ namespace OpenAutoIt
         return last;
     }
 
-    const Token& TokenStream::at(phi::usize index) const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE const Token& TokenStream::at(phi::usize index) const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -159,7 +163,7 @@ namespace OpenAutoIt
         return m_Tokens[index.unsafe()];
     }
 
-    phi::usize TokenStream::size() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE phi::usize TokenStream::size() const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -168,12 +172,12 @@ namespace OpenAutoIt
         return m_Tokens.size();
     }
 
-    [[nodiscard]] phi::boolean TokenStream::is_empty() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::is_empty() const noexcept
     {
         return m_Tokens.empty();
     }
 
-    [[nodiscard]] phi::usize TokenStream::current_position() noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE phi::usize TokenStream::current_position() noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -191,7 +195,7 @@ namespace OpenAutoIt
         m_Index = index;
     }
 
-    TokenStream::const_iterator TokenStream::begin() const noexcept
+    PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::begin() const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -200,7 +204,7 @@ namespace OpenAutoIt
         return m_Tokens.begin();
     }
 
-    TokenStream::const_iterator TokenStream::cbegin() const noexcept
+    PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cbegin() const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -209,7 +213,7 @@ namespace OpenAutoIt
         return m_Tokens.cbegin();
     }
 
-    TokenStream::const_iterator TokenStream::end() const noexcept
+    PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::end() const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -218,7 +222,7 @@ namespace OpenAutoIt
         return m_Tokens.end();
     }
 
-    TokenStream::const_iterator TokenStream::cend() const noexcept
+    PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cend() const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -227,7 +231,8 @@ namespace OpenAutoIt
         return m_Tokens.cend();
     }
 
-    [[nodiscard]] TokenStream::const_reverse_iterator TokenStream::rbegin() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE TokenStream::const_reverse_iterator TokenStream::rbegin()
+            const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -236,7 +241,8 @@ namespace OpenAutoIt
         return m_Tokens.rbegin();
     }
 
-    [[nodiscard]] TokenStream::const_reverse_iterator TokenStream::rend() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE TokenStream::const_reverse_iterator TokenStream::rend()
+            const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -245,7 +251,7 @@ namespace OpenAutoIt
         return m_Tokens.rend();
     }
 
-    [[nodiscard]] const Token& TokenStream::front() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE const Token& TokenStream::front() const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);
@@ -254,7 +260,7 @@ namespace OpenAutoIt
         return m_Tokens.front();
     }
 
-    [[nodiscard]] const Token& TokenStream::back() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE const Token& TokenStream::back() const noexcept
     {
 #if defined(PHI_DEBUG)
         PHI_ASSERT(m_Finialized);

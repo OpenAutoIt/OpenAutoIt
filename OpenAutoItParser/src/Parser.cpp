@@ -22,6 +22,7 @@
 #include "OpenAutoIt/VariableScope.hpp"
 #include <magic_enum.hpp>
 #include <phi/compiler_support/unused.hpp>
+#include <phi/compiler_support/warning.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/move.hpp>
@@ -1000,12 +1001,16 @@ namespace OpenAutoIt
         return phi::move(variable_expression);
     }
 
+    PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wsuggest-attribute=const")
+
     phi::scope_ptr<ASTArraySubscriptExpression> ParseArraySubscriptExpression() noexcept
     {
         // TODO: Implement me
 
         return phi::scope_ptr<ASTArraySubscriptExpression>{nullptr};
     }
+
+    PHI_GCC_SUPPRESS_WARNING_POP()
 
     phi::scope_ptr<ASTBooleanLiteral> Parser::ParseBooleanLiteral() noexcept
     {
