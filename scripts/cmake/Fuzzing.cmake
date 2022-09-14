@@ -10,7 +10,7 @@ file(
   CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/OpenAutoItParser/fuzzers/samples/*)
 
 function(oa_define_fuzzer name source libraries)
-  if(NOT PHI_COMPILER_CLANG)
+  if(NOT PHI_COMPILER_CLANG OR ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     return()
   endif()
 
