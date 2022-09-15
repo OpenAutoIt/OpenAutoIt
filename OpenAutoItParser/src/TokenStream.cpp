@@ -2,6 +2,7 @@
 #include "OpenAutoIt/TokenKind.hpp"
 #include "phi/core/assert.hpp"
 #include <phi/compiler_support/extended_attributes.hpp>
+#include <phi/compiler_support/warning.hpp>
 #include <phi/core/types.hpp>
 #include <iterator>
 
@@ -102,6 +103,8 @@ namespace OpenAutoIt
         m_Index += 1u;
     }
 
+    PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wsuggest-attribute=noreturn")
+
     void TokenStream::skip(phi::usize n) noexcept
     {
         PHI_ASSERT(!reached_end());
@@ -111,9 +114,10 @@ namespace OpenAutoIt
         PHI_ASSERT(has_x_more(n));
         PHI_ASSERT(n != 0u);
 
-        for (; n > 0u; --n, ++m_Index)
-        {}
+        m_Index += n;
     }
+
+    PHI_GCC_SUPPRESS_WARNING_POP()
 
     PHI_ATTRIBUTE_PURE const Token* TokenStream::find_first_token_of_type(
             TokenKind type) const noexcept
