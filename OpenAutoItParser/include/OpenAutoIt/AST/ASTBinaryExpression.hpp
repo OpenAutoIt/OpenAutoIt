@@ -22,7 +22,7 @@ namespace OpenAutoIt
 
             ret += indent_times(indent);
             ret += "BinaryExpression [";
-            ret += get_token_name(m_Operator);
+            ret += enum_name(m_Operator);
             ret += "]\n";
             ret += indent_times(indent) + "[\n";
             ret += m_LHS->DumpAST(indent + 1u);

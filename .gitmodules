@@ -6,7 +6,3 @@ branch = develop
 path = external/fmt
 url = https://github.com/fmtlib/fmt.git
 branch = master
-[submodule "external/magic_enum"]
-path = external/magic_enum
-url = https://github.com/Neargye/magic_enum.git
-branch = master

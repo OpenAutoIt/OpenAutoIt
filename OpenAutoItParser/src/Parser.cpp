@@ -20,7 +20,6 @@
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
 #include "OpenAutoIt/VariableScope.hpp"
-#include <magic_enum.hpp>
 #include <phi/compiler_support/unused.hpp>
 #include <phi/compiler_support/warning.hpp>
 #include <phi/core/assert.hpp>
@@ -436,8 +435,8 @@ namespace OpenAutoIt
                 auto expression_statement = ParseExpressionStatement();
                 if (!expression_statement)
                 {
-                    std::cout << "ERR: Unexpected token: "
-                              << magic_enum::enum_name(token.GetTokenKind()) << '\n';
+                    std::cout << "ERR: Unexpected token: " << enum_name(token.GetTokenKind())
+                              << '\n';
                     return {};
                 }
 

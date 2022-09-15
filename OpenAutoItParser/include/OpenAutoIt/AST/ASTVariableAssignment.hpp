@@ -5,7 +5,6 @@
 #include "OpenAutoIt/AST/ASTStatement.hpp"
 #include "OpenAutoIt/Utililty.hpp"
 #include "OpenAutoIt/VariableScope.hpp"
-#include <magic_enum.hpp>
 #include <phi/container/string_view.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/scope_ptr.hpp>
@@ -29,7 +28,7 @@ namespace OpenAutoIt
             ret += "VariableAssignment: [";
             ret += (m_IsStatic ? "static, " : "");
             ret += (m_IsConst ? "const, " : "");
-            ret += magic_enum::enum_name(m_Scope);
+            ret += enum_name(m_Scope);
             ret += "] $";
             ret += std::string_view(m_VariableName.data(), m_VariableName.length().unsafe());
             ret += " =";
