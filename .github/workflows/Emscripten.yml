@@ -41,7 +41,6 @@ jobs:
         em_version:
           - "3.1.20"
           - "3.0.1"
-          - "2.0.34"
 
         build_type:
           - "Debug"
