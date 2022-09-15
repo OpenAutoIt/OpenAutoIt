@@ -1,5 +1,6 @@
 #pragma once
 
+#include <phi/compiler_support/extended_attributes.hpp>
 #include <phi/compiler_support/warning.hpp>
 #include <phi/core/assert.hpp>
 
@@ -12,9 +13,9 @@ namespace OpenAutoIt
         Local,  // Explicitly local
     };
 
-    PHI_CLANG_SUPPRESS_WARNING_WITH_PUSH("-Wcovered-switch-default")
+    PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wreturn-type")
 
-    [[nodiscard]] constexpr const char* enum_name(VariableScope scope) noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_PURE constexpr const char* enum_name(VariableScope scope) noexcept
     {
         switch (scope)
         {
@@ -24,12 +25,11 @@ namespace OpenAutoIt
                 return "Global";
             case VariableScope::Local:
                 return "Local";
-
-            default:
-                PHI_ASSERT_NOT_REACHED();
         }
+
+        PHI_ASSERT_NOT_REACHED();
     }
 
-    PHI_CLANG_SUPPRESS_WARNING_POP()
+    PHI_GCC_SUPPRESS_WARNING_POP()
 
 } // namespace OpenAutoIt

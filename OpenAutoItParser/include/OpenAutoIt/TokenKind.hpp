@@ -259,6 +259,8 @@ namespace OpenAutoIt
 
     PHI_GCC_SUPPRESS_WARNING_POP()
 
+    PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wreturn-type")
+
     [[nodiscard]] PHI_ATTRIBUTE_PURE constexpr const char* enum_name(TokenKind token_kind) noexcept
     {
         switch (token_kind)
@@ -275,4 +277,7 @@ namespace OpenAutoIt
                 PHI_ASSERT_NOT_REACHED();
         }
     }
+
+    PHI_GCC_SUPPRESS_WARNING_POP()
+
 } // namespace OpenAutoIt
