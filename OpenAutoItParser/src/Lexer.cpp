@@ -13,6 +13,7 @@
 #include <phi/text/is_alpha_numeric.hpp>
 #include <phi/text/is_digit.hpp>
 #include <phi/text/is_hex_digit.hpp>
+#include <phi/text/to_lower_case.hpp>
 #include <algorithm>
 #include <array>
 #include <map>
@@ -158,9 +159,9 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
                     MacroValues, OpenAutoIt::TokenKind::NotAToken);
 
     std::string str{token.begin(), token.end()};
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    std::transform(str.begin(), str.end(), str.begin(), phi::to_lower_case);
 
-    return map.at({str});
+    return map.at(phi::string_view(str.c_str(), str.size()));
 }
 
 static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 10u>
@@ -184,9 +185,9 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
                     PreProcessorValues, OpenAutoIt::TokenKind::NotAToken);
 
     std::string str{token.begin(), token.end()};
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    std::transform(str.begin(), str.end(), str.begin(), phi::to_lower_case);
 
-    return map.at({str});
+    return map.at(phi::string_view(str.c_str(), str.size()));
 }
 
 static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 44u> KeyWordsValues{
@@ -242,9 +243,9 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
                     KeyWordsValues, OpenAutoIt::TokenKind::FunctionIdentifier);
 
     std::string str{token.begin(), token.end()};
-    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    std::transform(str.begin(), str.end(), str.begin(), phi::to_lower_case);
 
-    return map.at({str});
+    return map.at(phi::string_view(str.c_str(), str.size()));
 }
 
 static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 20u> OperatorValues{
