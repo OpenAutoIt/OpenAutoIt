@@ -357,6 +357,21 @@ jobs:
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
+        with:
+          upload: False
+          output: sarif-results
+
+      - name: filter-sarif
+        uses: advanced-security/filter-sarif@main
+        with:
+          patterns: -**/external/** # Ignore external directory
+          input: sarif-results/${{ matrix.language }}.sarif
+          output: sarif-results/${{ matrix.language }}.sarif
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: sarif-results/${{ matrix.language }}.sarif
 
   mull:
     runs-on: ubuntu-20.04
@@ -480,6 +495,13 @@ jobs:
           # Ruleset file that will determine what checks will be run
           ruleset: NativeRecommendedRules.ruleset
 
+      - name: filter-sarif
+        uses: advanced-security/filter-sarif@main
+        with:
+          patterns: -**/external/** # Ignore external directory
+          input: ${{ steps.run-analysis.outputs.sarif }}
+          output: ${{ steps.run-analysis.outputs.sarif }}
+
       # Upload SARIF file to GitHub Code Scanning Alerts
       - name: Upload SARIF to GitHub
         uses: github/codeql-action/upload-sarif@v2
@@ -543,6 +565,13 @@ jobs:
           # This will handover control about PR rejection to the GitHub side
           max-allowed-issues: 2147483647
           run-staticcheck: "true"
+
+      - name: filter-sarif
+        uses: advanced-security/filter-sarif@main
+        with:
+          patterns: -**/external/** # Ignore external directory
+          input: results.sarif
+          output: results.sarif
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
