@@ -1,8 +1,11 @@
-#define _CRT_SECURE_NO_WARNINGS
+#include <phi/compiler_support/platform.hpp>
+
+#if PHI_PLATFORM_IS(WINDOWS)
+#    define _CRT_SECURE_NO_WARNINGS
+#endif
 
 #include "OpenAutoIt/Utililty.hpp"
 
-#include <phi/compiler_support/platform.hpp>
 #include <phi/core/scope_guard.hpp>
 #include <cstdio>
 
