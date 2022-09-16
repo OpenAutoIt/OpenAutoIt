@@ -260,6 +260,7 @@ namespace OpenAutoIt
     PHI_GCC_SUPPRESS_WARNING_POP()
 
     PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wreturn-type")
+    PHI_MSVC_SUPPRESS_WARNING_WITH_PUSH(4702) // Unreachable code
 
     [[nodiscard]] PHI_ATTRIBUTE_PURE constexpr const char* enum_name(TokenKind token_kind) noexcept
     {
@@ -278,6 +279,7 @@ namespace OpenAutoIt
         }
     }
 
+    PHI_MSVC_SUPPRESS_WARNING_POP()
     PHI_GCC_SUPPRESS_WARNING_POP()
 
 } // namespace OpenAutoIt

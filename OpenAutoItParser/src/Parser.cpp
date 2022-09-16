@@ -49,6 +49,8 @@ namespace OpenAutoIt
             }
         }
 
+        PHI_MSVC_SUPPRESS_WARNING_WITH_PUSH(4702) // Unreachable code
+
         [[nodiscard]] constexpr int lookup(TokenKind token) const
         {
             int p = m_TokenPrecedence[static_cast<size_t>(token)];
@@ -60,6 +62,8 @@ namespace OpenAutoIt
 
             return p;
         }
+
+        PHI_MSVC_SUPPRESS_WARNING_POP()
 
     private:
         int m_TokenPrecedence[NumberOfTokens]{};
