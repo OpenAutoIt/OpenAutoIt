@@ -1,5 +1,8 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "OpenAutoIt/Utililty.hpp"
 
+#include <phi/compiler_support/platform.hpp>
 #include <phi/core/scope_guard.hpp>
 #include <cstdio>
 
@@ -13,8 +16,13 @@ namespace OpenAutoIt
             return {};
         }
 
-        std::FILE* file        = std::fopen(file_path.c_str(), "r");
-        auto       scope_guard = phi::make_scope_guard([&file]() { (void)std::fclose(file); });
+        std::FILE* file =
+#if PHI_PLATFORM_IS(WINDOWS)
+                _wfopen(file_path.c_str(), L"r");
+#else
+                std::fopen(file_path.c_str(), "r");
+#endif
+        auto scope_guard = phi::make_scope_guard([&file]() { (void)std::fclose(file); });
 
         if (file == nullptr)
         {
@@ -51,8 +59,13 @@ namespace OpenAutoIt
 
     phi::boolean write_file(const std::filesystem::path& file_path, std::string_view data) noexcept
     {
-        std::FILE* file        = std::fopen(file_path.c_str(), "w");
-        auto       scope_guard = phi::make_scope_guard([&file]() { (void)std::fclose(file); });
+        std::FILE* file =
+#if PHI_PLATFORM_IS(WINDOWS)
+                _wfopen(file_path.c_str(), L"w");
+#else
+                std::fopen(file_path.c_str(), "w");
+#endif
+        auto scope_guard = phi::make_scope_guard([&file]() { (void)std::fclose(file); });
 
         if (file == nullptr)
         {
