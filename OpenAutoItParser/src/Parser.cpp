@@ -469,7 +469,7 @@ namespace OpenAutoIt
         auto while_statement                   = phi::make_scope<ASTWhileStatement>();
         while_statement->m_ConditionExpression = phi::move(while_condition_expression);
 
-        // Parse statements untill KW_WEnd
+        // Parse statements until KW_WEnd
         while (m_TokenStream.has_more() && CurrentToken().GetTokenKind() != TokenKind::KW_WEnd)
         {
             // Skip NewLines and comments
@@ -649,7 +649,7 @@ namespace OpenAutoIt
 
         ConsumeNewLineAndComments();
 
-        // Next parse statements untill we hit and EndIf, ElseIf or Else
+        // Next parse statements until we hit and EndIf, ElseIf or Else
         while (m_TokenStream.has_more() && CurrentToken().GetTokenKind() != TokenKind::KW_EndIf &&
                CurrentToken().GetTokenKind() != TokenKind::KW_Else &&
                CurrentToken().GetTokenKind() != TokenKind::KW_ElseIf)

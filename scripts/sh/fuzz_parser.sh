@@ -37,7 +37,7 @@ mkdir -p corpus
 $fuzzer corpus old_corpus "$samples_dir" -merge=1 -close_fd_mask=1 -rss_limit_mb=0
 rm -rf old_corpus
 
-# Intial range fuzz
+# Initial range fuzz
 for i in {1,2,4,8,16,32,64}; do
     $fuzzer corpus "$samples_dir" -use_value_profile=1 -close_fd_mask=1 -timeout="$timeout" -jobs="$jobs" -workers="$jobs" -max_len="$i" -runs=1000000 -rss_limit_mb=4096 -dict=../OpenAutoItParser/fuzzers/dictionary/tokens.dict -dict=../OpenAutoItParser/fuzzers/dictionary/code.dict
 done

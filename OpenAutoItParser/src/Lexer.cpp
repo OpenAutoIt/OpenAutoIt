@@ -381,11 +381,11 @@ namespace OpenAutoIt
         {
             char current_character = *m_Iterator;
 
-            /* Embeded null character */
+            /* Embedded null character */
 
             if (current_character == '\0')
             {
-                // TODO: Warn embeded null character
+                // TODO: Warn embedded null character
                 SkipCurrentCharacter();
             }
 
@@ -393,9 +393,9 @@ namespace OpenAutoIt
 
             else if (m_InsideMultiLineComment)
             {
-                iterator begin_of_multiline_comment           = m_Iterator;
-                phi::u64 begining_line_of_multiline_comment   = m_LineNumber;
-                phi::u64 begining_column_of_multiline_comment = m_Column;
+                iterator begin_of_multiline_comment            = m_Iterator;
+                phi::u64 beginning_line_of_multiline_comment   = m_LineNumber;
+                phi::u64 beginning_column_of_multiline_comment = m_Column;
 
                 while (!IsFinished())
                 {
@@ -431,8 +431,8 @@ namespace OpenAutoIt
                             m_Iterator -= TokenText(begin_of_token).length().unsafe();
 
                             Token token{TokenKind::Comment, TokenText(begin_of_multiline_comment),
-                                        begining_line_of_multiline_comment,
-                                        begining_column_of_multiline_comment};
+                                        beginning_line_of_multiline_comment,
+                                        beginning_column_of_multiline_comment};
 
                             return token;
                         }
