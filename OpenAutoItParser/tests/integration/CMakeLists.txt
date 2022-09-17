@@ -14,6 +14,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE OpenAutoItParser)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Tests")
 
+file(GLOB SAMPLES_DIR "${CMAKE_SOURCE_DIR}/OpenAutoItParser/tests/integration/samples")
+
 add_test(NAME ${PROJECT_NAME}
          COMMAND $<TARGET_FILE:${PROJECT_NAME}>
-                 "${CMAKE_SOURCE_DIR}/OpenAutoItParser/tests/integration/samples")
+                 "${SAMPLES_DIR}")
