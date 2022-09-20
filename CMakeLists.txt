@@ -65,11 +65,6 @@ option(OA_ENABLE_SANITIZER_LEAK "" OFF)
 option(OA_ENABLE_SANITIZER_THREAD "" OFF)
 option(OA_ENABLE_SANITIZER_UNDEFINED "" OFF)
 
-# Targets
-add_subdirectory("OpenAutoItParser")
-
-add_subdirectory("tools")
-
 # Check for settings passed through the environment
 if(DEFINED ENV{OA_DYNAMIC_TEST})
   set(dyn_test $ENV{OA_DYNAMIC_TEST})
@@ -91,6 +86,11 @@ if(DEFINED ENV{OA_DYNAMIC_TEST})
     phi_error("No dynamic testing options called \"${dyn_test}\" supported")
   endif()
 endif()
+
+# Targets
+add_subdirectory("OpenAutoItParser")
+
+add_subdirectory("tools")
 
 if(${OA_LTO})
   set(_extra ${_extra} IPO)
