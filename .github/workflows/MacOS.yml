@@ -52,7 +52,6 @@ jobs:
         dynamic_test:
           - "none"
           - "asan"
-          - "ubsan"
 
     steps:
       - name: Checkout
