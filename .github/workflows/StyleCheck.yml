@@ -33,11 +33,7 @@ jobs:
         run: external/Phi/scripts/ci/InstallTools.sh clang-format-${{ env.LLVM_VERSION }}
 
       - name: Run clang-format
-        run: clang-format-${{ env.LLVM_VERSION }} -i $(find -iname "*.[hc]pp" -type f)
-
-      - name: Reset external
-        working-directory: ./external
-        run: git submodule foreach --recursive git reset --hard
+        run: clang-format-${{ env.LLVM_VERSION }} -i $(find ! \( -path ./external -prune \) -iname "*.[hc]pp" -type f)
 
       - name: Display diff
         run: git diff
@@ -71,11 +67,7 @@ jobs:
         run: external/Phi/scripts/ci/InstallTools.sh cmake-format
 
       - name: Run cmake-format
-        run: cmake-format -c ".cmake-format.yaml" -i $(find -iregex "./.*\.cmake" -or -iregex "./.*\CMakeLists\.txt")
-
-      - name: Reset external
-        working-directory: ./external
-        run: git submodule foreach --recursive git reset --hard
+        run: cmake-format -c ".cmake-format.yaml" -i $(find ! \( -path ./external -prune \) -iregex "./.*\.cmake" -or -iregex "./.*\CMakeLists\.txt") external/CMakeLists.txt
 
       - name: Display diff
         run: git diff
