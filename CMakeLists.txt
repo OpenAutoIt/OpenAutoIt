@@ -58,6 +58,7 @@ else()
   set(_lto_default ON)
 endif()
 
+option(OA_BUILD_TOOLS "" ON)
 option(OA_LTO "" ${_lto_default})
 option(OA_COVERAGE_BUILD "" OFF)
 option(OA_ENABLE_SANITIZER_ADDRESS "" OFF)
@@ -90,7 +91,9 @@ endif()
 # Targets
 add_subdirectory("OpenAutoItParser")
 
-add_subdirectory("tools")
+if(${OA_BUILD_TOOLS})
+  add_subdirectory("tools")
+endif()
 
 if(${OA_LTO})
   set(_extra ${_extra} IPO)
