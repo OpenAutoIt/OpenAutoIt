@@ -45,7 +45,8 @@ jobs:
           mkdir -p build
           cd build
 
-          cmake -DCMAKE_BUILD_TYPE:STRING="Debug"  ..
+          # TODO: Enable tools once we no longer require std::filesystem which gcc-8 doesn't support
+          cmake -DCMAKE_BUILD_TYPE:STRING="Debug" -DOA_BUILD_TOOLS:BOOL=OFF ..
 
       - name: Configure cov-build
         run: |
