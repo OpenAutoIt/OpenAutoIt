@@ -169,7 +169,7 @@ jobs:
           cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON
 
           # Run include-what-you-use
-          iwyu_tool.py ../OpenAutoItParser ../tools --jobs $(nproc) -p . -o clang -- -Xiwyu --cxx17ns | tee iwyu.log
+          iwyu_tool.py ../Parser ../tools --jobs $(nproc) -p . -o clang -- -Xiwyu --cxx17ns | tee iwyu.log
 
           # Filter out correct includes and generated code
           cat iwyu.log | grep -Ev "#includes/fwd-decls are correct" > iwyu_filtered.log || true

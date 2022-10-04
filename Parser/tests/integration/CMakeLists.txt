@@ -14,7 +14,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE OpenAutoItParser)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Tests")
 
-file(GLOB SAMPLES_DIR "${CMAKE_SOURCE_DIR}/OpenAutoItParser/tests/integration/samples")
+file(GLOB SAMPLES_DIR "${CMAKE_SOURCE_DIR}/Parser/tests/integration/samples")
 cmake_path(NATIVE_PATH SAMPLES_DIR NORMALIZE SAMPLES_DIR)
 
 add_test(NAME ${PROJECT_NAME} COMMAND $<TARGET_FILE:${PROJECT_NAME}> "${SAMPLES_DIR}")

@@ -8,7 +8,7 @@ export UBSAN_OPTIONS="print_stacktrace=1:report_error_type=1:halt_on_error=1"
 # Other options
 jobs=$(($(nproc) / 2))
 fuzzer=bin/RelWithDebInfo/OpenAutoItFuzzer_Parser
-samples_dir="../OpenAutoItParser/tests/integration/samples ../OpenAutoItParser/fuzzers/samples"
+samples_dir="../Parser/tests/integration/samples ../Parser/fuzzers/samples"
 timeout=1
 
 # Preparations
@@ -39,11 +39,11 @@ rm -rf old_corpus
 
 # Initial range fuzz
 for i in {1,2,4,8,16,32,64}; do
-    $fuzzer corpus "$samples_dir" -use_value_profile=1 -close_fd_mask=1 -timeout="$timeout" -jobs="$jobs" -workers="$jobs" -max_len="$i" -runs=1000000 -rss_limit_mb=4096 -dict=../OpenAutoItParser/fuzzers/dictionary/tokens.dict -dict=../OpenAutoItParser/fuzzers/dictionary/code.dict
+    $fuzzer corpus "$samples_dir" -use_value_profile=1 -close_fd_mask=1 -timeout="$timeout" -jobs="$jobs" -workers="$jobs" -max_len="$i" -runs=1000000 -rss_limit_mb=4096 -dict=../Parser/fuzzers/dictionary/tokens.dict -dict=../Parser/fuzzers/dictionary/code.dict
 done
 
 # Indefinite fuzz
-$fuzzer corpus "$samples_dir" -use_value_profile=1 -close_fd_mask=1 -timeout="$timeout" -jobs="$jobs" -workers="$jobs" -max_len=128 -rss_limit_mb=4096 -dict=../OpenAutoItParser/fuzzers/dictionary/tokens.dict -dict=../OpenAutoItParser/fuzzers/dictionary/code.dict
+$fuzzer corpus "$samples_dir" -use_value_profile=1 -close_fd_mask=1 -timeout="$timeout" -jobs="$jobs" -workers="$jobs" -max_len=128 -rss_limit_mb=4096 -dict=../Parser/fuzzers/dictionary/tokens.dict -dict=../Parser/fuzzers/dictionary/code.dict
 
 # Minimize all crashes
 find . -maxdepth 1 -iname "crash-*" -exec bash -c '$fuzzer ${0} -minimize_crash=1 -timeout="$timeout" -close_fd_mask=1 -rss_limit_mb=0 -runs=1000000' {} \; && find . -iname "minimized-from-*" -exec bash -c 'mv ${0} crash-$(sha1sum "${0}" | cut -f1 -d" ")' {} \;
