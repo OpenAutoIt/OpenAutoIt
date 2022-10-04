@@ -10,7 +10,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${OPENAUTOITPARSER_TEST_SOUR
 
 add_executable(${PROJECT_NAME} ${OPENAUTOITPARSER_TEST_SOURCES} ${OPENAUTOITPARSER_TEST_HEADERS})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenAutoItParser)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenAutoIt::Parser)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Tests")
 

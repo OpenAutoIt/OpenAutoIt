@@ -5,4 +5,4 @@ file(GLOB OPENAUTOITASTDUMPER_SOURCES "src/main.cpp")
 
 add_executable(${PROJECT_NAME} ${OPENAUTOITASTDUMPER_SOURCES} ${OPENAUTOITASTDUMPER_HEADERS})
 
-target_link_libraries(${PROJECT_NAME} PUBLIC OpenAutoItParser)
+target_link_libraries(${PROJECT_NAME} PUBLIC OpenAutoIt::Parser)
