@@ -64,7 +64,7 @@ jobs:
           variant: sccache
 
       - name: Setup msvc dev
-        uses: ilammy/msvc-dev-cmd@v1.11.0
+        uses: ilammy/msvc-dev-cmd@v1.12.0
 
       - name: Configure build directory
         run: |
