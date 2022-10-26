@@ -2,6 +2,7 @@
 
 #include "OpenAutoIt/AST/ASTBinaryExpression.hpp"
 #include "OpenAutoIt/AST/ASTExpression.hpp"
+#include "OpenAutoIt/AST/ASTFloatLiteral.hpp"
 #include "OpenAutoIt/AST/ASTFunctionCallExpression.hpp"
 #include "OpenAutoIt/AST/ASTKeywordLiteral.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
@@ -202,6 +203,12 @@ namespace OpenAutoIt
                 auto keyword_literal = expression->as<ASTKeywordLiteral>();
 
                 return Variant::MakeKeyword(keyword_literal->m_Keyword);
+            }
+
+            case ASTNodeType::FloatLiteral: {
+                auto float_literal = expression->as<ASTFloatLiteral>();
+
+                return Variant::MakeDouble(float_literal->m_Value);
             }
 
             case ASTNodeType::StringLiteral: {

@@ -14,6 +14,7 @@ namespace OpenAutoIt
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(BinaryExpression)                                           \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(BooleanLiteral)                                             \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(ExpressionStatement)                                        \
+    OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(FloatLiteral)                                               \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(FunctionCallExpression)                                     \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(IfStatement)                                                \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(IntegerLiteral)                                             \

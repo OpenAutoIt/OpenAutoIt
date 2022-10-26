@@ -414,6 +414,7 @@ namespace OpenAutoIt
             case Type::Double: {
                 const phi::f64 value = AsDouble();
 
+                // TODO: std::to_string outputs our values with trailing zeros which is not what we want
                 return MakeString(std::to_string(value.unsafe()));
             }
 

@@ -1071,14 +1071,13 @@ namespace OpenAutoIt
                 }
             }
 
-            /* Number Literals */
+            /* Number Literals - IntegerLiteral/FloatLiteral */
 
-            else if (phi::is_digit(current_character))
+            else if (phi::is_digit(current_character) || current_character == '.')
             {
-                // TODO: Support float literals
-                // TODO: Suppport hex literals
                 const phi::boolean start_with_zero{current_character == '0'};
                 phi::boolean       parsing_hex{false};
+                phi::boolean       parsing_float{current_character == '.'};
 
                 iterator begin_of_token = m_Iterator;
                 ConsumeCurrentCharacter();
@@ -1088,7 +1087,7 @@ namespace OpenAutoIt
                     current_character = *m_Iterator;
 
                     // Is the second character
-                    if (m_Iterator - begin_of_token == 1u)
+                    if (m_Iterator - begin_of_token == 1u && start_with_zero)
                     {
                         // Hex character
                         if (current_character == 'x' || current_character == 'X')
@@ -1102,6 +1101,12 @@ namespace OpenAutoIt
                     // Actually parsing
                     if (parsing_hex)
                     {
+                        if (parsing_float)
+                        {
+                            // TODO: Error hexliteral not allowed for floats
+                            return ConstructToken(TokenKind::Garbage, begin_of_token);
+                        }
+
                         if (phi::is_hex_digit(current_character))
                         {
                             ConsumeCurrentCharacter();
@@ -1113,8 +1118,34 @@ namespace OpenAutoIt
                         ConsumeCurrentCharacter();
                         continue;
                     }
+                    // Literal dot
+                    else if (current_character == '.')
+                    {
+                        if (parsing_float)
+                        {
+                            // TODO: Error more than one dot in float literal
+                            return ConstructToken(TokenKind::Garbage, begin_of_token);
+                        }
+
+                        parsing_float = true;
+                        ConsumeCurrentCharacter();
+                        continue;
+                    }
 
                     break;
+                }
+
+                if (parsing_float)
+                {
+                    // Were not allowed to end with a dot
+                    // TODO: This is very hacky and looks nasty
+                    if (*(m_Iterator - 1) == '.')
+                    {
+                        // TODO: Prober error
+                        return ConstructToken(TokenKind::Garbage, begin_of_token);
+                    }
+
+                    return ConstructToken(TokenKind::FloatLiteral, begin_of_token);
                 }
 
                 return ConstructToken(TokenKind::IntegerLiteral, begin_of_token);

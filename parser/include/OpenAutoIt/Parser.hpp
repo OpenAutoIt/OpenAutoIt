@@ -6,6 +6,7 @@
 #include "OpenAutoIt/AST/ASTDocument.hpp"
 #include "OpenAutoIt/AST/ASTExpression.hpp"
 #include "OpenAutoIt/AST/ASTExpressionStatement.hpp"
+#include "OpenAutoIt/AST/ASTFloatLiteral.hpp"
 #include "OpenAutoIt/AST/ASTFunctionCallExpression.hpp"
 #include "OpenAutoIt/AST/ASTFunctionDefinition.hpp"
 #include "OpenAutoIt/AST/ASTIfStatement.hpp"
@@ -153,6 +154,7 @@ namespace OpenAutoIt
         phi::scope_ptr<ASTStringLiteral>  ParseStringLiteral() noexcept;
         phi::scope_ptr<ASTBooleanLiteral> ParseBooleanLiteral() noexcept;
         phi::scope_ptr<ASTKeywordLiteral> ParseKeywordliteral() noexcept;
+        phi::scope_ptr<ASTFloatLiteral>   ParseFloatLiteral() noexcept;
 
         ParseResult* m_ParseResult;
         TokenStream* m_TokenStream;

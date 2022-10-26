@@ -5,6 +5,7 @@
 #include "OpenAutoIt/AST/ASTDocument.hpp"
 #include "OpenAutoIt/AST/ASTExpression.hpp"
 #include "OpenAutoIt/AST/ASTExpressionStatement.hpp"
+#include "OpenAutoIt/AST/ASTFloatLiteral.hpp"
 #include "OpenAutoIt/AST/ASTFunctionCallExpression.hpp"
 #include "OpenAutoIt/AST/ASTFunctionDefinition.hpp"
 #include "OpenAutoIt/AST/ASTIfStatement.hpp"
@@ -39,6 +40,7 @@
 #include <phi/type_traits/to_underlying.hpp>
 #include <phi/type_traits/underlying_type.hpp>
 #include <cstddef>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 
@@ -825,14 +827,27 @@ namespace OpenAutoIt
             if (!keyword_literal)
             {
                 // TODO: Proper error
-                std::cout << "ERR: Failed to parse keyworld literal expression!\n";
+                std::cout << "ERR: Failed to parse keyword literal expression!\n";
+                return {};
             }
 
             return keyword_literal;
         }
+        // Float literal
+        else if (token.GetTokenKind() == TokenKind::FloatLiteral)
+        {
+            auto float_literal = ParseFloatLiteral();
+            if (!float_literal)
+            {
+                // TODO: Proper error
+                std::cout << "ERR: Failed to parse float literal expression!\n";
+                return {};
+            }
 
-        // TODO: Fix me
-        // TODO: Error: not valid token
+            return float_literal;
+        }
+
+        // TODO: Error Unexpected token
         std::cout << "Unexpected token \"" << enum_name(token.GetTokenKind())
                   << "\" while parsing expression\n";
         return {};
@@ -1108,6 +1123,29 @@ namespace OpenAutoIt
         {
             ConsumeCurrent();
             return phi::make_scope<ASTKeywordLiteral>(token.GetTokenKind());
+        }
+
+        // TODO: Proper error
+        return {};
+    }
+
+    phi::scope_ptr<ASTFloatLiteral> Parser::ParseFloatLiteral() noexcept
+    {
+        if (!m_TokenStream->has_more())
+        {
+            // TODO: Proper error
+            return {};
+        }
+
+        const Token& token = CurrentToken();
+        if (token.GetTokenKind() == TokenKind::FloatLiteral)
+        {
+            ConsumeCurrent();
+
+            char*    ptr   = nullptr;
+            phi::f64 value = std::strtod(token.GetText().begin(), &ptr);
+
+            return phi::make_scope<ASTFloatLiteral>(value);
         }
 
         // TODO: Proper error
