@@ -759,7 +759,7 @@ namespace OpenAutoIt
                     return {};
                 }
 
-                return binary_exp;
+                return phi::move(binary_exp);
             }
 
             // Integer literal not followed by operator so just IntegerLiteralExpression
@@ -774,7 +774,7 @@ namespace OpenAutoIt
                 return {};
             }
 
-            return string_literal_expression;
+            return phi::move(string_literal_expression);
         }
 
         // Boolean literal
@@ -788,7 +788,7 @@ namespace OpenAutoIt
                 return {};
             }
 
-            return boolean_literal;
+            return phi::move(boolean_literal);
         }
 
         // Function call expression
@@ -802,7 +802,7 @@ namespace OpenAutoIt
                 return {};
             }
 
-            return function_call_expression;
+            return phi::move(function_call_expression);
         }
         // Variable expression
         else if (token.GetTokenKind() == TokenKind::VariableIdentifier)
@@ -818,7 +818,7 @@ namespace OpenAutoIt
             // TODO: There could be an operator after here which whould need to be parsed
             //       Like $var = $var + 1 for example
 
-            return variable_expression;
+            return phi::move(variable_expression);
         }
         // Keyword literal
         else if (token.IsKeywordLiteral())
@@ -831,7 +831,7 @@ namespace OpenAutoIt
                 return {};
             }
 
-            return keyword_literal;
+            return phi::move(keyword_literal);
         }
         // Float literal
         else if (token.GetTokenKind() == TokenKind::FloatLiteral)
@@ -844,7 +844,7 @@ namespace OpenAutoIt
                 return {};
             }
 
-            return float_literal;
+            return phi::move(float_literal);
         }
 
         // TODO: Error Unexpected token
