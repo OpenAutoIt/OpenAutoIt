@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     OpenAutoIt::ParseResult parse_result;
 
     // Lex the source file
-    OpenAutoIt::Lexer       lexer{parse_result};
+    OpenAutoIt::Lexer lexer{parse_result};
     lexer.ProcessString(phi::string_view{file_content.data(), file_content.length()});
 
     // Parse the source file
