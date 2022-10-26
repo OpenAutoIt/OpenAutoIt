@@ -9,8 +9,14 @@
 #include <functional>
 #include <string>
 
+PHI_MSVC_SUPPRESS_WARNING(4702) // unreachable code
+
 namespace OpenAutoIt
 {
+    PHI_MSVC_SUPPRESS_WARNING_PUSH()
+    PHI_MSVC_SUPPRESS_WARNING(4582) // constructor is not implicitly called
+    PHI_MSVC_SUPPRESS_WARNING(4583) // destructor is not implicitly called
+
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
     Variant::Variant() noexcept
         : m_Type{Type::String}
@@ -37,6 +43,8 @@ namespace OpenAutoIt
     {
         Clear();
     }
+
+    PHI_MSVC_SUPPRESS_WARNING_POP()
 
     Variant& Variant::operator=(const Variant& other) noexcept
     {

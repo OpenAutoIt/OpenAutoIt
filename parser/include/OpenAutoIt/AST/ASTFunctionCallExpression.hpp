@@ -16,6 +16,7 @@ namespace OpenAutoIt
     {
     public:
         ASTFunctionCallExpression() noexcept
+            : m_FunctionName{}
         {
             m_NodeType = ASTNodeType::FunctionCallExpression;
         }
@@ -26,9 +27,8 @@ namespace OpenAutoIt
             {
                 return enum_name(m_BuiltInFunction);
             }
-            {
-                return m_FunctionName;
-            }
+
+            return m_FunctionName;
         }
 
         [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override

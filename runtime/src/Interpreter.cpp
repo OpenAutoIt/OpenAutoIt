@@ -16,6 +16,8 @@
 #include <phi/core/observer_ptr.hpp>
 #include <phi/core/sized_types.hpp>
 
+PHI_MSVC_SUPPRESS_WARNING(4702) // unreachable code
+
 namespace OpenAutoIt
 {
     Interpreter::Interpreter(phi::not_null_observer_ptr<ASTDocument> document) noexcept
