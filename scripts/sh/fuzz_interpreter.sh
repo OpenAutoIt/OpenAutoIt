@@ -32,18 +32,18 @@ mkdir -p corpus
 # Minimize corpus
 mv corpus old_corpus
 mkdir -p corpus
-$fuzzer corpus old_corpus $samples_dir -merge=1 -use_value_profile=1 -close_fd_mask=1 -rss_limit_mb=0
+$fuzzer corpus old_corpus $samples_dir -merge=1 -use_value_profile=1 -close_fd_mask=1 -rss_limit_mb=0 -only_ascii=1
 rm -rf old_corpus
 
 # Initial range fuzz
 for i in {1,2,4,8,16,32,64,128}; do
-    $fuzzer corpus $samples_dir -use_value_profile=1 -close_fd_mask=1 -timeout=$timeout -jobs="$jobs" -workers="$jobs" -max_len="$i" -runs=1000000 -rss_limit_mb=4096 $dictionaries
+    $fuzzer corpus $samples_dir -use_value_profile=1 -close_fd_mask=1 -timeout=$timeout -jobs="$jobs" -workers="$jobs" -max_len="$i" -runs=1000000 -rss_limit_mb=4096 $dictionaries -only_ascii=1
 done
 
 echo "- Starting indefinite fuzzing"
 
 # Indefinite fuzz
-$fuzzer corpus $samples_dir -use_value_profile=1 -close_fd_mask=1 -timeout=$timeout -jobs="$jobs" -workers="$jobs" -max_len=256 -rss_limit_mb=4096 $dictionaries
+$fuzzer corpus $samples_dir -use_value_profile=1 -close_fd_mask=1 -timeout=$timeout -jobs="$jobs" -workers="$jobs" -max_len=256 -rss_limit_mb=4096 $dictionaries -only_ascii=1
 
 # Minimize all crashes
 find . -maxdepth 1 -iname "crash-*" -exec bash -c '$fuzzer ${0} -minimize_crash=1 -timeout=$timeout -close_fd_mask=1 -rss_limit_mb=0 -runs=1000000' {} \; && find . -iname "minimized-from-*" -exec bash -c 'mv ${0} crash-$(sha1sum "${0}" | cut -f1 -d" ")' {} \;
