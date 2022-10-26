@@ -89,11 +89,17 @@ if(DEFINED ENV{OA_DYNAMIC_TEST})
 endif()
 
 # Targets
-add_subdirectory("Parser")
+add_subdirectory("parser")
+
+add_subdirectory("runtime")
+
+add_subdirectory("test_runner")
 
 if(${OA_BUILD_TOOLS})
   add_subdirectory("tools")
 endif()
+
+add_subdirectory("OpenAutoIt")
 
 if(${OA_LTO})
   set(_extra ${_extra} IPO)

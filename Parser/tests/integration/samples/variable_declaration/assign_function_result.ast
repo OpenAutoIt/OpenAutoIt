@@ -1,9 +1,0 @@
-Document:
-Statements:
-VariableAssignment: [Auto] $var =
-[
-  FunctionCallExpression: "Abs"
-  [
-    IntegerLiteral [3],
-  ]
-]

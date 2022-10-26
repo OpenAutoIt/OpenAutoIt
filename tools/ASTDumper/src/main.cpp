@@ -1,3 +1,4 @@
+#include "OpenAutoIt/ParseResult.hpp"
 #include <OpenAutoIt/Lexer.hpp>
 #include <OpenAutoIt/Parser.hpp>
 #include <phi/compiler_support/warning.hpp>
@@ -12,7 +13,9 @@ PHI_CLANG_SUPPRESS_WARNING("-Wglobal-constructors")
 PHI_CLANG_SUPPRESS_WARNING("-Wexit-time-destructors")
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-OpenAutoIt::Lexer lexer;
+OpenAutoIt::ParseResult parse_result;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+OpenAutoIt::Lexer lexer{parse_result};
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 OpenAutoIt::Parser parser;
 
@@ -32,15 +35,13 @@ phi::boolean process_file(const std::filesystem::path& file_path) noexcept
 
     // Lex the source file
     lexer.Reset();
-    OpenAutoIt::TokenStream token_stream =
-            lexer.ProcessString(phi::string_view{file_content.data(), file_content.length()});
+    lexer.ProcessString(phi::string_view{file_content.data(), file_content.length()});
 
     // Parse the source file
-    phi::scope_ptr<OpenAutoIt::ASTDocument> document =
-            parser.ParseDocument(phi::move(token_stream));
+    parser.ParseDocument(parse_result);
 
     // Generate AST Dump
-    std::string ast_dump = document->DumpAST();
+    const std::string ast_dump = parse_result.m_Document->DumpAST();
 
     // Generate AST Dump file
     std::filesystem::path ast_file_path = file_path;

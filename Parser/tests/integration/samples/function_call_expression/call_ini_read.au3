@@ -1,1 +1,0 @@
-IniRead("Filename.ini", "Section", "Key", "Default")

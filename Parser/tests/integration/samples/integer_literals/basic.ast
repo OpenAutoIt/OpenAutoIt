@@ -1,6 +1,0 @@
-Document:
-Statements:
-VariableAssignment: [Auto] $var =
-[
-  IntegerLiteral [123]
-]
