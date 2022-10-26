@@ -2,7 +2,7 @@
 
 namespace OpenAutoIt
 {
-    ParseError ParseError::UnexpectedToken(const Token& token) noexcept
+    PHI_ATTRIBUTE_PURE ParseError ParseError::UnexpectedToken(const Token& token) noexcept
     {
         ParseError err;
 

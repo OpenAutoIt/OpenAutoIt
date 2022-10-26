@@ -102,8 +102,8 @@ std::string null_terminated_string(phi::string_view text) noexcept
     return string;
 }
 
-phi::boolean vector_equals(const std::vector<std::string>& lhs,
-                           const std::vector<std::string>& rhs) noexcept
+PHI_ATTRIBUTE_PURE phi::boolean vector_equals(const std::vector<std::string>& lhs,
+                                              const std::vector<std::string>& rhs) noexcept
 {
     if (lhs.size() != rhs.size())
     {
@@ -114,7 +114,7 @@ phi::boolean vector_equals(const std::vector<std::string>& lhs,
 }
 
 // TODO: Print expected actual etc.
-phi::boolean expects_matched(const ExpectedBlock& expected_block) noexcept
+PHI_ATTRIBUTE_PURE phi::boolean expects_matched(const ExpectedBlock& expected_block) noexcept
 {
     phi::boolean return_value{true};
 

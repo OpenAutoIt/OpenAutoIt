@@ -244,6 +244,7 @@ namespace OpenAutoIt
         }
 
         PHI_ASSERT_NOT_REACHED();
+        return {};
     }
 
     std::vector<Variant> Interpreter::InterpretExpressions(
@@ -317,6 +318,7 @@ namespace OpenAutoIt
         }
 
         PHI_ASSERT_NOT_REACHED();
+        return {};
     }
 
     Variant Interpreter::InterpretFunctionCall(const phi::string_view      function,

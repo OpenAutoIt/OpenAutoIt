@@ -1,8 +1,14 @@
 #include "OpenAutoIt/ParseWarning.hpp"
 
+#include <phi/compiler_support/extended_attributes.hpp>
+#include <phi/compiler_support/warning.hpp>
+
 namespace OpenAutoIt
 {
-    ParseWarning ParseWarning::EmbeddedNullCharacter(phi::u64 line, phi::u64 column) noexcept
+    PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wsuggest-attribute=pure")
+
+    PHI_ATTRIBUTE_CONST ParseWarning ParseWarning::EmbeddedNullCharacter(phi::u64 line,
+                                                                         phi::u64 column) noexcept
     {
         ParseWarning warn;
 
@@ -16,4 +22,6 @@ namespace OpenAutoIt
 
         return warn;
     }
+
+    PHI_GCC_SUPPRESS_WARNING_POP()
 } // namespace OpenAutoIt
