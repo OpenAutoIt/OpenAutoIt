@@ -244,18 +244,18 @@ int main(int argc, char* argv[])
             continue;
         }
 
-        std::cout << "[Check] \"" << file.path().string() << "\"...\n";
+        std::cout << '\"' << file.path().string() << "\"... ";
 
         const phi::boolean result = process_file(path);
 
         number_of_tests += 1u;
         if (result)
         {
-            std::cout << "[Pass]  \"" << file.path().string() << "\"\n";
+            std::cout << "\033[32m" << "[PASS]" << "\033[0m\n";
         }
         else
         {
-            std::cout << "[Fail]  \"" << file.path().string() << "\"\n";
+            std::cout << "\033[31m" << "[FAIL]" << "\033[0m\n";
             number_of_test_failures += 1u;
         }
     }
