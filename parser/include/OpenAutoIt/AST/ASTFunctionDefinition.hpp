@@ -74,8 +74,8 @@ namespace OpenAutoIt
             return ret;
         }
 
-        phi::string_view                          m_FunctionName;
-        std::vector<FunctionParameter>            m_Parameters;
-        std::vector<phi::scope_ptr<ASTStatement>> m_FunctionBody;
+        phi::string_view                                   m_FunctionName;
+        std::vector<FunctionParameter>                     m_Parameters;
+        std::vector<phi::not_null_scope_ptr<ASTStatement>> m_FunctionBody;
     };
 } // namespace OpenAutoIt

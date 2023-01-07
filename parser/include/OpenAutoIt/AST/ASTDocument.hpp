@@ -3,6 +3,7 @@
 #include "OpenAutoIt/AST/ASTFunctionDefinition.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
 #include "OpenAutoIt/AST/ASTStatement.hpp"
+#include <phi/algorithm/string_equals.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/scope_ptr.hpp>
 #include <vector>
@@ -21,6 +22,21 @@ namespace OpenAutoIt
         void AppendFunction(phi::not_null_scope_ptr<ASTFunctionDefinition> child) noexcept
         {
             m_Functions.emplace_back(phi::move(child));
+        }
+
+        [[nodiscard]] phi::observer_ptr<ASTFunctionDefinition> LookupFunctionDefinitionByName(
+                phi::string_view function_name) noexcept
+        {
+            for (phi::not_null_observer_ptr<ASTFunctionDefinition> func_definition : m_Functions)
+            {
+                // TODO: Should ignore case
+                if (phi::string_equals(func_definition->m_FunctionName, function_name))
+                {
+                    return func_definition;
+                }
+            }
+
+            return nullptr;
         }
 
         [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override

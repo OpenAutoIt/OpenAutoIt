@@ -124,7 +124,7 @@ PHI_ATTRIBUTE_PURE phi::boolean expects_matched(const ExpectedBlock& expected_bl
         return_value = false;
     }
 
-    // Check std-out
+    // Check std-err
     if (!vector_equals(expected_block.std_err, buffer.std_err))
     {
         return_value = false;
@@ -188,14 +188,13 @@ phi::boolean process_file(const std::filesystem::path& file_path) noexcept
     // Extract expected block
     const ExpectedBlock expected_block = extract_expected_block(parse_result.m_TokenStream);
 
-    // Setup interpret
+    // Setup interpreter
     OpenAutoIt::Interpreter interpreter{parse_result.m_Document.not_null_observer()};
 
     // Setup VM
     buffer.begin(expected_block);
 
-    // TODO: Use getter function
-    OpenAutoIt::VirtualMachine& vm = interpreter.m_VirtualMachine;
+    OpenAutoIt::VirtualMachine& vm = interpreter.vm();
 
     vm.m_ConsoleWrite = [](phi::string_view text) noexcept { buffer.std_out.emplace_back(text); };
     vm.m_ConsoleWriteError = [](phi::string_view text) noexcept {
@@ -251,11 +250,15 @@ int main(int argc, char* argv[])
         number_of_tests += 1u;
         if (result)
         {
-            std::cout << "\033[32m" << "[PASS]" << "\033[0m\n";
+            std::cout << "\033[32m"
+                      << "[PASS]"
+                      << "\033[0m\n";
         }
         else
         {
-            std::cout << "\033[31m" << "[FAIL]" << "\033[0m\n";
+            std::cout << "\033[31m"
+                      << "[FAIL]"
+                      << "\033[0m\n";
             number_of_test_failures += 1u;
         }
     }

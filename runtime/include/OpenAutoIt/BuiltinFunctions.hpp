@@ -9,7 +9,7 @@ namespace OpenAutoIt
 
     Variant BuiltIn_ConsoleWrite(const VirtualMachine& vm, const Variant& input) noexcept;
 
-    Variant BuiltIn_ConsoleWriteWrite(const VirtualMachine& vm, const Variant& input) noexcept;
+    Variant BuiltIn_ConsoleWriteError(const VirtualMachine& vm, const Variant& input) noexcept;
 
     Variant BuiltIn_VarGetType(const VirtualMachine& vm, const Variant& input) noexcept;
 } // namespace OpenAutoIt

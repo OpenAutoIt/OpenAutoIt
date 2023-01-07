@@ -4,13 +4,17 @@
 #include "OpenAutoIt/AST/ASTExpression.hpp"
 #include "OpenAutoIt/AST/ASTFloatLiteral.hpp"
 #include "OpenAutoIt/AST/ASTFunctionCallExpression.hpp"
+#include "OpenAutoIt/AST/ASTFunctionDefinition.hpp"
 #include "OpenAutoIt/AST/ASTKeywordLiteral.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
 #include "OpenAutoIt/AST/ASTWhileStatement.hpp"
 #include "OpenAutoIt/BuiltinFunctions.hpp"
+#include "OpenAutoIt/Token.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
+#include "OpenAutoIt/UnsafeOperations.hpp"
 #include "OpenAutoIt/Variant.hpp"
 #include "OpenAutoIt/VirtualMachine.hpp"
+#include <fmt/format.h>
 #include <phi/container/string_view.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/observer_ptr.hpp>
@@ -34,6 +38,16 @@ namespace OpenAutoIt
         InterpretStatements(m_Document->m_Statements);
     }
 
+    VirtualMachine& Interpreter::vm() noexcept
+    {
+        return m_VirtualMachine;
+    }
+
+    const VirtualMachine& Interpreter::vm() const noexcept
+    {
+        return m_VirtualMachine;
+    }
+
     void Interpreter::InterpretStatements(
             std::vector<phi::not_null_scope_ptr<ASTStatement>>& statements)
     {
@@ -42,7 +56,7 @@ namespace OpenAutoIt
             // Run pre-action
             m_VirtualMachine.PreStatementAction(statement);
 
-            if (m_VirtualMachine.m_GracefullyHalt)
+            if (m_VirtualMachine.m_Aborting)
             {
                 return;
             }
@@ -104,6 +118,7 @@ namespace OpenAutoIt
                 const phi::string_view variable_name = variable_assignment->m_VariableName;
                 PHI_ASSERT(!variable_name.is_empty());
 
+                // TODO: Const?
                 phi::observer_ptr<ASTExpression> initial_expression =
                         variable_assignment->m_InitialValueExpression;
                 if (initial_expression)
@@ -111,14 +126,12 @@ namespace OpenAutoIt
                     const Variant expression_value =
                             InterpretExpression(initial_expression.release_not_null());
 
-                    // TODO: Wrap in function
-                    m_VirtualMachine.m_Globals.insert_or_assign(variable_name, expression_value);
+                    m_VirtualMachine.PushOrAssignVariable(variable_name, expression_value);
                     return;
                 }
 
-                // TODO: Wrap in function
                 // Insert a default initialized variable
-                m_VirtualMachine.m_Globals[variable_name];
+                m_VirtualMachine.PushVariable(variable_name, {});
                 return;
             }
 
@@ -137,7 +150,7 @@ namespace OpenAutoIt
                     PHI_ASSERT(condition.IsBoolean());
 
                     // Stop while loop if the condition is false
-                    if (!condition.AsBoolean() || m_VirtualMachine.m_GracefullyHalt)
+                    if (!condition.AsBoolean() || m_VirtualMachine.m_Aborting)
                     {
                         return;
                     }
@@ -228,15 +241,15 @@ namespace OpenAutoIt
 
                 const phi::string_view variable_name = variable_expression->m_VariableName;
 
-                // TODO: Wrap in function
-                if (!m_VirtualMachine.m_Globals.contains(variable_name))
+                auto value = m_VirtualMachine.LookupVariableByName(variable_name);
+                if (!value)
                 {
-                    // TODO: Give error
+                    m_VirtualMachine.RuntimeError("No variable named \"{}\"",
+                                                  std::string_view(variable_name));
                     return {};
                 }
 
-                // TODO: Wrap in function
-                return m_VirtualMachine.m_Globals.at(variable_name);
+                return value.value();
             }
 
             default:
@@ -296,7 +309,7 @@ namespace OpenAutoIt
                     return {};
                 }
 
-                return BuiltIn_ConsoleWriteWrite(m_VirtualMachine, arguments.at(0u));
+                return BuiltIn_ConsoleWriteError(m_VirtualMachine, arguments.at(0u));
             }
 
             // https://www.autoitscript.com/autoit3/docs/functions/VarGetType.htm
@@ -311,9 +324,9 @@ namespace OpenAutoIt
             }
 
             default:
-                // TODO: Temporary hack to allow running code which uses not implemented builtins
-                std::cout << "RUNTIME ERROR: Usage of unimplemented builtin function \""
-                          << enum_name(function) << "\"\n";
+                // TODO: Temporary hack to allow running code which uses not implemented builtin
+                m_VirtualMachine.RuntimeError("Usage of unimplemented builtin function \"{}\"",
+                                              enum_name(function));
                 return {};
         }
 
@@ -324,10 +337,50 @@ namespace OpenAutoIt
     Variant Interpreter::InterpretFunctionCall(const phi::string_view      function,
                                                const std::vector<Variant>& arguments)
     {
-        // TODO: Implement men
+        phi::observer_ptr<ASTFunctionDefinition> function_definition =
+                m_Document->LookupFunctionDefinitionByName(function);
 
-        (void)function;
-        (void)arguments;
+        if (!function_definition)
+        {
+            m_VirtualMachine.RuntimeError("No function called \"{}\" found!",
+                                          std::string_view(function));
+            return {};
+        }
+
+        // Push new function scope
+        m_VirtualMachine.PushFunctionScope(function);
+
+        // Push arguments into the new scope
+        for (phi::usize index{0u}; index < function_definition->m_Parameters.size(); ++index)
+        {
+            // TODO: This should be const but theres currently a bug in Phi which prevents us more doing so
+            FunctionParameter& parameter = function_definition->m_Parameters.at(index.unsafe());
+
+            // Check if the argument was explicitly provided
+            if (index < arguments.size())
+            {
+                // Simply set the parameter to be the given argument
+                m_VirtualMachine.PushVariable(parameter.name, arguments.at(index.unsafe()));
+            }
+            else
+            {
+                // Otherwise the paramter MUST be defaultet
+                if (!parameter.default_value)
+                {
+                    m_VirtualMachine.RuntimeError("Missing argument");
+                    break;
+                }
+
+                // The value is simply the interpreted value of our default expression
+                Variant value = InterpretExpression(parameter.default_value.not_null_observer());
+
+                m_VirtualMachine.PushVariable(parameter.name, value);
+            }
+        }
+
+        InterpretStatements(function_definition->m_FunctionBody);
+
+        m_VirtualMachine.PopFunctionScope();
 
         return {};
     }
@@ -339,15 +392,21 @@ namespace OpenAutoIt
         switch (op)
         {
             case TokenKind::OP_Plus:
-                return EvalutateBinaryPlusExpression(lhs, rhs);
+                return EvaluateBinaryPlusExpression(lhs, rhs);
+
+            case TokenKind::OP_Minus:
+                return EvaluateBinaryMinusExpression(lhs, rhs);
+
+            case TokenKind::OP_Multiply:
+                return EvaluateBinaryMultiplyExpression(lhs, rhs);
 
             default:
                 return {};
         }
     }
 
-    Variant Interpreter::EvalutateBinaryPlusExpression(const Variant& lhs,
-                                                       const Variant& rhs) noexcept
+    Variant Interpreter::EvaluateBinaryPlusExpression(const Variant& lhs,
+                                                      const Variant& rhs) noexcept
     {
         // TODO: We currently only support adding integer which is not correct
         if (!lhs.IsInt64() || !rhs.IsInt64())
@@ -355,6 +414,28 @@ namespace OpenAutoIt
             return {};
         }
 
-        return Variant::MakeInt(lhs.AsInt64() + rhs.AsInt64());
+        return Variant::MakeInt(UnsafeAdd(lhs.AsInt64(), rhs.AsInt64()));
+    }
+
+    Variant Interpreter::EvaluateBinaryMinusExpression(const Variant& lhs,
+                                                       const Variant& rhs) noexcept
+    {
+        if (!lhs.IsInt64() || !rhs.IsInt64())
+        {
+            return {};
+        }
+
+        return Variant::MakeInt(UnsafeMinus(lhs.AsInt64(), rhs.AsInt64()));
+    }
+
+    Variant Interpreter::EvaluateBinaryMultiplyExpression(const Variant& lhs,
+                                                          const Variant& rhs) noexcept
+    {
+        if (!lhs.IsInt64() || !rhs.IsInt64())
+        {
+            return {};
+        }
+
+        return Variant::MakeInt(UnsafeMultiply(lhs.AsInt64(), rhs.AsInt64()));
     }
 } // namespace OpenAutoIt

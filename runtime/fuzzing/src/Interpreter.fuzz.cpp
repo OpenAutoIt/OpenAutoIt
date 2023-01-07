@@ -23,7 +23,7 @@ void pre_action(phi::not_null_observer_ptr<OpenAutoIt::ASTStatement> /*statement
 
     if (NumberOfStatementsRan >= MaxNumberOfStatements)
     {
-        current_interpreter->m_VirtualMachine.m_GracefullyHalt = true;
+        current_interpreter->vm().m_Aborting = true;
     }
 }
 
@@ -58,11 +58,11 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
     current_interpreter = &interpreter;
 
     // Inject methods for pre actions
-    interpreter.m_VirtualMachine.SetPreStatementAction(pre_action);
+    interpreter.vm().SetPreStatementAction(pre_action);
 
     // Prevent output
-    interpreter.m_VirtualMachine.m_ConsoleWrite      = [](phi::string_view) {};
-    interpreter.m_VirtualMachine.m_ConsoleWriteError = [](phi::string_view) {};
+    interpreter.vm().m_ConsoleWrite      = [](phi::string_view) {};
+    interpreter.vm().m_ConsoleWriteError = [](phi::string_view) {};
 
     interpreter.Run();
 

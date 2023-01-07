@@ -62,11 +62,7 @@ namespace OpenAutoIt
         [[nodiscard]] constexpr int lookup(TokenKind token) const
         {
             int precedence = m_TokenPrecedence[static_cast<size_t>(token)];
-            if (precedence == 0)
-            {
-                // No precedence defined
-                PHI_ASSERT_NOT_REACHED();
-            }
+            //PHI_ASSERT(precedence != 0);
 
             return precedence;
         }
@@ -79,43 +75,43 @@ namespace OpenAutoIt
         struct OperatorPrecedence
         {
             TokenKind token;
-            int       precedence;
+            int       precedence{-1};
         };
 
         // https://www.autoitscript.com/autoit3/docs/intro/lang_operators.htm
         static constexpr const OperatorPrecedence m_OperatorPrecedence[] = {
                 // Precedence 8
-                {TokenKind::LParen, 8}, // (
+                {TokenKind::LParen, 80}, // (
 
                 // Precedence 7
-                {TokenKind::KW_Not, 7}, // Not
+                {TokenKind::KW_Not, 70}, // Not
 
                 // Precedence 6
-                {TokenKind::OP_Raise, 6}, // ^
+                {TokenKind::OP_Raise, 60}, // ^
 
                 // Precedence 5
-                {TokenKind::OP_Multiply, 5}, // *
-                {TokenKind::OP_Divide, 5},   // /
+                {TokenKind::OP_Multiply, 50}, // *
+                {TokenKind::OP_Divide, 50},   // /
 
                 // Precedence 4
-                {TokenKind::OP_Plus, 4},  // +
-                {TokenKind::OP_Minus, 4}, // -
+                {TokenKind::OP_Plus, 40},  // +
+                {TokenKind::OP_Minus, 40}, // -
 
                 // Precedence 3
-                {TokenKind::OP_Concatenate, 3}, // &
+                {TokenKind::OP_Concatenate, 30}, // &
 
                 // Precedence 2
-                {TokenKind::OP_LessThan, 2},         // <
-                {TokenKind::OP_LessThanEqual, 2},    // <=
-                {TokenKind::OP_GreaterThan, 2},      // >
-                {TokenKind::OP_GreaterThanEqual, 2}, // <=
-                {TokenKind::OP_Equals, 2},           // =
-                {TokenKind::OP_NotEqual, 2},         // <>
-                {TokenKind::OP_EqualsEquals, 2},     // ==
+                {TokenKind::OP_LessThan, 20},         // <
+                {TokenKind::OP_LessThanEqual, 20},    // <=
+                {TokenKind::OP_GreaterThan, 20},      // >
+                {TokenKind::OP_GreaterThanEqual, 20}, // <=
+                {TokenKind::OP_Equals, 20},           // =
+                {TokenKind::OP_NotEqual, 20},         // <>
+                {TokenKind::OP_EqualsEquals, 20},     // ==
 
                 // Precedence 1
-                {TokenKind::KW_Or, 1},  // Or
-                {TokenKind::KW_And, 1}, // And
+                {TokenKind::KW_Or, 10},  // Or
+                {TokenKind::KW_And, 10}, // And
         };
     };
 
@@ -304,7 +300,10 @@ namespace OpenAutoIt
                 return {};
             }
 
-            function_definition->m_FunctionBody.emplace_back(phi::move(statement));
+            function_definition->m_FunctionBody.emplace_back(
+                    phi::move(statement.release_not_null()));
+
+            ConsumeNewLineAndComments();
         }
 
         // Next we MUST parse EndFunc
@@ -348,7 +347,7 @@ namespace OpenAutoIt
                     ConsumeCurrent();
 
                     // Default value is an expression
-                    auto default_expression = ParseExpression(0);
+                    auto default_expression = ParseExpression();
                     if (!default_expression)
                     {
                         // TODO: Report error
@@ -456,7 +455,7 @@ namespace OpenAutoIt
         ConsumeCurrent();
 
         // Next we MUST parse an Expression
-        auto while_condition_expression = ParseExpression(0);
+        auto while_condition_expression = ParseExpression();
         if (!while_condition_expression)
         {
             // TODO: Proper error
@@ -606,7 +605,7 @@ namespace OpenAutoIt
             ConsumeCurrent();
 
             // Now me MUST parse an expression
-            phi::scope_ptr<ASTExpression> expression = phi::move(ParseExpression(-1));
+            phi::scope_ptr<ASTExpression> expression = ParseExpression();
             if (!expression)
             {
                 // TODO: Error failed to parse a valid expression
@@ -623,7 +622,7 @@ namespace OpenAutoIt
 
     phi::scope_ptr<ASTExpressionStatement> Parser::ParseExpressionStatement() noexcept
     {
-        auto expression = ParseExpression(0);
+        auto expression = ParseExpression();
         if (!expression)
         {
             return {};
@@ -647,7 +646,7 @@ namespace OpenAutoIt
         }
 
         // Next me MUST parse an expression
-        auto if_condition = ParseExpression(0);
+        auto if_condition = ParseExpression();
         if (!if_condition)
         {
             std::cout << "ERR: failed to parse expression!\n";
@@ -696,161 +695,6 @@ namespace OpenAutoIt
         }
 
         return phi::move(if_statement);
-    }
-
-    phi::scope_ptr<ASTExpression> Parser::ParseExpression(int precedence) noexcept
-    {
-        if (!m_TokenStream->has_more())
-        {
-            // TODO: Proper error
-            return {};
-        }
-
-        const Token& token = CurrentToken();
-        if (IsUnaryOperator(token.GetTokenKind()))
-        {
-            const int op_precedence = OperatorPrecedence.lookup(token.GetTokenKind());
-            PHI_UNUSED_VARIABLE(op_precedence);
-            ConsumeCurrent();
-
-            // TODO: Implement me
-        }
-        else if (token.GetTokenKind() == TokenKind::LParen)
-        {
-            // TODO: Implement me
-            m_TokenStream->consume();
-
-            if (!m_TokenStream->has_more())
-            {
-                // TODO: Give proper Error
-                return {};
-            }
-
-            ParseExpression(precedence);
-            // TODO: expect )
-        }
-        else if (token.GetTokenKind() == TokenKind::IntegerLiteral)
-        {
-            phi::scope_ptr<ASTExpression> int_literal = ParseIntegerLiteral();
-            if (!int_literal)
-            {
-                // TODO: Error failed to parse integer literal
-                return {};
-            }
-
-            // TODO: For some reason reached_end() always returns false
-            // Check for EOF or NewLine
-            if (m_TokenStream->reached_end() || CurrentToken().GetTokenKind() == TokenKind::NewLine)
-            {
-                // This is just an inter literal
-                return int_literal;
-            }
-
-            const Token& next_token = CurrentToken();
-
-            // TODO: Why on earth is this hardcoded to integer literal? You can have binary operators for all sorts of things...
-            if (IsBinaryOperator(next_token.GetTokenKind()))
-            {
-                // Then this must be a binary expression
-                auto binary_exp = ParseBinaryExpression(int_literal.release_not_null());
-                if (!binary_exp)
-                {
-                    // TODO: Error failed to parse binary expression
-                    return {};
-                }
-
-                return phi::move(binary_exp);
-            }
-
-            // Integer literal not followed by operator so just IntegerLiteralExpression
-            return phi::move(int_literal);
-        }
-        else if (token.GetTokenKind() == TokenKind::StringLiteral)
-        {
-            auto string_literal_expression = ParseStringLiteral();
-            if (!string_literal_expression)
-            {
-                // TODO: Proper error
-                return {};
-            }
-
-            return phi::move(string_literal_expression);
-        }
-
-        // Boolean literal
-        else if (token.GetTokenKind() == TokenKind::KW_True ||
-                 token.GetTokenKind() == TokenKind::KW_False)
-        {
-            auto boolean_literal = ParseBooleanLiteral();
-            if (!boolean_literal)
-            {
-                // TODO: Proper error
-                return {};
-            }
-
-            return phi::move(boolean_literal);
-        }
-
-        // Function call expression
-        else if (token.GetTokenKind() == TokenKind::FunctionIdentifier || token.IsBuiltInFunction())
-        {
-            auto function_call_expression = ParseFunctionCallExpression();
-            if (!function_call_expression)
-            {
-                // TODO: Proper error
-                std::cout << "ERR: Failed to parse function call expression!\n";
-                return {};
-            }
-
-            return phi::move(function_call_expression);
-        }
-        // Variable expression
-        else if (token.GetTokenKind() == TokenKind::VariableIdentifier)
-        {
-            auto variable_expression = ParseVariableExpression();
-            if (!variable_expression)
-            {
-                // TODO: Proper error
-                std::cout << "ERR: Failed to parse Variable expression\n";
-                return {};
-            }
-
-            // TODO: There could be an operator after here which whould need to be parsed
-            //       Like $var = $var + 1 for example
-
-            return phi::move(variable_expression);
-        }
-        // Keyword literal
-        else if (token.IsKeywordLiteral())
-        {
-            auto keyword_literal = ParseKeywordliteral();
-            if (!keyword_literal)
-            {
-                // TODO: Proper error
-                std::cout << "ERR: Failed to parse keyword literal expression!\n";
-                return {};
-            }
-
-            return phi::move(keyword_literal);
-        }
-        // Float literal
-        else if (token.GetTokenKind() == TokenKind::FloatLiteral)
-        {
-            auto float_literal = ParseFloatLiteral();
-            if (!float_literal)
-            {
-                // TODO: Proper error
-                std::cout << "ERR: Failed to parse float literal expression!\n";
-                return {};
-            }
-
-            return phi::move(float_literal);
-        }
-
-        // TODO: Error Unexpected token
-        std::cout << "Unexpected token \"" << enum_name(token.GetTokenKind())
-                  << "\" while parsing expression\n";
-        return {};
     }
 
     phi::scope_ptr<ASTIntegerLiteral> Parser::ParseIntegerLiteral() noexcept
@@ -921,29 +765,205 @@ namespace OpenAutoIt
         return phi::move(string_literal);
     }
 
-    phi::scope_ptr<ASTBinaryExpression> Parser::ParseBinaryExpression(
-            phi::not_null_scope_ptr<ASTExpression> lhs_expression) noexcept
+    phi::scope_ptr<ASTExpression> Parser::ParseExpression() noexcept
     {
-        const Token& op_token = CurrentToken();
-
-        if (!IsBinaryOperator(op_token.GetTokenKind()))
+        phi::scope_ptr<ASTExpression> lhs_expression = ParseExpressionLhs();
+        if (!lhs_expression)
         {
-            // TODO: Error non binary operator token
-            return {};
-        }
-        ConsumeCurrent();
-
-        phi::scope_ptr<ASTExpression> rhs_expression =
-                ParseExpression(-1); // TODO: -1 is very likely not correct and a HACK
-        if (!rhs_expression)
-        {
-            // TODO: Error failed to parse rhs expression
             return {};
         }
 
-        return phi::make_not_null_scope<ASTBinaryExpression>(phi::move(lhs_expression),
-                                                             op_token.GetTokenKind(),
-                                                             rhs_expression.release_not_null());
+        return ParseExpressionRhs(lhs_expression.release_not_null(), 0);
+    }
+
+    phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs() noexcept
+    {
+        if (!m_TokenStream->has_more())
+        {
+            // TODO: Proper error
+            return {};
+        }
+
+        const Token& token = CurrentToken();
+        if (IsUnaryOperator(token.GetTokenKind()))
+        {
+            const int op_precedence = OperatorPrecedence.lookup(token.GetTokenKind());
+            PHI_UNUSED_VARIABLE(op_precedence);
+            ConsumeCurrent();
+
+            // TODO: Implement me
+        }
+        else if (token.GetTokenKind() == TokenKind::LParen)
+        {
+            // Consume the LParen
+            m_TokenStream->consume();
+
+            phi::scope_ptr<ASTExpression> paren_expression = ParseParenExpression();
+            if (!paren_expression)
+            {
+                // TODO: Proper error
+                return {};
+            }
+
+            return phi::move(paren_expression);
+        }
+        else if (token.GetTokenKind() == TokenKind::IntegerLiteral)
+        {
+            phi::scope_ptr<ASTExpression> int_literal = ParseIntegerLiteral();
+            if (!int_literal)
+            {
+                // TODO: Error failed to parse integer literal
+                return {};
+            }
+
+            return phi::move(int_literal);
+        }
+        else if (token.GetTokenKind() == TokenKind::StringLiteral)
+        {
+            auto string_literal_expression = ParseStringLiteral();
+            if (!string_literal_expression)
+            {
+                // TODO: Proper error
+                return {};
+            }
+
+            return phi::move(string_literal_expression);
+        }
+
+        // Boolean literal
+        else if (token.GetTokenKind() == TokenKind::KW_True ||
+                 token.GetTokenKind() == TokenKind::KW_False)
+        {
+            auto boolean_literal = ParseBooleanLiteral();
+            if (!boolean_literal)
+            {
+                // TODO: Proper error
+                return {};
+            }
+
+            return phi::move(boolean_literal);
+        }
+
+        // Function call expression
+        else if (token.GetTokenKind() == TokenKind::FunctionIdentifier || token.IsBuiltInFunction())
+        {
+            auto function_call_expression = ParseFunctionCallExpression();
+            if (!function_call_expression)
+            {
+                // TODO: Proper error
+                std::cout << "ERR: Failed to parse function call expression!\n";
+                return {};
+            }
+
+            return phi::move(function_call_expression);
+        }
+        // Variable expression
+        else if (token.GetTokenKind() == TokenKind::VariableIdentifier)
+        {
+            auto variable_expression = ParseVariableExpression();
+            if (!variable_expression)
+            {
+                // TODO: Proper error
+                std::cout << "ERR: Failed to parse Variable expression\n";
+                return {};
+            }
+
+            return phi::move(variable_expression);
+        }
+        // Keyword literal
+        else if (token.IsKeywordLiteral())
+        {
+            auto keyword_literal = ParseKeywordliteral();
+            if (!keyword_literal)
+            {
+                // TODO: Proper error
+                std::cout << "ERR: Failed to parse keyword literal expression!\n";
+                return {};
+            }
+
+            return phi::move(keyword_literal);
+        }
+        // Float literal
+        else if (token.GetTokenKind() == TokenKind::FloatLiteral)
+        {
+            auto float_literal = ParseFloatLiteral();
+            if (!float_literal)
+            {
+                // TODO: Proper error
+                std::cout << "ERR: Failed to parse float literal expression!\n";
+                return {};
+            }
+
+            return phi::move(float_literal);
+        }
+
+        // TODO: Error Unexpected token
+        std::cout << "Unexpected token \"" << enum_name(token.GetTokenKind())
+                  << "\" while parsing expression\n";
+        return {};
+    }
+
+    phi::scope_ptr<ASTExpression> Parser::ParseExpressionRhs(
+            phi::not_null_scope_ptr<ASTExpression> lhs, int precedence) noexcept
+    {
+        while (true)
+        {
+            if (!m_TokenStream->has_more())
+            {
+                return phi::move(lhs);
+            }
+
+            const Token& operator_token = CurrentToken();
+            if (!IsBinaryOperator(operator_token.GetTokenKind()))
+            {
+                // If its not a binary operator just return the lhs expression
+                return phi::move(lhs);
+            }
+            int token_precedence = OperatorPrecedence.lookup(operator_token.GetTokenKind());
+            ConsumeCurrent();
+
+            if (token_precedence < precedence)
+            {
+                return phi::move(lhs);
+            }
+
+            // This must be an binary expression
+            phi::scope_ptr<ASTExpression> rhs_expression = ParseExpressionLhs();
+            if (!rhs_expression)
+            {
+                // TODO: Proper error
+                return {};
+            }
+
+            // Nothing left to parse so directly return from here
+            if (!m_TokenStream->has_more())
+            {
+                return phi::make_not_null_scope<ASTBinaryExpression>(
+                        phi::move(lhs), operator_token.GetTokenKind(),
+                        rhs_expression.release_not_null());
+            }
+
+            // If BinOp binds less tightly with RHS than the operator after RHS, let
+            // the pending operator take RHS as its LHS.
+            const Token& next_token      = CurrentToken();
+            int          next_precedence = OperatorPrecedence.lookup(next_token.GetTokenKind());
+
+            if (token_precedence < next_precedence)
+            {
+                rhs_expression =
+                        ParseExpressionRhs(rhs_expression.release_not_null(), token_precedence + 1);
+                if (!rhs_expression)
+                {
+                    // TODO: Proper error
+                    return {};
+                }
+            }
+
+            // Merge LHS/RHS.
+            lhs = phi::make_not_null_scope<ASTBinaryExpression>(phi::move(lhs),
+                                                                operator_token.GetTokenKind(),
+                                                                rhs_expression.release_not_null());
+        }
     }
 
     phi::scope_ptr<ASTFunctionCallExpression> Parser::ParseFunctionCallExpression() noexcept
@@ -959,6 +979,11 @@ namespace OpenAutoIt
 
         phi::scope_ptr<ASTFunctionCallExpression> function_call_expression =
                 phi::make_scope<ASTFunctionCallExpression>();
+        if (!function_call_expression)
+        {
+            // TODO: Proper error
+            return {};
+        }
 
         if (function_identifier_token.IsBuiltInFunction())
         {
@@ -1027,7 +1052,7 @@ namespace OpenAutoIt
         while (m_TokenStream->has_more() && CurrentToken().GetTokenKind() != TokenKind::RParen)
         {
             // Parse the expression
-            phi::scope_ptr<ASTExpression> expression = ParseExpression(0);
+            phi::scope_ptr<ASTExpression> expression = ParseExpression();
             if (!expression)
             {
                 std::cout << "ERR: While parsing expression for function call arguments\n";
@@ -1083,6 +1108,26 @@ namespace OpenAutoIt
     }
 
     PHI_GCC_SUPPRESS_WARNING_POP()
+
+    phi::scope_ptr<ASTExpression> Parser::ParseParenExpression() noexcept
+    {
+        // NOTE: Me MUST have consumed the LParen before this
+
+        phi::scope_ptr<ASTExpression> expression = ParseExpression();
+        if (!expression)
+        {
+            // TODO: Proper error
+            return {};
+        }
+
+        if (!MustParse(TokenKind::RParen))
+        {
+            // TODO: Proper error expected closing paren
+            return {};
+        }
+
+        return phi::move(expression);
+    }
 
     phi::scope_ptr<ASTBooleanLiteral> Parser::ParseBooleanLiteral() noexcept
     {

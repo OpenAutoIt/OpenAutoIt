@@ -102,7 +102,7 @@ endif()
 add_subdirectory("OpenAutoIt")
 
 if(${OA_LTO})
-  set(_extra ${_extra} IPO)
+  set(_extra ${_extra} LTO)
 endif()
 
 if(${OA_COVERAGE_BUILD})

@@ -36,6 +36,10 @@ namespace OpenAutoIt
 
         void Run();
 
+        [[nodiscard]] VirtualMachine& vm() noexcept;
+
+        [[nodiscard]] const VirtualMachine& vm() const noexcept;
+
         void InterpretStatements(std::vector<phi::not_null_scope_ptr<ASTStatement>>& statements);
 
         void InterpretStatement(phi::not_null_observer_ptr<ASTStatement> statement);
@@ -54,9 +58,11 @@ namespace OpenAutoIt
         Variant EvaluateBinaryExpression(const Variant& lhs, const Variant& rhs,
                                          const TokenKind op);
 
-        Variant EvalutateBinaryPlusExpression(const Variant& lhs, const Variant& rhs) noexcept;
+        Variant EvaluateBinaryPlusExpression(const Variant& lhs, const Variant& rhs) noexcept;
+        Variant EvaluateBinaryMinusExpression(const Variant& lhs, const Variant& rhs) noexcept;
+        Variant EvaluateBinaryMultiplyExpression(const Variant& lhs, const Variant& rhs) noexcept;
 
-    public:
+    private:
         phi::not_null_observer_ptr<ASTDocument> m_Document;
         VirtualMachine                          m_VirtualMachine;
     };

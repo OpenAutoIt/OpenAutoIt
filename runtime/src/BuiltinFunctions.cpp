@@ -38,10 +38,11 @@ namespace OpenAutoIt
     }
 
     // https://www.autoitscript.com/autoit3/docs/functions/ConsoleWriteError.htm
-    Variant BuiltIn_ConsoleWriteWrite(const VirtualMachine& vm, const Variant& input) noexcept
+    Variant BuiltIn_ConsoleWriteError(const VirtualMachine& vm, const Variant& input) noexcept
     {
         const Variant value = input.CastToString();
         PHI_ASSERT(value.IsString());
+
         const std::string& output = value.AsString();
 
         // Output to VM

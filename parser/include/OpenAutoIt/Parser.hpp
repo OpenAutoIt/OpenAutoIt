@@ -137,17 +137,17 @@ namespace OpenAutoIt
         phi::scope_ptr<ASTIfStatement>         ParseIfStatement() noexcept;
 
         // Expressions
-        phi::scope_ptr<ASTExpression> ParseExpression(int precedence) noexcept;
+        phi::scope_ptr<ASTExpression> ParseExpression() noexcept;
 
-        phi::scope_ptr<ASTBinaryExpression> ParseBinaryExpression(
-                phi::not_null_scope_ptr<ASTExpression> lhs_expression) noexcept;
+        phi::scope_ptr<ASTExpression> ParseExpressionLhs() noexcept;
+        phi::scope_ptr<ASTExpression> ParseExpressionRhs(phi::not_null_scope_ptr<ASTExpression> lhs,
+                                                         int precedence) noexcept;
 
-        phi::scope_ptr<ASTFunctionCallExpression> ParseFunctionCallExpression() noexcept;
-
+        phi::scope_ptr<ASTFunctionCallExpression>           ParseFunctionCallExpression() noexcept;
         std::vector<phi::not_null_scope_ptr<ASTExpression>> ParseFunctionCallArguments() noexcept;
-
-        phi::scope_ptr<ASTVariableExpression>       ParseVariableExpression() noexcept;
+        phi::scope_ptr<ASTVariableExpression>               ParseVariableExpression() noexcept;
         phi::scope_ptr<ASTArraySubscriptExpression> ParseArraySubscriptExpression() noexcept;
+        phi::scope_ptr<ASTExpression>               ParseParenExpression() noexcept;
 
         // Literals
         phi::scope_ptr<ASTIntegerLiteral> ParseIntegerLiteral() noexcept;

@@ -1,2 +1,4 @@
 Func empty()
 EndFunc
+
+empty()
