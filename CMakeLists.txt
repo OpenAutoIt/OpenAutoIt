@@ -44,6 +44,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake)
 
 include(Environment)
 include(Testing)
+include(CTest)
 include(ProjectOptions)
 
 # Set output directories
@@ -100,6 +101,10 @@ if(${OA_BUILD_TOOLS})
 endif()
 
 add_subdirectory("OpenAutoIt")
+
+# Disable unwanted gcc warning
+phi_set_cache_value(PHI_HAS_C_FLAG_WABI_TAG 0)
+phi_set_cache_value(PHI_HAS_CXX_FLAG_WABI_TAG 0)
 
 if(${OA_LTO})
   set(_extra ${_extra} LTO)
