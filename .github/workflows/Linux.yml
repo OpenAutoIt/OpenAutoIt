@@ -62,11 +62,7 @@ jobs:
           submodules: recursive
 
       - name: Setup Environment
-        run: |
-          external/Phi/scripts/ci/SetupEnvironment.sh
-
-          # Export dynamic test mode
-          echo "OA_DYNAMIC_TEST=${{ matrix.dynamic_test }}" >> $GITHUB_ENV
+        run: external/Phi/scripts/ci/SetupEnvironment.sh
 
       - name: Install compiler
         run: external/Phi/scripts/ci/InstallTools.sh ${{ matrix.compiler }} ninja
@@ -85,7 +81,13 @@ jobs:
           mkdir build -p
           cd build
 
-          cmake -DCMAKE_BUILD_TYPE:STRING=${{ matrix.build_type }} ..
+          cmake .. \
+            -DCMAKE_BUILD_TYPE:STRING=${{ matrix.build_type }} \
+            -DOA_COVERAGE_BUILD:STRING=${{ matrix.dynamic_test == "coverage" }}
+            -DOA_ENABLE_SANITIZER_ADDRESS:STRING=${{ matrix.dynamic_test == "asan" }} \
+            -DOA_ENABLE_SANITIZER_LEAK:STRING=${{ matrix.dynamic_test == "lsan" }} \
+            -DOA_ENABLE_SANITIZER_THREAD:STRING=${{ matrix.dynamic_test == "tsan" }} \
+            -DOA_ENABLE_SANITIZER_UNDEFINED:STRING=${{ matrix.dynamic_test == "ubsan" }}
 
       - name: Build
         working-directory: ./build
