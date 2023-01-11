@@ -104,6 +104,7 @@ jobs:
         if: ${{ matrix.dynamic_test == 'coverage' }}
         uses: codecov/codecov-action@v3.1.1
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: ./build/coverage.xml
           flags: ${{ runner.os }},${{ matrix.compiler }},${{ matrix.build_type }}
           name: ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.build_type }}
