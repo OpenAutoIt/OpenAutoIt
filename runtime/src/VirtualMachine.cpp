@@ -1,80 +1,99 @@
 #include "OpenAutoIt/VirtualMachine.hpp"
-#include "OpenAutoIt/FunctionScope.hpp"
+
+#include "OpenAutoIt/Scope.hpp"
+#include "OpenAutoIt/StackTraceEntry.hpp"
 #include "OpenAutoIt/VariableScope.hpp"
+#include <phi/compiler_support/extended_attributes.hpp>
+#include <phi/compiler_support/warning.hpp>
 #include <phi/core/assert.hpp>
+#include <phi/core/boolean.hpp>
+#include <phi/core/observer_ptr.hpp>
+
+PHI_GCC_SUPPRESS_WARNING("-Wsuggest-attribute=pure")
 
 namespace OpenAutoIt
 {
-    VirtualMachine::VirtualMachine()
+    void VirtualMachine::PushFunctionScope(std::string_view function_name,
+                                           Statements&      statements) noexcept
     {
-        // Push global scope
-        PushFunctionScope("<global>");
+        m_Scopes.emplace_front(ScopeKind::Function, function_name, statements);
     }
 
-    void VirtualMachine::SetPreStatementAction(VirtualMachine::PreStatementActionT action) noexcept
+    void VirtualMachine::PushBlockScope(Statements& statements) noexcept
     {
-        m_PreStatementAction = action;
+        m_Scopes.emplace_back(ScopeKind::Block, "<block_scope>", statements);
     }
 
-    void VirtualMachine::PreStatementAction(
-            phi::not_null_observer_ptr<ASTStatement> statement) const noexcept
+    void VirtualMachine::PushGlobalScope(Statements& statements) noexcept
     {
-        if (m_PreStatementAction)
+        m_Scopes.emplace_back(ScopeKind::Function, "<global>", statements);
+    }
+
+    void VirtualMachine::PopScope() noexcept
+    {
+        m_Scopes.pop_front();
+    }
+
+    PHI_ATTRIBUTE_PURE Scope& VirtualMachine::GetCurrentScope() noexcept
+    {
+        PHI_ASSERT(!m_Scopes.empty());
+
+        return m_Scopes.front();
+    }
+
+    PHI_ATTRIBUTE_PURE const Scope& VirtualMachine::GetCurrentScope() const noexcept
+    {
+        PHI_ASSERT(!m_Scopes.empty());
+
+        return m_Scopes.front();
+    }
+
+    PHI_ATTRIBUTE_PURE Scope& VirtualMachine::GetGlobalScope() noexcept
+    {
+        PHI_ASSERT(!m_Scopes.empty());
+
+        return m_Scopes.back();
+    }
+
+    PHI_ATTRIBUTE_PURE const Scope& VirtualMachine::GetGlobalScope() const noexcept
+    {
+        PHI_ASSERT(!m_Scopes.empty());
+
+        return m_Scopes.back();
+    }
+
+    StackTrace VirtualMachine::GetStrackTrace() const noexcept
+    {
+        // Count number of function elements
+        phi::u64 count = 0u;
+        for (const Scope& scope : m_Scopes)
         {
-            m_PreStatementAction(statement);
+            if (scope.kind == ScopeKind::Function)
+            {
+                count += 1u;
+            }
         }
-    }
 
-    void VirtualMachine::SetPostStatementAction(
-            VirtualMachine::PostStatementActionT action) noexcept
-    {
-        m_PostStatementAction = action;
-    }
+        StackTrace stack_trace;
+        stack_trace.reserve(count.unsafe());
 
-    void VirtualMachine::PostStatementAction(
-            phi::not_null_observer_ptr<ASTStatement> statement) const noexcept
-    {
-        if (m_PostStatementAction)
+        // Populate the stacktrace
+        for (const Scope& scope : m_Scopes)
         {
-            m_PostStatementAction(statement);
+            if (scope.kind == ScopeKind::Function)
+            {
+                // TODO: Line and Column not implemented
+                stack_trace.emplace_back(StackTraceEntry{
+                        .file = "", .function = scope.name, .line = 0u, .column = 0u});
+            }
         }
-    }
 
-    void VirtualMachine::PushFunctionScope(std::string_view function_name) noexcept
-    {
-        m_FunctionScopes.emplace_front(function_name);
-    }
-
-    void VirtualMachine::PopFunctionScope() noexcept
-    {
-        PHI_ASSERT(m_FunctionScopes.size() > 1u, "You cannot pop the global scope");
-
-        m_FunctionScopes.pop_front();
-    }
-
-    FunctionScope& VirtualMachine::GetLocalScope() noexcept
-    {
-        return m_FunctionScopes.front();
-    }
-
-    const FunctionScope& VirtualMachine::GetLocalScope() const noexcept
-    {
-        return m_FunctionScopes.front();
-    }
-
-    FunctionScope& VirtualMachine::GetGlobalScope() noexcept
-    {
-        return m_FunctionScopes.back();
-    }
-
-    const FunctionScope& VirtualMachine::GetGlobalScope() const noexcept
-    {
-        return m_FunctionScopes.back();
+        return phi::move(stack_trace);
     }
 
     phi::boolean VirtualMachine::PushVariable(std::string_view name, Variant value) noexcept
     {
-        FunctionScope& current_scope = GetLocalScope();
+        Scope& current_scope = GetCurrentScope();
 
         if (current_scope.variables.contains(name))
         {
@@ -87,7 +106,7 @@ namespace OpenAutoIt
 
     phi::boolean VirtualMachine::PushVariableGlobal(std::string_view name, Variant value) noexcept
     {
-        FunctionScope& global_scope = GetGlobalScope();
+        Scope& global_scope = GetGlobalScope();
 
         if (global_scope.variables.contains(name))
         {
@@ -113,7 +132,7 @@ namespace OpenAutoIt
 
     void VirtualMachine::PushOrAssignVariable(std::string_view name, Variant value) noexcept
     {
-        FunctionScope& current_scope = GetLocalScope();
+        Scope& current_scope = GetCurrentScope();
 
         current_scope.variables.insert_or_assign(name, value);
     }
@@ -121,8 +140,27 @@ namespace OpenAutoIt
     phi::optional<Variant> VirtualMachine::LookupVariableByName(
             std::string_view variable_name) const noexcept
     {
-        for (const FunctionScope& scope : m_FunctionScopes)
+        phi::boolean found_function_boundary{false};
+
+        for (const Scope& scope : m_Scopes)
         {
+            if (scope.kind == ScopeKind::Function)
+            {
+                if (found_function_boundary)
+                {
+                    // We hit the function boundary so only check the global scope and don't continue
+                    const Scope& global_scope = GetGlobalScope();
+                    if (global_scope.variables.contains(variable_name))
+                    {
+                        return global_scope.variables.at(variable_name);
+                    }
+
+                    return {};
+                }
+
+                found_function_boundary = true;
+            }
+
             if (scope.variables.contains(variable_name))
             {
                 return scope.variables.at(variable_name);
@@ -130,5 +168,27 @@ namespace OpenAutoIt
         }
 
         return {};
+    }
+
+    PHI_ATTRIBUTE_PURE phi::boolean VirtualMachine::CanRun() const noexcept
+    {
+        return !m_Scopes.empty() && !m_Aborting;
+    }
+
+    void VirtualMachine::OverwriteIOSreams(phi::observer_ptr<std::ostream> out,
+                                           phi::observer_ptr<std::ostream> err) noexcept
+    {
+        m_Stdout = out;
+        m_Stderr = err;
+    }
+
+    PHI_ATTRIBUTE_CONST phi::observer_ptr<std::ostream> VirtualMachine::GetStdout() const noexcept
+    {
+        return m_Stdout;
+    }
+
+    PHI_ATTRIBUTE_CONST phi::observer_ptr<std::ostream> VirtualMachine::GetStderr() const noexcept
+    {
+        return m_Stderr;
     }
 } // namespace OpenAutoIt

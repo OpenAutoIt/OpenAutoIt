@@ -10,6 +10,7 @@
 #include <string>
 
 PHI_MSVC_SUPPRESS_WARNING(4702) // unreachable code
+PHI_GCC_SUPPRESS_WARNING("-Wsuggest-attribute=const")
 
 namespace OpenAutoIt
 {

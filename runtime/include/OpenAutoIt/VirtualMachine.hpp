@@ -1,67 +1,76 @@
 #pragma once
 
 #include "OpenAutoIt/AST/ASTStatement.hpp"
-#include "OpenAutoIt/FunctionScope.hpp"
+#include "OpenAutoIt/Scope.hpp"
+#include "OpenAutoIt/StackTraceEntry.hpp"
 #include "OpenAutoIt/VariableScope.hpp"
 #include "OpenAutoIt/Variant.hpp"
-#include <fmt/core.h>
-#include <fmt/format.h>
+#include <phi/compiler_support/warning.hpp>
 #include <phi/container/string_view.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/forward.hpp>
 #include <phi/core/observer_ptr.hpp>
+#include <phi/core/types.hpp>
 #include <iostream>
+#include <iterator>
 #include <list>
+#include <ostream>
 #include <string_view>
 #include <unordered_map>
 
+PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wuninitialized")
+
+#include <fmt/core.h>
+#include <fmt/format.h>
+
+PHI_GCC_SUPPRESS_WARNING_POP()
+
 namespace OpenAutoIt
 {
-    // TODO: Move me somewhere saner
-    inline void default_console_write(phi::string_view text) noexcept
-    {
-        std::cout << std::string_view(text);
-    }
-
-    inline void default_console_write_error(phi::string_view text) noexcept
-    {
-        std::cerr << std::string_view(text);
-    }
+    using StackTrace = std::vector<StackTraceEntry>;
 
     // The abstract virtual machine running AutoIt
     class VirtualMachine
     {
     public:
-        VirtualMachine();
-
-        // TODO: Remove Pre/PostStatement stuff
-        using PreStatementActionT  = void (*)(phi::not_null_observer_ptr<ASTStatement> statement);
-        using PostStatementActionT = void (*)(phi::not_null_observer_ptr<ASTStatement> statement);
-
-        void SetPreStatementAction(PreStatementActionT action) noexcept;
-        void PreStatementAction(phi::not_null_observer_ptr<ASTStatement> statement) const noexcept;
-
-        void SetPostStatementAction(PostStatementActionT action) noexcept;
-        void PostStatementAction(phi::not_null_observer_ptr<ASTStatement> statement) const noexcept;
-        // TODO: End of remove me
-
         template <typename... ArgsT>
         void RuntimeError(std::string_view format_string, ArgsT&&... args) noexcept
         {
-            std::cerr << "[OpenAutoIt] RUNTIME ERROR: "
+            std::cerr << "[OpenAutoIt] "
+                      << "\033[31m"
+                         "RUNTIME ERROR!"
+                      << "\033[0m\n"
+                      << " > "
+                      << "\033[31m"
                       << fmt::format(fmt::runtime(format_string), phi::forward<ArgsT>(args)...)
-                      << '\n';
+                      << "\033[0m\n"
+                      << "Stack trace:\n";
+
+            // Print stack trace
+            StackTrace strack_trace = GetStrackTrace();
+            for (phi::u64 index{0u}; index < strack_trace.size(); ++index)
+            {
+                const StackTraceEntry& entry = strack_trace.at(index.unsafe());
+
+                std::cerr << "    #" << index.unsafe() << ' ' << entry.function << ' ' << entry.file
+                          << ':' << entry.line.unsafe() << ':' << entry.column.unsafe() << '\n';
+            }
+
             m_Aborting = true;
         }
 
-        void PushFunctionScope(std::string_view function_name) noexcept;
-        void PopFunctionScope() noexcept;
+        void PushFunctionScope(std::string_view function_name, Statements& statements) noexcept;
+        void PushBlockScope(Statements& statements) noexcept;
+        void PushGlobalScope(Statements& statements) noexcept;
+        void PopScope() noexcept;
 
-        [[nodiscard]] FunctionScope&       GetLocalScope() noexcept;
-        [[nodiscard]] const FunctionScope& GetLocalScope() const noexcept;
+        [[nodiscard]] Scope&       GetCurrentScope() noexcept;
+        [[nodiscard]] const Scope& GetCurrentScope() const noexcept;
 
-        [[nodiscard]] FunctionScope&       GetGlobalScope() noexcept;
-        [[nodiscard]] const FunctionScope& GetGlobalScope() const noexcept;
+        [[nodiscard]] Scope&       GetGlobalScope() noexcept;
+        [[nodiscard]] const Scope& GetGlobalScope() const noexcept;
+
+        [[nodiscard]] StackTrace GetStrackTrace() const noexcept;
 
         phi::boolean PushVariable(std::string_view name, Variant value) noexcept;
         phi::boolean PushVariableGlobal(std::string_view name, Variant value) noexcept;
@@ -74,18 +83,19 @@ namespace OpenAutoIt
         [[nodiscard]] phi::optional<Variant> LookupVariableByName(
                 std::string_view variable_name) const noexcept;
 
-        using ConsoleWriteT      = void (*)(phi::string_view text);
-        using ConsoleWriteErrorT = void (*)(phi::string_view text);
+        [[nodiscard]] phi::boolean CanRun() const noexcept;
 
-        //TODO: private
-        std::list<FunctionScope> m_FunctionScopes;
+        void OverwriteIOSreams(phi::observer_ptr<std::ostream> out,
+                               phi::observer_ptr<std::ostream> err) noexcept;
 
-        ConsoleWriteT      m_ConsoleWrite{default_console_write};
-        ConsoleWriteErrorT m_ConsoleWriteError{default_console_write_error};
+        [[nodiscard]] phi::observer_ptr<std::ostream> GetStdout() const noexcept;
+        [[nodiscard]] phi::observer_ptr<std::ostream> GetStderr() const noexcept;
 
-        // TODO: Remove these
-        PreStatementActionT  m_PreStatementAction{nullptr};
-        PostStatementActionT m_PostStatementAction{nullptr};
-        phi::boolean         m_Aborting{false};
+    private:
+        std::list<Scope> m_Scopes;
+
+        phi::observer_ptr<std::ostream> m_Stdout{&std::cout};
+        phi::observer_ptr<std::ostream> m_Stderr{&std::cerr};
+        phi::boolean                    m_Aborting{false};
     };
 } // namespace OpenAutoIt

@@ -32,17 +32,23 @@ namespace OpenAutoIt
     public:
         explicit Interpreter(phi::not_null_observer_ptr<ASTDocument> document) noexcept;
 
-        void SetDocument(phi::not_null_observer_ptr<ASTDocument> document) noexcept;
-
         void Run();
+
+        void Step();
+
+        [[nodiscard]] phi::not_null_observer_ptr<ASTStatement> GetCurrentStatement() const noexcept;
 
         [[nodiscard]] VirtualMachine& vm() noexcept;
 
         [[nodiscard]] const VirtualMachine& vm() const noexcept;
 
-        void InterpretStatements(std::vector<phi::not_null_scope_ptr<ASTStatement>>& statements);
+        enum class StatementFinished : bool
+        {
+            Yes = true,
+            No  = false,
+        };
 
-        void InterpretStatement(phi::not_null_observer_ptr<ASTStatement> statement);
+        StatementFinished InterpretStatement(phi::not_null_observer_ptr<ASTStatement> statement);
 
         Variant InterpretExpression(phi::not_null_observer_ptr<ASTExpression> expression);
 

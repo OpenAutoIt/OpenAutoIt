@@ -36,6 +36,14 @@ project(
   LANGUAGES CXX
   VERSION ${OPENAUT_VERSION_MAJOR}.${OPENAUT_VERSION_MINOR}.${OPENAUT_VERSION_PATCH})
 
+# Disable unwanted gcc warning
+set(PHI_HAS_C_FLAG_WABI_TAG
+    0
+    CACHE BOOL "" FORCE)
+set(PHI_HAS_CXX_FLAG_WABI_TAG
+    0
+    CACHE BOOL "" FORCE)
+
 # Dependencies
 add_subdirectory(external)
 
@@ -66,6 +74,7 @@ option(OA_ENABLE_SANITIZER_ADDRESS "" OFF)
 option(OA_ENABLE_SANITIZER_LEAK "" OFF)
 option(OA_ENABLE_SANITIZER_THREAD "" OFF)
 option(OA_ENABLE_SANITIZER_UNDEFINED "" OFF)
+option(OA_FUZZING_BUILD "" OFF)
 
 # Check for settings passed through the environment
 if(DEFINED ENV{OA_DYNAMIC_TEST})
@@ -96,15 +105,13 @@ add_subdirectory("runtime")
 
 add_subdirectory("test_runner")
 
+add_subdirectory("fuzzing")
+
 if(${OA_BUILD_TOOLS})
   add_subdirectory("tools")
 endif()
 
 add_subdirectory("OpenAutoIt")
-
-# Disable unwanted gcc warning
-phi_set_cache_value(PHI_HAS_C_FLAG_WABI_TAG 0)
-phi_set_cache_value(PHI_HAS_CXX_FLAG_WABI_TAG 0)
 
 if(${OA_LTO})
   set(_extra ${_extra} LTO)
@@ -131,6 +138,10 @@ endif()
 
 if(_list_of_sanitizers)
   set(_extra ${_extra} SANITIZER ${_list_of_sanitizers})
+endif()
+
+if(${OA_FUZZING_BUILD})
+  set(_extra FUZZING_BUILD)
 endif()
 
 # Configure

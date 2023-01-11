@@ -12,27 +12,11 @@
 #include <cstddef>
 #include <cstdint>
 
-static const constexpr phi::usize          MaxNumberOfStatements{1'000u};
-static phi::usize                          NumberOfStatementsRan{0u};
-phi::observer_ptr<OpenAutoIt::Interpreter> current_interpreter{nullptr};
-
-// TODO: Remove once hack is fixed
-void pre_action(phi::not_null_observer_ptr<OpenAutoIt::ASTStatement> /*statement*/)
-{
-    NumberOfStatementsRan += 1u;
-
-    if (NumberOfStatementsRan >= MaxNumberOfStatements)
-    {
-        current_interpreter->vm().m_Aborting = true;
-    }
-}
+static const constexpr phi::usize MaxNumberOfStatements{1'000u};
 
 // cppcheck-suppress unusedFunction symbolName=LLVMFuzzerTestOneInput
 extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size)
 {
-    // Reset counter
-    NumberOfStatementsRan = 0u;
-
     phi::string_view source = phi::string_view(reinterpret_cast<const char*>(data), size);
 
     OpenAutoIt::ParseResult parse_result;
@@ -54,17 +38,16 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
     // Interpreting
     OpenAutoIt::Interpreter interpreter{parse_result.m_Document.not_null_observer()};
 
-    // TODO: Remove me once the hackisch way to limiting number of statements is removed
-    current_interpreter = &interpreter;
-
-    // Inject methods for pre actions
-    interpreter.vm().SetPreStatementAction(pre_action);
-
     // Prevent output
-    interpreter.vm().m_ConsoleWrite      = [](phi::string_view) {};
-    interpreter.vm().m_ConsoleWriteError = [](phi::string_view) {};
+    interpreter.vm().OverwriteIOSreams(nullptr, nullptr);
 
-    interpreter.Run();
+    // Limit number of executions because of the halting problem
+    phi::u64 statements_ran = 0u;
+    while (interpreter.vm().CanRun() && statements_ran < MaxNumberOfStatements)
+    {
+        interpreter.Step();
+        ++statements_ran;
+    }
 
     return 0;
 }

@@ -646,7 +646,10 @@ namespace OpenAutoIt
     OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(BI_WinWait)                                                    \
     OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(BI_WinWaitActive)                                              \
     OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(BI_WinWaitClose)                                               \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(BI_WinWaitNotActive)
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(BI_WinWaitNotActive)                                           \
+    /* OpenAutoIt built-in Function language extensions */                                         \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(BI_ConsoleWriteLine)                                           \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(BI_ConsoleWriteErrorLine)
 
     enum class TokenKind
     {
@@ -665,7 +668,7 @@ namespace OpenAutoIt
     static constexpr const phi::size_t NumberOfTokens = static_cast<phi::size_t>(TokenKind::COUNT);
     static constexpr const phi::size_t BuiltInFirst   = static_cast<phi::size_t>(TokenKind::BI_Abs);
     static constexpr const phi::size_t BuiltInLast =
-            static_cast<phi::size_t>(TokenKind::BI_WinWaitNotActive);
+            static_cast<phi::size_t>(TokenKind::BI_ConsoleWriteErrorLine);
 
     PHI_GCC_SUPPRESS_WARNING_POP()
 

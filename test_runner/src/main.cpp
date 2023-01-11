@@ -10,70 +10,44 @@
 #include "OpenAutoIt/TokenStream.hpp"
 #include "OpenAutoIt/VirtualMachine.hpp"
 #include <phi/algorithm/equal.hpp>
+#include <phi/algorithm/string_equals.hpp>
 #include <phi/compiler_support/warning.hpp>
 #include <phi/container/string_view.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/integer.hpp>
+#include <phi/core/narrow_cast.hpp>
 #include <phi/core/optional.hpp>
 #include <phi/core/scope_guard.hpp>
 #include <phi/core/types.hpp>
+
+// No idea why we get this warning here from gcc
+PHI_GCC_SUPPRESS_WARNING("-Walloc-zero")
+
 #include <cstddef>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <regex>
+#include <sstream>
 #include <string>
-
-struct WarningInfo
-{
-    OpenAutoIt::ParseWarningType type;
-    OpenAutoIt::SourceLocation   location;
-};
-
-struct ErrorInfo
-{
-    OpenAutoIt::ParseErrorType type;
-    OpenAutoIt::SourceLocation location;
-};
 
 struct ExpectedBlock
 {
-    std::vector<std::string> std_out;
-    std::vector<std::string> std_err;
-    std::vector<WarningInfo> warnings;
+    std::string std_out;
+    std::string std_err;
 };
 
-struct GlobalBuffer
+struct OutputBuffer
 {
-    std::vector<std::string> std_out;
-    std::vector<std::string> std_err;
-
-    void begin(const ExpectedBlock& expected) noexcept
-    {
-        std_out.clear();
-        std_err.clear();
-
-        // Reserve space matching the expected block
-        std_out.reserve(expected.std_out.size());
-        std_err.reserve(expected.std_err.size());
-    }
+    std::stringstream std_out;
+    std::stringstream std_err;
 };
 
 PHI_CLANG_SUPPRESS_WARNING_PUSH()
 PHI_CLANG_SUPPRESS_WARNING("-Wexit-time-destructors")
 PHI_CLANG_SUPPRESS_WARNING("-Wglobal-constructors")
-
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-OpenAutoIt::ParseResult parse_result;
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-OpenAutoIt::Lexer lexer{parse_result};
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-OpenAutoIt::Parser parser;
-
-// Buffer
-GlobalBuffer buffer;
 
 // Regexes
 static const std::regex expected_std_out_regex{R"regex(expect-stdout:\s*"(.*)")regex"};
@@ -81,52 +55,33 @@ static const std::regex expected_std_err_regex{R"regex(expect-stderr:\s*"(.*)")r
 
 PHI_CLANG_SUPPRESS_WARNING_POP()
 
-std::string null_terminated_string(phi::string_view text) noexcept
-{
-    if (text.is_empty())
-    {
-        return {};
-    }
-
-    if (text.back() == '\0')
-    {
-        return std::string(text);
-    }
-
-    std::string string;
-
-    string.reserve(text.length().unsafe() + 1u);
-    string = text;
-    string.push_back('\0');
-
-    return string;
-}
-
-PHI_ATTRIBUTE_PURE phi::boolean vector_equals(const std::vector<std::string>& lhs,
-                                              const std::vector<std::string>& rhs) noexcept
-{
-    if (lhs.size() != rhs.size())
-    {
-        return false;
-    }
-
-    return phi::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-
 // TODO: Print expected actual etc.
-PHI_ATTRIBUTE_PURE phi::boolean expects_matched(const ExpectedBlock& expected_block) noexcept
+PHI_ATTRIBUTE_PURE phi::boolean expects_matched(const ExpectedBlock& expected_block,
+                                                const OutputBuffer&  buffer) noexcept
 {
     phi::boolean return_value{true};
 
     // Check std-out
-    if (!vector_equals(expected_block.std_out, buffer.std_out))
+    const std::string std_out_str = buffer.std_out.str();
+    if (expected_block.std_out != std_out_str)
     {
+        std::cout << "Expected stdout mismatch!\n";
+
+        std::cout << "- Expected:\n" << expected_block.std_out;
+        std::cout << "- Actual  :\n" << std_out_str;
+
         return_value = false;
     }
 
     // Check std-err
-    if (!vector_equals(expected_block.std_err, buffer.std_err))
+    const std::string std_err_str = buffer.std_err.str();
+    if (expected_block.std_err != std_err_str)
     {
+        std::cout << "Expected stderr mismatch!\n";
+
+        std::cout << "- Expected:\n" << expected_block.std_err;
+        std::cout << "- Actual  :\n" << std_err_str;
+
         return_value = false;
     }
 
@@ -150,22 +105,40 @@ ExpectedBlock extract_expected_block(const OpenAutoIt::TokenStream& tokens) noex
         // stdout
         if (std::regex_search(text.begin(), text.end(), match, expected_std_out_regex))
         {
-            block.std_out.emplace_back(null_terminated_string(match[1].str()));
-            PHI_ASSERT(block.std_out.back().empty() || block.std_out.back().back() == '\0');
+            // Ignore empty strings
+            if (match[1].length() == 0u)
+            {
+                break;
+            }
+
+            block.std_out.reserve(block.std_out.length() +
+                                  phi::narrow_cast<std::string::size_type>(match[1].length()) + 1u);
+
+            block.std_out += match[1];
+            block.std_out.push_back('\0');
         }
 
         // stderr
         if (std::regex_search(text.begin(), text.end(), match, expected_std_err_regex))
         {
-            block.std_err.emplace_back(null_terminated_string(match[1].str()));
-            PHI_ASSERT(block.std_err.back().empty() || block.std_err.back().back() == '\0');
+            // Ignore empty strings
+            if (match[1].length() == 0u)
+            {
+                break;
+            }
+
+            block.std_err.reserve(block.std_err.length() +
+                                  phi::narrow_cast<std::string::size_type>(match[1].length()) + 1u);
+
+            block.std_err += match[1];
+            block.std_err.push_back('\0');
         }
     }
 
     return block;
 }
 
-phi::boolean process_file(const std::filesystem::path& file_path) noexcept
+[[nodiscard]] phi::boolean process_file(const std::filesystem::path& file_path) noexcept
 {
     const std::string base_name = file_path.filename().replace_extension().string();
 
@@ -176,13 +149,14 @@ phi::boolean process_file(const std::filesystem::path& file_path) noexcept
     }
     const std::string& file_content = file_content_opt.value();
 
-    parse_result.Clear();
+    OpenAutoIt::ParseResult parse_result;
 
     // Lex the source file
-    lexer.Reset();
+    OpenAutoIt::Lexer lexer{parse_result};
     lexer.ProcessString(phi::string_view{file_content.data(), file_content.length()});
 
     // Parse the source file
+    OpenAutoIt::Parser parser;
     parser.ParseDocument(parse_result);
 
     // Extract expected block
@@ -191,21 +165,18 @@ phi::boolean process_file(const std::filesystem::path& file_path) noexcept
     // Setup interpreter
     OpenAutoIt::Interpreter interpreter{parse_result.m_Document.not_null_observer()};
 
-    // Setup VM
-    buffer.begin(expected_block);
+    OutputBuffer buffer;
 
+    // Setup VM
     OpenAutoIt::VirtualMachine& vm = interpreter.vm();
 
-    vm.m_ConsoleWrite = [](phi::string_view text) noexcept { buffer.std_out.emplace_back(text); };
-    vm.m_ConsoleWriteError = [](phi::string_view text) noexcept {
-        buffer.std_err.emplace_back(text);
-    };
+    vm.OverwriteIOSreams(&buffer.std_out, &buffer.std_err);
 
     // Interpret the code
     interpreter.Run();
 
     // Check expected
-    return expects_matched(expected_block);
+    return expects_matched(expected_block, buffer);
 }
 
 int main(int argc, char* argv[])
@@ -243,9 +214,11 @@ int main(int argc, char* argv[])
             continue;
         }
 
-        std::cout << '\"' << file.path().string() << "\"... ";
+        std::cout << file.path().string() << " running...\n";
 
         const phi::boolean result = process_file(path);
+
+        std::cout << file.path().string() << " ";
 
         number_of_tests += 1u;
         if (result)
@@ -268,8 +241,8 @@ int main(int argc, char* argv[])
 
     if (number_of_test_failures != 0u)
     {
-        std::cout << number_of_test_failures.unsafe() << '/' << number_of_tests.unsafe()
-                  << " tests failed!\n";
+        std::cout << "\033[31m" << number_of_test_failures.unsafe() << "\033[0m/"
+                  << number_of_tests.unsafe() << " tests failed!\n";
         return 1;
     }
 

@@ -1,31 +1,33 @@
 #include "OpenAutoIt/UnsafeOperations.hpp"
 
 #include <phi/compiler_support/compiler.hpp>
+#include <phi/compiler_support/extended_attributes.hpp>
 
 #if PHI_COMPILER_IS(CLANG_COMPAT) || PHI_COMPILER_IS(GCC_COMPAT)
-#    define ATTRIBUTE_NO_UBSAN __attribute__((no_sanitize("undefined")))
+#    define ATTRIBUTE_NO_SAN __attribute__((no_sanitize("undefined")))
 #else
-#    define ATTRIBUTE_NO_UBSAN /* Nothing */
+#    define ATTRIBUTE_NO_SAN /* Nothing */
 #endif
 
 namespace OpenAutoIt
 {
-    ATTRIBUTE_NO_UBSAN phi::i64 UnsafeAdd(phi::i64 lhs, phi::i64 rhs) noexcept
+    ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeAdd(phi::i64 lhs, phi::i64 rhs) noexcept
     {
         return lhs.unsafe() + rhs.unsafe();
     }
 
-    ATTRIBUTE_NO_UBSAN phi::i64 UnsafeMinus(phi::i64 lhs, phi::i64 rhs) noexcept
+    ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeMinus(phi::i64 lhs, phi::i64 rhs) noexcept
     {
         return lhs.unsafe() - rhs.unsafe();
     }
 
-    ATTRIBUTE_NO_UBSAN phi::i64 UnsafeMultiply(phi::i64 lhs, phi::i64 rhs) noexcept
+    ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeMultiply(phi::i64 lhs,
+                                                                 phi::i64 rhs) noexcept
     {
         return lhs.unsafe() * rhs.unsafe();
     }
 
-    ATTRIBUTE_NO_UBSAN phi::i64 UnsafeDivide(phi::i64 lhs, phi::i64 rhs) noexcept
+    ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeDivide(phi::i64 lhs, phi::i64 rhs) noexcept
     {
         return lhs.unsafe() / rhs.unsafe();
     }

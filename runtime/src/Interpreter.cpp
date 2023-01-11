@@ -14,11 +14,18 @@
 #include "OpenAutoIt/UnsafeOperations.hpp"
 #include "OpenAutoIt/Variant.hpp"
 #include "OpenAutoIt/VirtualMachine.hpp"
-#include <fmt/format.h>
+#include <phi/compiler_support/extended_attributes.hpp>
+#include <phi/compiler_support/warning.hpp>
 #include <phi/container/string_view.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/observer_ptr.hpp>
 #include <phi/core/sized_types.hpp>
+
+PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wuninitialized")
+
+#include <fmt/format.h>
+
+PHI_GCC_SUPPRESS_WARNING_POP()
 
 PHI_MSVC_SUPPRESS_WARNING(4702) // unreachable code
 
@@ -26,58 +33,73 @@ namespace OpenAutoIt
 {
     Interpreter::Interpreter(phi::not_null_observer_ptr<ASTDocument> document) noexcept
         : m_Document{phi::move(document)}
-    {}
-
-    void Interpreter::SetDocument(phi::not_null_observer_ptr<ASTDocument> document) noexcept
     {
-        m_Document = phi::move(document);
+        vm().PushGlobalScope(document->m_Statements);
     }
 
     void Interpreter::Run()
     {
-        InterpretStatements(m_Document->m_Statements);
-    }
-
-    VirtualMachine& Interpreter::vm() noexcept
-    {
-        return m_VirtualMachine;
-    }
-
-    const VirtualMachine& Interpreter::vm() const noexcept
-    {
-        return m_VirtualMachine;
-    }
-
-    void Interpreter::InterpretStatements(
-            std::vector<phi::not_null_scope_ptr<ASTStatement>>& statements)
-    {
-        for (const phi::not_null_observer_ptr<ASTStatement> statement : statements)
+        while (vm().CanRun())
         {
-            // Run pre-action
-            m_VirtualMachine.PreStatementAction(statement);
-
-            if (m_VirtualMachine.m_Aborting)
-            {
-                return;
-            }
-
-            // Run actual statement
-            InterpretStatement(statement);
-
-            // Run post-action
-            m_VirtualMachine.PostStatementAction(statement);
+            Step();
         }
     }
 
-    void Interpreter::InterpretStatement(phi::not_null_observer_ptr<ASTStatement> statement)
+    void Interpreter::Step()
     {
+        Scope& current_scope = vm().GetCurrentScope();
+
+        // Check if we reached the end of the current scope
+        if (current_scope.index >= current_scope.statements.size())
+        {
+            vm().PopScope();
+            return;
+        }
+
+        auto current_statement = GetCurrentStatement();
+
+        // Interpret statement
+        StatementFinished result = InterpretStatement(current_statement);
+
+        // Increment index if the statement is finished
+        if (result == StatementFinished::Yes)
+        {
+            ++current_scope.index;
+        }
+    }
+
+    phi::not_null_observer_ptr<ASTStatement> Interpreter::GetCurrentStatement() const noexcept
+    {
+        const Scope& current_scope = vm().GetCurrentScope();
+        PHI_ASSERT(!current_scope.statements.empty());
+        PHI_ASSERT(current_scope.index < current_scope.statements.size());
+
+        return current_scope.statements.at(current_scope.index.unsafe());
+    }
+
+    PHI_ATTRIBUTE_CONST VirtualMachine& Interpreter::vm() noexcept
+    {
+        return m_VirtualMachine;
+    }
+
+    PHI_ATTRIBUTE_CONST const VirtualMachine& Interpreter::vm() const noexcept
+    {
+        return m_VirtualMachine;
+    }
+
+    Interpreter::StatementFinished Interpreter::InterpretStatement(
+            phi::not_null_observer_ptr<ASTStatement> statement)
+    {
+        // NOTE: Generally we return Yes for finished statments and the ending of loops
+        //       While returning No for unfinished loops like While and For
+
         switch (statement->NodeType())
         {
             case ASTNodeType::ExpressionStatement: {
                 auto expression_statement = statement->as<ASTExpressionStatement>();
 
                 InterpretExpression(expression_statement->m_Expression);
-                return;
+                return StatementFinished::Yes;
             }
 
             case ASTNodeType::IfStatement: {
@@ -89,8 +111,8 @@ namespace OpenAutoIt
 
                 if (if_condition_value.AsBoolean())
                 {
-                    InterpretStatements(if_statement->m_IfCase.body);
-                    return;
+                    vm().PushBlockScope(if_statement->m_IfCase.body);
+                    return StatementFinished::Yes;
                 }
 
                 // Handle all ElseIf cases
@@ -102,14 +124,14 @@ namespace OpenAutoIt
 
                     if (condition_value.AsBoolean())
                     {
-                        InterpretStatements(else_if_case.body);
-                        return;
+                        vm().PushBlockScope(else_if_case.body);
+                        return StatementFinished::Yes;
                     }
                 }
 
                 // Handle Else case
-                InterpretStatements(if_statement->m_ElseCase);
-                return;
+                vm().PushBlockScope(if_statement->m_ElseCase);
+                return StatementFinished::Yes;
             }
 
             case ASTNodeType::VariableAssignment: {
@@ -126,43 +148,36 @@ namespace OpenAutoIt
                     const Variant expression_value =
                             InterpretExpression(initial_expression.release_not_null());
 
-                    m_VirtualMachine.PushOrAssignVariable(variable_name, expression_value);
-                    return;
+                    vm().PushOrAssignVariable(variable_name, expression_value);
+                    return StatementFinished::Yes;
                 }
 
                 // Insert a default initialized variable
-                m_VirtualMachine.PushVariable(variable_name, {});
-                return;
+                vm().PushVariable(variable_name, {});
+                return StatementFinished::Yes;
             }
 
             case ASTNodeType::WhileStatement: {
                 auto while_statement = statement->as<ASTWhileStatement>();
 
-                while (true)
+                // Evalaute condition
+                const Variant condition =
+                        InterpretExpression(while_statement->m_ConditionExpression).CastToBoolean();
+                PHI_ASSERT(condition.IsBoolean());
+
+                if (!condition.AsBoolean())
                 {
-                    // TODO: This is actually not totally correct
-                    m_VirtualMachine.PreStatementAction(statement);
-
-                    // Evalaute condition
-                    const Variant condition =
-                            InterpretExpression(while_statement->m_ConditionExpression)
-                                    .CastToBoolean();
-                    PHI_ASSERT(condition.IsBoolean());
-
-                    // Stop while loop if the condition is false
-                    if (!condition.AsBoolean() || m_VirtualMachine.m_Aborting)
-                    {
-                        return;
-                    }
-
-                    // Interpret while statements
-                    InterpretStatements(while_statement->m_Statements);
+                    return StatementFinished::Yes;
                 }
+
+                // Interpret while statements
+                vm().PushBlockScope(while_statement->m_Statements);
+                return StatementFinished::No;
             }
 
             default:
                 PHI_ASSERT_NOT_REACHED();
-                return;
+                return StatementFinished::No;
         }
     }
 
@@ -241,11 +256,10 @@ namespace OpenAutoIt
 
                 const phi::string_view variable_name = variable_expression->m_VariableName;
 
-                auto value = m_VirtualMachine.LookupVariableByName(variable_name);
+                auto value = vm().LookupVariableByName(variable_name);
                 if (!value)
                 {
-                    m_VirtualMachine.RuntimeError("No variable named \"{}\"",
-                                                  std::string_view(variable_name));
+                    vm().RuntimeError("No variable named '{}'", std::string_view(variable_name));
                     return {};
                 }
 
@@ -277,6 +291,8 @@ namespace OpenAutoIt
     Variant Interpreter::InterpretBuiltInFunctionCall(const TokenKind             function,
                                                       const std::vector<Variant>& arguments)
     {
+        // TODO: Is pretty incovinient that every function has to check for itself that it hast the right amount of arguments etc.
+
         switch (function)
         {
             // https://www.autoitscript.com/autoit3/docs/functions/Abs.htm
@@ -323,10 +339,28 @@ namespace OpenAutoIt
                 return BuiltIn_VarGetType(m_VirtualMachine, arguments.at(0u));
             }
 
+            case TokenKind::BI_ConsoleWriteLine: {
+                if (arguments.size() != 1u)
+                {
+                    // TODO: Error:
+                    return {};
+                }
+
+                return BuiltIn_ConsoleWriteLine(vm(), arguments.at(0u));
+            }
+
+            case TokenKind::BI_ConsoleWriteErrorLine: {
+                if (arguments.size() != 1u)
+                {
+                    // TODO: Error
+                    return {};
+                }
+
+                return BuiltIn_ConsoleWriteErrorLine(vm(), arguments.at(0u));
+            }
+
             default:
-                // TODO: Temporary hack to allow running code which uses not implemented builtin
-                m_VirtualMachine.RuntimeError("Usage of unimplemented builtin function \"{}\"",
-                                              enum_name(function));
+                vm().RuntimeError("Builtin function '{:s}' not implemented", enum_name(function));
                 return {};
         }
 
@@ -342,13 +376,12 @@ namespace OpenAutoIt
 
         if (!function_definition)
         {
-            m_VirtualMachine.RuntimeError("No function called \"{}\" found!",
-                                          std::string_view(function));
+            vm().RuntimeError("Function '{:s}' not found'", std::string_view(function));
             return {};
         }
 
         // Push new function scope
-        m_VirtualMachine.PushFunctionScope(function);
+        vm().PushFunctionScope(function, function_definition->m_FunctionBody);
 
         // Push arguments into the new scope
         for (phi::usize index{0u}; index < function_definition->m_Parameters.size(); ++index)
@@ -360,27 +393,24 @@ namespace OpenAutoIt
             if (index < arguments.size())
             {
                 // Simply set the parameter to be the given argument
-                m_VirtualMachine.PushVariable(parameter.name, arguments.at(index.unsafe()));
+                vm().PushVariable(parameter.name, arguments.at(index.unsafe()));
             }
             else
             {
                 // Otherwise the paramter MUST be defaultet
                 if (!parameter.default_value)
                 {
-                    m_VirtualMachine.RuntimeError("Missing argument");
+                    // TODO: Better error message
+                    vm().RuntimeError("Missing argument");
                     break;
                 }
 
                 // The value is simply the interpreted value of our default expression
                 Variant value = InterpretExpression(parameter.default_value.not_null_observer());
 
-                m_VirtualMachine.PushVariable(parameter.name, value);
+                vm().PushVariable(parameter.name, value);
             }
         }
-
-        InterpretStatements(function_definition->m_FunctionBody);
-
-        m_VirtualMachine.PopFunctionScope();
 
         return {};
     }
