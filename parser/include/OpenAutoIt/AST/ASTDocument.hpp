@@ -32,7 +32,7 @@ namespace OpenAutoIt
                 // TODO: Should ignore case
                 if (phi::string_equals(func_definition->m_FunctionName, function_name))
                 {
-                    return func_definition;
+                    return phi::move(func_definition);
                 }
             }
 
