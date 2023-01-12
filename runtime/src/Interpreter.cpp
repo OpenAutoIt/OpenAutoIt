@@ -397,7 +397,7 @@ namespace OpenAutoIt
             }
             else
             {
-                // Otherwise the paramter MUST be defaultet
+                // Otherwise the parameter MUST be defaultet
                 if (!parameter.default_value)
                 {
                     // TODO: Better error message

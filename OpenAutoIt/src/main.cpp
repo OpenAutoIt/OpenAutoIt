@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 
     // TODO: Options etc.
 
-    // TODO: Move to seperate function
+    // TODO: Move to separate function
 
     const char* file_path = argv[1];
 

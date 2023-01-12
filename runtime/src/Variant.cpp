@@ -438,7 +438,7 @@ namespace OpenAutoIt
             }
 
             case Type::Function: {
-                // TOOD:
+                // TODO:
 
                 return {};
             }
