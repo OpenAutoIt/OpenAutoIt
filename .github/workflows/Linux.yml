@@ -83,11 +83,11 @@ jobs:
 
           cmake .. \
             -DCMAKE_BUILD_TYPE:STRING=${{ matrix.build_type }} \
-            -DOA_COVERAGE_BUILD:STRING=${{ matrix.dynamic_test == 'coverage' }}
-            -DOA_ENABLE_SANITIZER_ADDRESS:STRING=${{ matrix.dynamic_test == 'asan' }} \
-            -DOA_ENABLE_SANITIZER_LEAK:STRING=${{ matrix.dynamic_test == 'lsan' }} \
-            -DOA_ENABLE_SANITIZER_THREAD:STRING=${{ matrix.dynamic_test == 'tsan' }} \
-            -DOA_ENABLE_SANITIZER_UNDEFINED:STRING=${{ matrix.dynamic_test == 'ubsan' }}
+            -DOA_COVERAGE_BUILD:BOOL=${{ matrix.dynamic_test == 'coverage' }} \
+            -DOA_ENABLE_SANITIZER_ADDRESS:BOOL=${{ matrix.dynamic_test == 'asan' }} \
+            -DOA_ENABLE_SANITIZER_LEAK:BOOL=${{ matrix.dynamic_test == 'lsan' }} \
+            -DOA_ENABLE_SANITIZER_THREAD:BOOL=${{ matrix.dynamic_test == 'tsan' }} \
+            -DOA_ENABLE_SANITIZER_UNDEFINED:BOOL=${{ matrix.dynamic_test == 'ubsan' }}
 
       - name: Build
         working-directory: ./build
