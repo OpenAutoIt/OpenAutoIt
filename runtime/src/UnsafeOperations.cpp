@@ -10,7 +10,7 @@
 #    define ATTRIBUTE_NO_SAN /* Nothing */
 #endif
 
-PHI_GCC_SUPPRESS_WARNING("Wsuggest-attribute=pure")
+PHI_GCC_SUPPRESS_WARNING("-Wsuggest-attribute=pure")
 
 namespace OpenAutoIt
 {
