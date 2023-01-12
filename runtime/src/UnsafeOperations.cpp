@@ -2,12 +2,15 @@
 
 #include <phi/compiler_support/compiler.hpp>
 #include <phi/compiler_support/extended_attributes.hpp>
+#include <phi/compiler_support/warning.hpp>
 
 #if PHI_COMPILER_IS(CLANG_COMPAT) || PHI_COMPILER_IS(GCC_COMPAT)
 #    define ATTRIBUTE_NO_SAN __attribute__((no_sanitize("undefined")))
 #else
 #    define ATTRIBUTE_NO_SAN /* Nothing */
 #endif
+
+PHI_GCC_SUPPRESS_WARNING("Wsuggest-attribute=pure")
 
 namespace OpenAutoIt
 {
