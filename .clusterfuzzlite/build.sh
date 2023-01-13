@@ -15,3 +15,22 @@ ninja OpenAutoItFuzzer_Lexer OpenAutoItFuzzer_Parser OpenAutoItFuzzer_Interprete
 
 # Copy fuzzers to out
 cp bin/* "${OUT}/"
+
+# Build dictionary
+cd ..
+
+cat scripts/dictionary/code.dict >"${OUT}/OpenAutoItFuzzer_Lexer.dict"
+cat scripts/dictionary/tokens.dict >>"${OUT}/OpenAutoItFuzzer_Lexer.dict"
+
+cp "${OUT}/OpenAutoItFuzzer_Lexer.dict" "${OUT}/OpenAutoItFuzzer_Parser.dict"
+cp "${OUT}/OpenAutoItFuzzer_Lexer.dict" "${OUT}/OpenAutoItFuzzer_Interpreter.dict"
+
+# Build seed corpus
+mkdir -p "OpenAutoItFuzzer_Lexer_seed_corpus"
+
+cp -a "fuzzing/samples/." "OpenAutoItFuzzer_Lexer_seed_corpus"
+find samples -type f -exec bash -c 'cp ${0} OpenAutoItFuzzer_Lexer_seed_corpus' {} \;
+
+zip -r "${OUT}/OpenAutoItFuzzer_Lexer_seed_corpus.zip" "OpenAutoItFuzzer_Lexer_seed_corpus"
+cp "${OUT}/OpenAutoItFuzzer_Lexer_seed_corpus.zip" "${OUT}/OpenAutoItFuzzer_Parser_seed_corpus.zip"
+cp "${OUT}/OpenAutoItFuzzer_Lexer_seed_corpus.zip" "${OUT}/OpenAutoItFuzzer_Interpreter_seed_corpus.zip"
