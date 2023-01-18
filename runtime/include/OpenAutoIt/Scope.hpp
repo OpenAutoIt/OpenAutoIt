@@ -2,6 +2,7 @@
 
 #include <OpenAutoIt/AST/ASTStatement.hpp>
 #include <OpenAutoIt/Variant.hpp>
+#include<OpenAutoIt/Statements.hpp>
 #include <phi/core/observer_ptr.hpp>
 #include <phi/core/sized_types.hpp>
 #include <string_view>
@@ -15,8 +16,6 @@ namespace OpenAutoIt
         Function,
         Block,
     };
-
-    using Statements = std::vector<phi::not_null_scope_ptr<ASTStatement>>;
 
     class Scope
     {

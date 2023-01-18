@@ -23,6 +23,7 @@
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
 #include "OpenAutoIt/VariableScope.hpp"
+#include <fmt/format.h>
 #include <phi/compiler_support/extended_attributes.hpp>
 #include <phi/compiler_support/unused.hpp>
 #include <phi/compiler_support/warning.hpp>
@@ -136,7 +137,7 @@ namespace OpenAutoIt
                 auto function_definition = ParseFunctionDefinition();
                 if (!function_definition)
                 {
-                    std::cout << "ERR: Failed to parse function definition!\n";
+                    err("ERR: Failed to parse function definition!\n");
                     continue;
                 }
 
@@ -150,7 +151,7 @@ namespace OpenAutoIt
             }
             else if (token.GetTokenKind() == TokenKind::NotAToken)
             {
-                std::cout << "ERR: Unexpected NotAToken!\n";
+                err("ERR: Unexpected NotAToken!\n");
                 ConsumeCurrent();
                 continue;
             }
@@ -160,7 +161,7 @@ namespace OpenAutoIt
                 if (!statement)
                 {
                     // TODO: Proper error reporting
-                    std::cout << "ERR: Failed to parse statement!\n";
+                    err("ERR: Failed to parse statement!\n");
 
                     if (m_TokenStream->has_more())
                     {
@@ -253,7 +254,7 @@ namespace OpenAutoIt
             return {};
         }
 
-        // Next me parse the function parameter declarations until right parenthesis (RParen)
+        // Next we parse the function parameter declarations until right parenthesis (RParen)
         while (m_TokenStream->has_more() && CurrentToken().GetTokenKind() != TokenKind::RParen)
         {
             phi::optional<FunctionParameter> function_paremeter_optional =
@@ -294,8 +295,8 @@ namespace OpenAutoIt
             auto statement = ParseStatement();
             if (!statement)
             {
-                std::cout << "ERR: Failed while parsing statement for function \""
-                          << std::string(function_definition->m_FunctionName) << "\"\n";
+                err(fmt::format("ERR: Failed while parsing statement for function \"{:s}\"\n",
+                                std::string_view(function_definition->m_FunctionName)));
                 // TODO: Report proper error
                 return {};
             }
@@ -343,6 +344,12 @@ namespace OpenAutoIt
                     break;
                 }
                 case TokenKind::OP_Equals: {
+                    if (parameter.name.is_empty())
+                    {
+                        // TODO: PROPER ERROR
+                        return {};
+                    }
+
                     // Consume the '='
                     ConsumeCurrent();
 
@@ -354,7 +361,15 @@ namespace OpenAutoIt
                         return {};
                     }
 
-                    parameter.default_value = phi::move(default_expression);
+                    // For default values we artificially create a variable assignment
+                    auto default_var_assignment = phi::make_not_null_scope<ASTVariableAssignment>();
+
+                    default_var_assignment->m_Scope        = VariableScope::Auto;
+                    default_var_assignment->m_VariableName = parameter.name;
+                    default_var_assignment->m_InitialValueExpression =
+                            phi::move(default_expression);
+
+                    parameter.default_value_init.emplace_back(phi::move(default_var_assignment));
                     break;
                 }
                 case TokenKind::Comma:
@@ -395,7 +410,7 @@ namespace OpenAutoIt
                 auto variable_declaration = ParseVariableAssignment();
                 if (!variable_declaration)
                 {
-                    std::cout << "ERR: Failed to parse variable assignment!\n";
+                    err("ERR: Failed to parse variable assignment!\n");
                     break;
                 }
 
@@ -407,7 +422,7 @@ namespace OpenAutoIt
                 auto if_statement = ParseIfStatement();
                 if (!if_statement)
                 {
-                    std::cout << "ERR: Failed to parse if statement!\n";
+                    err("ERR: Failed to parse if statement!\n");
                     break;
                 }
 
@@ -419,7 +434,7 @@ namespace OpenAutoIt
                 auto while_statement = ParseWhileStatement();
                 if (!while_statement)
                 {
-                    std::cout << "ERR: Failed to parse while statement!\n";
+                    err("ERR: Failed to parse while statement!\n");
                     break;
                 }
 
@@ -431,8 +446,8 @@ namespace OpenAutoIt
                 auto expression_statement = ParseExpressionStatement();
                 if (!expression_statement)
                 {
-                    std::cout << "ERR: Unexpected token: " << enum_name(token.GetTokenKind())
-                              << '\n';
+                    err(fmt::format("ERR: Unexpected token: '{:s}'\n",
+                                    enum_name(token.GetTokenKind())));
                     return {};
                 }
 
@@ -521,8 +536,8 @@ namespace OpenAutoIt
                 case TokenKind::KW_Const: {
                     if (variable_declaration->m_IsConst)
                     {
-                        // TODO: Error more than a const specifier
-                        std::cout << "ERR: More than one const specifier given\n";
+                        // TODO: Error more than one const specifier
+                        err("ERR: More than one const specifier given\n");
                         return {};
                     }
                     variable_declaration->m_IsConst = true;
@@ -533,7 +548,7 @@ namespace OpenAutoIt
                     if (variable_declaration->m_IsStatic)
                     {
                         // TODO: Error more than one static specifier
-                        std::cout << "ERR: More than one static specifier given\n";
+                        err("ERR: More than one static specifier given\n");
                         return {};
                     }
                     variable_declaration->m_IsStatic = true;
@@ -544,7 +559,7 @@ namespace OpenAutoIt
                     if (variable_declaration->m_Scope != VariableScope::Auto)
                     {
                         // TODO: Error more than one scope specifier
-                        std::cout << "ERR: More than one scope specifier given\n";
+                        err("ERR: More than one scope specifier given\n");
                         return {};
                     }
                     variable_declaration->m_Scope = VariableScope::Global;
@@ -555,7 +570,7 @@ namespace OpenAutoIt
                     if (variable_declaration->m_Scope != VariableScope::Auto)
                     {
                         // TODO: Error more than one scope specifier
-                        std::cout << "ERR: More than one scope specifier given\n";
+                        err("ERR: More than one scope specifier given\n");
                         return {};
                     }
                     variable_declaration->m_Scope = VariableScope::Local;
@@ -587,7 +602,7 @@ namespace OpenAutoIt
         if (!parsed_identifier)
         {
             // TODO: Error variable declaration ends before the VariableIdentifier
-            std::cout << "ERR: Missing variable identifier!\n";
+            err("ERR: Missing variable identifier!\n");
             return {};
         }
 
@@ -609,8 +624,7 @@ namespace OpenAutoIt
             if (!expression)
             {
                 // TODO: Error failed to parse a valid expression
-                std::cout
-                        << "ERR: Failed to parse a valid expression inside variable assignment!\n";
+                err("ERR: Failed to parse a valid expression inside variable assignment!\n");
                 return {};
             }
 
@@ -649,7 +663,7 @@ namespace OpenAutoIt
         auto if_condition = ParseExpression();
         if (!if_condition)
         {
-            std::cout << "ERR: failed to parse expression!\n";
+            err("ERR: failed to parse expression!\n");
 
             return {};
         }
@@ -657,7 +671,7 @@ namespace OpenAutoIt
         // Next we MUST parse Then
         if (!MustParse(TokenKind::KW_Then))
         {
-            std::cout << "ERR: Missing then!\n";
+            err("ERR: Missing then!\n");
 
             return {};
         }
@@ -674,7 +688,7 @@ namespace OpenAutoIt
             auto statement = ParseStatement();
             if (!statement)
             {
-                std::cout << "ERR: Failed to parse statement inside of IF\n";
+                err("ERR: Failed to parse statement inside of IF\n");
                 return {};
             }
 
@@ -689,7 +703,7 @@ namespace OpenAutoIt
 
         if (!MustParse(TokenKind::KW_EndIf))
         {
-            std::cout << "ERR: Missing EndIf!\n";
+            err("ERR: Missing EndIf!\n");
             // TODO: Proper Error
             return {};
         }
@@ -851,7 +865,7 @@ namespace OpenAutoIt
             if (!function_call_expression)
             {
                 // TODO: Proper error
-                std::cout << "ERR: Failed to parse function call expression!\n";
+                err("ERR: Failed to parse function call expression!\n");
                 return {};
             }
 
@@ -864,7 +878,7 @@ namespace OpenAutoIt
             if (!variable_expression)
             {
                 // TODO: Proper error
-                std::cout << "ERR: Failed to parse Variable expression\n";
+                err("ERR: Failed to parse Variable expression\n");
                 return {};
             }
 
@@ -877,7 +891,7 @@ namespace OpenAutoIt
             if (!keyword_literal)
             {
                 // TODO: Proper error
-                std::cout << "ERR: Failed to parse keyword literal expression!\n";
+                err("ERR: Failed to parse keyword literal expression!\n");
                 return {};
             }
 
@@ -890,7 +904,7 @@ namespace OpenAutoIt
             if (!float_literal)
             {
                 // TODO: Proper error
-                std::cout << "ERR: Failed to parse float literal expression!\n";
+                err("ERR: Failed to parse float literal expression!\n");
                 return {};
             }
 
@@ -898,8 +912,8 @@ namespace OpenAutoIt
         }
 
         // TODO: Error Unexpected token
-        std::cout << "Unexpected token \"" << enum_name(token.GetTokenKind())
-                  << "\" while parsing expression\n";
+        err(fmt::format("Unexpected token '{:s}' while parsing expression\n",
+                        enum_name(token.GetTokenKind())));
         return {};
     }
 
@@ -1002,9 +1016,9 @@ namespace OpenAutoIt
         // Now me MUST parse an LParen
         if (!m_TokenStream->has_more())
         {
-            std::cout << "ERR: Expected opening parenthesis for function call \""
-                      << std::string{function_call_expression->FunctionName()} << "\"\n";
             // TODO: Give proper error
+            err(fmt::format("ERR: Expected opening parenthesis for function call '{:s}'\n",
+                            std::string_view{function_call_expression->FunctionName()}));
             return {};
         }
 
@@ -1012,9 +1026,9 @@ namespace OpenAutoIt
         ConsumeCurrent();
         if (left_paren_token.GetTokenKind() != TokenKind::LParen)
         {
-            std::cout << "ERR: Expected opening parenthesis for function call \""
-                      << std::string{function_call_expression->FunctionName()} << "\"\n";
             // TODO: Give error
+            err(fmt::format("ERR: Expected opening parenthesis for function call '{:s}'\n",
+                            std::string_view{function_call_expression->FunctionName()}));
             return {};
         }
 
@@ -1024,8 +1038,8 @@ namespace OpenAutoIt
         // Finally we MUST parse an RParen
         if (!m_TokenStream->has_more())
         {
-            std::cout << "ERR: Expected closing parenthesis for function call \""
-                      << std::string{function_call_expression->FunctionName()} << "\"\n";
+            err(fmt::format("ERR: Expected closing parenthesis for function call '{:s}'\n",
+                            std::string_view{function_call_expression->FunctionName()}));
             // TODO: Give proper error
             return {};
         }
@@ -1034,8 +1048,8 @@ namespace OpenAutoIt
         ConsumeCurrent();
         if (right_paren_token.GetTokenKind() != TokenKind::RParen)
         {
-            std::cout << "ERR: Expected closing parenthesis for function call \""
-                      << std::string{function_call_expression->FunctionName()} << "\"\n";
+            err(fmt::format("ERR: Expected closing parenthesis for function call '{:s}'\n",
+                            std::string_view{function_call_expression->FunctionName()}));
             // TODO: Give Error
             return {};
         }
@@ -1055,7 +1069,7 @@ namespace OpenAutoIt
             phi::scope_ptr<ASTExpression> expression = ParseExpression();
             if (!expression)
             {
-                std::cout << "ERR: While parsing expression for function call arguments\n";
+                err("ERR: While parsing expression for function call arguments\n");
                 // TODO: Give Prober error
                 arguments.clear();
                 return arguments;

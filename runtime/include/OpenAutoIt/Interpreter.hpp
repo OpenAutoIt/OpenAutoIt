@@ -71,5 +71,6 @@ namespace OpenAutoIt
     private:
         phi::not_null_observer_ptr<ASTDocument> m_Document;
         VirtualMachine                          m_VirtualMachine;
+        Statements                              m_VirtualBlock;
     };
 } // namespace OpenAutoIt

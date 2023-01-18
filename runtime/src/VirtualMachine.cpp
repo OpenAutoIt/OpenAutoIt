@@ -3,6 +3,7 @@
 #include "OpenAutoIt/Scope.hpp"
 #include "OpenAutoIt/StackTraceEntry.hpp"
 #include "OpenAutoIt/VariableScope.hpp"
+#include "OpenAutoIt/Variant.hpp"
 #include <phi/compiler_support/extended_attributes.hpp>
 #include <phi/compiler_support/warning.hpp>
 #include <phi/core/assert.hpp>
@@ -21,7 +22,7 @@ namespace OpenAutoIt
 
     void VirtualMachine::PushBlockScope(Statements& statements) noexcept
     {
-        m_Scopes.emplace_back(ScopeKind::Block, "<block_scope>", statements);
+        m_Scopes.emplace_front(ScopeKind::Block, "<block_scope>", statements);
     }
 
     void VirtualMachine::PushGlobalScope(Statements& statements) noexcept
@@ -132,24 +133,43 @@ namespace OpenAutoIt
 
     void VirtualMachine::PushOrAssignVariable(std::string_view name, Variant value) noexcept
     {
-        Scope& current_scope = GetCurrentScope();
+        auto variable_opt = LookupVariableRefByName(name);
+        if(variable_opt)
+        {
+            // Overwrite current value
+            variable_opt.value() = phi::move(value);
+            return;
+        }
 
-        current_scope.variables.insert_or_assign(name, value);
+        Scope& current_scope = GetCurrentScope();
+        current_scope.variables[name] = phi::move(value);
     }
 
     phi::optional<Variant> VirtualMachine::LookupVariableByName(
             std::string_view variable_name) const noexcept
     {
+        auto variable = LookupVariableRefByName(variable_name);
+        if (variable.has_value())
+        {
+            return *variable;
+        }
+
+        return {};
+    }
+
+    phi::optional<Variant&> VirtualMachine::LookupVariableRefByName(
+            std::string_view variable_name) noexcept
+    {
         phi::boolean found_function_boundary{false};
 
-        for (const Scope& scope : m_Scopes)
+        for (Scope& scope : m_Scopes)
         {
             if (scope.kind == ScopeKind::Function)
             {
                 if (found_function_boundary)
                 {
                     // We hit the function boundary so only check the global scope and don't continue
-                    const Scope& global_scope = GetGlobalScope();
+                    Scope& global_scope = GetGlobalScope();
                     if (global_scope.variables.contains(variable_name))
                     {
                         return global_scope.variables.at(variable_name);
@@ -165,6 +185,18 @@ namespace OpenAutoIt
             {
                 return scope.variables.at(variable_name);
             }
+        }
+
+        return {};
+    }
+
+    phi::optional<const Variant&> VirtualMachine::LookupVariableRefByName(
+            std::string_view variable_name) const noexcept
+    {
+        auto res = const_cast<VirtualMachine&>(*this).LookupVariableRefByName(variable_name);
+        if (res.has_value())
+        {
+            return res.value();
         }
 
         return {};

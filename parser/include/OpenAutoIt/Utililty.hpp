@@ -24,4 +24,10 @@ namespace OpenAutoIt
             const std::filesystem::path& file_path) noexcept;
 
     phi::boolean write_file(const std::filesystem::path& file_path, std::string_view data) noexcept;
+
+    void out(std::string_view data);
+
+    void err(std::string_view data);
+
+    void disable_output();
 } // namespace OpenAutoIt

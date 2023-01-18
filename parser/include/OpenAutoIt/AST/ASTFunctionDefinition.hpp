@@ -8,13 +8,14 @@
 #include <phi/core/scope_ptr.hpp>
 #include <phi/core/types.hpp>
 #include <vector>
+#include "OpenAutoIt/Statements.hpp"
 
 namespace OpenAutoIt
 {
     struct FunctionParameter
     {
         phi::string_view              name; // Parameter name without the $
-        phi::scope_ptr<ASTExpression> default_value;
+        Statements                    default_value_init;
         phi::boolean                  by_ref   = false;
         phi::boolean                  as_const = false;
     };
@@ -43,10 +44,11 @@ namespace OpenAutoIt
                 ret += '$';
                 ret += std::string_view{parameter.name.data(), parameter.name.length().unsafe()};
 
-                if (parameter.default_value)
+                if (!parameter.default_value_init.empty())
                 {
+                    PHI_ASSERT(parameter.default_value_init.size() == 1u);
                     ret += " = ";
-                    ret += parameter.default_value->DumpAST(0u);
+                    ret += parameter.default_value_init.front()->DumpAST(0u);
                 }
 
                 ret += ", ";

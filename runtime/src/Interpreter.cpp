@@ -398,17 +398,19 @@ namespace OpenAutoIt
             else
             {
                 // Otherwise the parameter MUST be defaultet
-                if (!parameter.default_value)
+                if (parameter.default_value_init.empty())
                 {
                     // TODO: Better error message
                     vm().RuntimeError("Missing argument");
                     break;
                 }
 
-                // The value is simply the interpreted value of our default expression
-                Variant value = InterpretExpression(parameter.default_value.not_null_observer());
+                // Push the parameter with an empty value
+                vm().PushVariable(parameter.name, {});
 
-                vm().PushVariable(parameter.name, value);
+                // Push a virtual block scope which handles the initialization of the default value
+                // We do this since function default values can themselves be function calls etc.
+                vm().PushBlockScope(parameter.default_value_init);
             }
         }
 

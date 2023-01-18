@@ -3,6 +3,7 @@
 #include "OpenAutoIt/AST/ASTStatement.hpp"
 #include "OpenAutoIt/Scope.hpp"
 #include "OpenAutoIt/StackTraceEntry.hpp"
+#include "OpenAutoIt/Utililty.hpp"
 #include "OpenAutoIt/VariableScope.hpp"
 #include "OpenAutoIt/Variant.hpp"
 #include <phi/compiler_support/warning.hpp>
@@ -36,15 +37,15 @@ namespace OpenAutoIt
         template <typename... ArgsT>
         void RuntimeError(std::string_view format_string, ArgsT&&... args) noexcept
         {
-            std::cerr << "[OpenAutoIt] "
-                      << "\033[31m"
-                         "RUNTIME ERROR!"
-                      << "\033[0m\n"
-                      << " > "
-                      << "\033[31m"
-                      << fmt::format(fmt::runtime(format_string), phi::forward<ArgsT>(args)...)
-                      << "\033[0m\n"
-                      << "Stack trace:\n";
+            err("[OpenAutoIt] ");
+            err("\033[31m");
+            err("RUNTIME ERROR!");
+            err("\033[0m\n");
+            err(" > ");
+            err("\033[31m");
+            err(fmt::format(fmt::runtime(format_string), phi::forward<ArgsT>(args)...));
+            err("\033[0m\n");
+            err("Stack trace:\n");
 
             // Print stack trace
             StackTrace strack_trace = GetStrackTrace();
@@ -52,8 +53,8 @@ namespace OpenAutoIt
             {
                 const StackTraceEntry& entry = strack_trace.at(index.unsafe());
 
-                std::cerr << "    #" << index.unsafe() << ' ' << entry.function << ' ' << entry.file
-                          << ':' << entry.line.unsafe() << ':' << entry.column.unsafe() << '\n';
+                err(fmt::format("\t#{:d} {:s} {:s}:{:d}:{:d}\n", index.unsafe(), entry.function,
+                                entry.file, entry.line.unsafe(), entry.column.unsafe()));
             }
 
             m_Aborting = true;
@@ -81,6 +82,10 @@ namespace OpenAutoIt
 
         // Needs to be the variable name without a leading $
         [[nodiscard]] phi::optional<Variant> LookupVariableByName(
+                std::string_view variable_name) const noexcept;
+        [[nodiscard]] phi::optional<Variant&> LookupVariableRefByName(
+                std::string_view variable_name) noexcept;
+        [[nodiscard]] phi::optional<const Variant&> LookupVariableRefByName(
                 std::string_view variable_name) const noexcept;
 
         [[nodiscard]] phi::boolean CanRun() const noexcept;

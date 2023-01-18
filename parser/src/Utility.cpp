@@ -5,12 +5,15 @@
 #endif
 
 #include "OpenAutoIt/Utililty.hpp"
-
+#include <phi/core/boolean.hpp>
 #include <phi/core/scope_guard.hpp>
 #include <cstdio>
+#include <iostream>
 
 namespace OpenAutoIt
 {
+    static phi::boolean output_enabled{true};
+
     phi::optional<std::string> read_file(const std::filesystem::path& file_path) noexcept
     {
         // Check that the file actually exists
@@ -84,5 +87,26 @@ namespace OpenAutoIt
         }
 
         return true;
+    }
+
+    void out(std::string_view data)
+    {
+        if (output_enabled)
+        {
+            std::cout << data;
+        }
+    }
+
+    void err(std::string_view data)
+    {
+        if (output_enabled)
+        {
+            std::cerr << data;
+        }
+    }
+
+    void disable_output()
+    {
+        output_enabled = false;
     }
 } // namespace OpenAutoIt
