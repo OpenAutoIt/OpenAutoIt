@@ -23,7 +23,6 @@
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
 #include "OpenAutoIt/VariableScope.hpp"
-#include <fmt/format.h>
 #include <phi/compiler_support/extended_attributes.hpp>
 #include <phi/compiler_support/unused.hpp>
 #include <phi/compiler_support/warning.hpp>
@@ -44,6 +43,12 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+
+PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wuninitialized")
+
+#include <fmt/format.h>
+
+PHI_GCC_SUPPRESS_WARNING_POP()
 
 namespace OpenAutoIt
 {
