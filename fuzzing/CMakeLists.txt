@@ -27,35 +27,23 @@ function(oa_define_fuzzer name source libraries)
   target_compile_options(${name} PRIVATE -fsanitize=fuzzer)
   target_include_directories(${name} PRIVATE "include")
 
-  add_test(
-    NAME "${name}_run"
-    CONFIGURATIONS "Release"
-    COMMAND ${name} -max_total_time=${FUZZ_RUNTIME})
-  add_test(
-    NAME "${name}_run_only_ascii"
-    CONFIGURATIONS "Release"
-    COMMAND ${name} -max_total_time=${FUZZ_RUNTIME} -only_ascii=1)
+  add_test(NAME "${name}_run" COMMAND ${name} -max_total_time=${FUZZ_RUNTIME})
+  add_test(NAME "${name}_run_only_ascii" COMMAND ${name} -max_total_time=${FUZZ_RUNTIME}
+                                                 -only_ascii=1)
 
   # Regression testing
-  add_test(
-    NAME "${name}_regression"
-    CONFIGURATIONS "Release"
-    COMMAND "${name}" ${fuzz_sample_files})
+  add_test(NAME "${name}_regression" COMMAND "${name}" ${fuzz_sample_files})
 
   # Test with
   foreach(dictionary ${fuzz_dictionaries})
     # Get just the name without the extension
     cmake_path(GET dictionary STEM file_name)
 
-    add_test(
-      NAME "${name}_run_with_${file_name}_dict"
-      CONFIGURATIONS "Release"
-      COMMAND ${name} -max_total_time=${FUZZ_RUNTIME} -dict=${dictionary})
+    add_test(NAME "${name}_run_with_${file_name}_dict"
+             COMMAND ${name} -max_total_time=${FUZZ_RUNTIME} -dict=${dictionary})
 
-    add_test(
-      NAME "${name}_run_with_${file_name}_dict_only_ascii"
-      CONFIGURATIONS "Release"
-      COMMAND ${name} -max_total_time=${FUZZ_RUNTIME} -dict=${dictionary} -only_ascii=1)
+    add_test(NAME "${name}_run_with_${file_name}_dict_only_ascii"
+             COMMAND ${name} -max_total_time=${FUZZ_RUNTIME} -dict=${dictionary} -only_ascii=1)
   endforeach()
 endfunction()
 
