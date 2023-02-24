@@ -134,14 +134,14 @@ namespace OpenAutoIt
     void VirtualMachine::PushOrAssignVariable(std::string_view name, Variant value) noexcept
     {
         auto variable_opt = LookupVariableRefByName(name);
-        if(variable_opt)
+        if (variable_opt)
         {
             // Overwrite current value
             variable_opt.value() = phi::move(value);
             return;
         }
 
-        Scope& current_scope = GetCurrentScope();
+        Scope& current_scope          = GetCurrentScope();
         current_scope.variables[name] = phi::move(value);
     }
 

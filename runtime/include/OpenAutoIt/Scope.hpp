@@ -1,8 +1,8 @@
 #pragma once
 
 #include <OpenAutoIt/AST/ASTStatement.hpp>
+#include <OpenAutoIt/Statements.hpp>
 #include <OpenAutoIt/Variant.hpp>
-#include<OpenAutoIt/Statements.hpp>
 #include <phi/core/observer_ptr.hpp>
 #include <phi/core/sized_types.hpp>
 #include <string_view>

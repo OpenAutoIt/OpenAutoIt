@@ -3,21 +3,21 @@
 #include "OpenAutoIt/AST/ASTExpression.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
 #include "OpenAutoIt/AST/ASTStatement.hpp"
+#include "OpenAutoIt/Statements.hpp"
 #include "OpenAutoIt/Utililty.hpp"
 #include <phi/container/string_view.hpp>
 #include <phi/core/scope_ptr.hpp>
 #include <phi/core/types.hpp>
 #include <vector>
-#include "OpenAutoIt/Statements.hpp"
 
 namespace OpenAutoIt
 {
     struct FunctionParameter
     {
-        phi::string_view              name; // Parameter name without the $
-        Statements                    default_value_init;
-        phi::boolean                  by_ref   = false;
-        phi::boolean                  as_const = false;
+        phi::string_view name; // Parameter name without the $
+        Statements       default_value_init;
+        phi::boolean     by_ref   = false;
+        phi::boolean     as_const = false;
     };
 
     class ASTFunctionDefinition final : public ASTNode
