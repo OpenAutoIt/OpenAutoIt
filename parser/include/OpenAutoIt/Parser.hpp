@@ -105,9 +105,11 @@ namespace OpenAutoIt
 
         void ConsumeCurrent() noexcept;
 
+        void ConsumeComments() noexcept;
+
         void ConsumeNewLineAndComments() noexcept;
 
-        [[nodiscard]] phi::boolean MustParse(TokenKind kind) noexcept;
+        [[nodiscard]] phi::optional<const Token&> MustParse(TokenKind kind) noexcept;
 
         template <typename TypeT>
         void AppendStatementToDocument(phi::not_null_scope_ptr<TypeT> statement) noexcept

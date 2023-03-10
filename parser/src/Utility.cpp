@@ -1,4 +1,5 @@
 #include <phi/compiler_support/platform.hpp>
+#include <phi/core/types.hpp>
 
 #if PHI_PLATFORM_IS(WINDOWS)
 #    define _CRT_SECURE_NO_WARNINGS
@@ -122,7 +123,7 @@ namespace OpenAutoIt
         }
 
         // Case insensitively compare the names
-        for (phi::u64 index{0u}; index < lhs.length(); ++index)
+        for (phi::usize index{0u}; index < lhs.length(); ++index)
         {
             const char lhs_char = lhs.at(index);
             const char rhs_char = rhs.at(index);

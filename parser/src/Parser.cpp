@@ -22,6 +22,7 @@
 #include "OpenAutoIt/Token.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
+#include "OpenAutoIt/Utililty.hpp"
 #include "OpenAutoIt/VariableScope.hpp"
 #include <phi/compiler_support/extended_attributes.hpp>
 #include <phi/compiler_support/unused.hpp>
@@ -137,46 +138,52 @@ namespace OpenAutoIt
             const Token& token = CurrentToken();
 
             // Parse global function definition
-            if (token.GetTokenKind() == TokenKind::KW_Func)
+            switch (token.GetTokenKind())
             {
-                auto function_definition = ParseFunctionDefinition();
-                if (!function_definition)
-                {
-                    err("ERR: Failed to parse function definition!\n");
-                    continue;
-                }
+                case TokenKind::KW_Func: {
+                    ConsumeCurrent();
 
-                AppendFunctionToDocument(function_definition.release_not_null());
-            }
-            else if (token.GetTokenKind() == TokenKind::NewLine ||
-                     token.GetTokenKind() == TokenKind::Comment)
-            {
-                // Simply ignore and consume newlines and comments
-                ConsumeCurrent();
-            }
-            else if (token.GetTokenKind() == TokenKind::NotAToken)
-            {
-                err("ERR: Unexpected NotAToken!\n");
-                ConsumeCurrent();
-                continue;
-            }
-            else
-            {
-                auto statement = ParseStatement();
-                if (!statement)
-                {
-                    // TODO: Proper error reporting
-                    err("ERR: Failed to parse statement!\n");
-
-                    if (m_TokenStream->has_more())
+                    auto function_definition = ParseFunctionDefinition();
+                    if (!function_definition)
                     {
-                        // Swallow the bad token
-                        ConsumeCurrent();
+                        err("ERR: Failed to parse function definition!\n");
+                        continue;
                     }
-                    continue;
+
+                    AppendFunctionToDocument(function_definition.release_not_null());
+                    break;
                 }
 
-                AppendStatementToDocument(statement.release_not_null());
+                case TokenKind::Comment:
+                case TokenKind::NewLine: {
+                    // Simply ignore and consume newlines and comments
+                    ConsumeCurrent();
+                    break;
+                }
+                case TokenKind::NotAToken: {
+                    err(fmt::format("ERR: Unexpected NotAToken with text '{:s}'!\n",
+                                    std::string_view(token.GetText())));
+                    ConsumeCurrent();
+                    break;
+                }
+
+                default: {
+                    auto statement = ParseStatement();
+                    if (!statement)
+                    {
+                        // TODO: Proper error reporting
+                        err("ERR: Failed to parse statement!\n");
+
+                        if (m_TokenStream->has_more())
+                        {
+                            // Swallow the bad token
+                            ConsumeCurrent();
+                        }
+                        continue;
+                    }
+
+                    AppendStatementToDocument(statement.release_not_null());
+                }
             }
         }
     }
@@ -191,6 +198,22 @@ namespace OpenAutoIt
     void Parser::ConsumeCurrent() noexcept
     {
         m_TokenStream->consume();
+    }
+
+    void Parser::ConsumeComments() noexcept
+    {
+        while (m_TokenStream->has_more())
+        {
+            switch (CurrentToken().GetTokenKind())
+            {
+                case TokenKind::Comment:
+                    ConsumeCurrent();
+                    break;
+
+                default:
+                    return;
+            }
+        }
     }
 
     void Parser::ConsumeNewLineAndComments() noexcept
@@ -210,52 +233,43 @@ namespace OpenAutoIt
         }
     }
 
-    phi::boolean Parser::MustParse(TokenKind kind) noexcept
+    phi::optional<const Token&> Parser::MustParse(TokenKind kind) noexcept
     {
         // Do we even have more tokens?
         if (!m_TokenStream->has_more())
         {
-            return false;
+            return {};
         }
 
-        // Is is the correct token kind
-        if (CurrentToken().GetTokenKind() != kind)
+        const Token& token = CurrentToken();
+
+        // Is this the correct token kind
+        if (token.GetTokenKind() != kind)
         {
-            return false;
+            return {};
         }
 
         ConsumeCurrent();
-        return true;
+        return token;
     }
 
     phi::scope_ptr<ASTFunctionDefinition> Parser::ParseFunctionDefinition() noexcept
     {
-        if (!MustParse(TokenKind::KW_Func))
-        {
-            // TODO: Proper Error
-            return {};
-        }
-
         // Next we MUST parse the function name
-        if (!m_TokenStream->has_more())
+        auto function_name_token = MustParse(TokenKind::FunctionIdentifier);
+        if (!function_name_token)
         {
+            err("Expected identifier for function name");
             return {};
         }
-        const Token& function_name_token = CurrentToken();
-        if (function_name_token.GetTokenKind() != TokenKind::FunctionIdentifier)
-        {
-            // TODO: Proper error
-            return {};
-        }
-        ConsumeCurrent();
 
         auto function_definition            = phi::make_scope<ASTFunctionDefinition>();
-        function_definition->m_FunctionName = function_name_token.GetText();
+        function_definition->m_FunctionName = function_name_token->GetText();
 
         // Next we MUST parse an opening parenthesis (LParen)
         if (!MustParse(TokenKind::LParen))
         {
-            // TODO: Proper error
+            err("Expected opening parenthesis");
             return {};
         }
 
@@ -402,6 +416,8 @@ namespace OpenAutoIt
             return {};
         }
 
+        phi::scope_ptr<ASTStatement> ret_statement;
+
         // Loop until we parse something or there is nothing left to parse
         const Token& token = CurrentToken();
         switch (token.GetTokenKind())
@@ -412,56 +428,59 @@ namespace OpenAutoIt
             case TokenKind::KW_Global:
             case TokenKind::KW_Static:
             case TokenKind::VariableIdentifier: {
-                auto variable_declaration = ParseVariableAssignment();
-                if (!variable_declaration)
+                ret_statement = ParseVariableAssignment();
+                if (!ret_statement)
                 {
                     err("ERR: Failed to parse variable assignment!\n");
-                    break;
+                    return {};
                 }
-
-                return phi::move(variable_declaration);
+                break;
             }
 
             // If Statement
             case TokenKind::KW_If: {
-                auto if_statement = ParseIfStatement();
-                if (!if_statement)
+                ret_statement = ParseIfStatement();
+                if (!ret_statement)
                 {
                     err("ERR: Failed to parse if statement!\n");
-                    break;
+                    return {};
                 }
-
-                return phi::move(if_statement);
+                break;
             }
 
             // While statement
             case TokenKind::KW_While: {
-                auto while_statement = ParseWhileStatement();
-                if (!while_statement)
+                ret_statement = ParseWhileStatement();
+                if (!ret_statement)
                 {
                     err("ERR: Failed to parse while statement!\n");
-                    break;
+                    return {};
                 }
-
-                return phi::move(while_statement);
+                break;
             }
 
             default: {
                 // Try to parse ExpressionStatement
-                auto expression_statement = ParseExpressionStatement();
-                if (!expression_statement)
+                ret_statement = ParseExpressionStatement();
+                if (!ret_statement)
                 {
                     err(fmt::format("ERR: Unexpected token: '{:s}'\n",
                                     enum_name(token.GetTokenKind())));
                     return {};
                 }
-
-                return phi::move(expression_statement);
+                break;
             }
         }
 
-        // TODO: Proper error reporting
-        return {};
+        ConsumeComments();
+
+        if (m_TokenStream->has_more() && !MustParse(TokenKind::NewLine))
+        {
+            err("Requires newline after statement\n");
+            return {};
+        }
+
+        return phi::move(ret_statement);
     }
 
     phi::scope_ptr<ASTWhileStatement> Parser::ParseWhileStatement() noexcept
@@ -650,9 +669,12 @@ namespace OpenAutoIt
         auto expression_statement =
                 phi::make_not_null_scope<ASTExpressionStatement>(expression.release_not_null());
 
-        // TODO: Afterwards we surely should parse a NewLine or EOF
-
-        // TODO: Make sure the expression is valid for an expression statement!
+        if (!expression_statement->m_Expression->IsValidAsStatement())
+        {
+            err(fmt::format("Expression {:s} is not valid as an statement\n",
+                            expression_statement->m_Expression->Name()));
+            return {};
+        }
 
         return phi::move(expression_statement);
     }
