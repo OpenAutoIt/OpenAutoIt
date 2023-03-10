@@ -1,14 +1,9 @@
-#include <phi/compiler_support/platform.hpp>
-#include <phi/core/types.hpp>
-
-#if PHI_PLATFORM_IS(WINDOWS)
-#    define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include "OpenAutoIt/Utililty.hpp"
+#include <phi/compiler_support/platform.hpp>
 #include <phi/container/string_view.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/scope_guard.hpp>
+#include <phi/core/types.hpp>
 #include <phi/text/to_lower_case.hpp>
 #include <cstdio>
 #include <iostream>

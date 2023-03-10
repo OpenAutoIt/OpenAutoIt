@@ -67,6 +67,11 @@ else()
   set(_lto_default ON)
 endif()
 
+# Needed for MSVC to build without errors
+if(PHI_PLATFORM_WINDOWS)
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+endif()
+
 option(OA_BUILD_TOOLS "" ON)
 option(OA_LTO "" ${_lto_default})
 option(OA_COVERAGE_BUILD "" OFF)
