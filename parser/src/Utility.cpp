@@ -122,7 +122,7 @@ namespace OpenAutoIt
             return false;
         }
 
-        // Case insensitively compare the names
+        // Case insensitively compare the strings
         for (phi::usize index{0u}; index < lhs.length(); ++index)
         {
             const char lhs_char = lhs.at(index);
