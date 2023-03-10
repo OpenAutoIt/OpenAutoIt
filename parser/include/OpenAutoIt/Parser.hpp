@@ -153,7 +153,7 @@ namespace OpenAutoIt
         phi::scope_ptr<ASTIntegerLiteral> ParseIntegerLiteral() noexcept;
         phi::scope_ptr<ASTStringLiteral>  ParseStringLiteral() noexcept;
         phi::scope_ptr<ASTBooleanLiteral> ParseBooleanLiteral() noexcept;
-        phi::scope_ptr<ASTKeywordLiteral> ParseKeywordliteral() noexcept;
+        phi::scope_ptr<ASTKeywordLiteral> ParseKeywordLiteral() noexcept;
         phi::scope_ptr<ASTFloatLiteral>   ParseFloatLiteral() noexcept;
 
         ParseResult* m_ParseResult;

@@ -892,7 +892,7 @@ namespace OpenAutoIt
         // Keyword literal
         else if (token.IsKeywordLiteral())
         {
-            auto keyword_literal = ParseKeywordliteral();
+            auto keyword_literal = ParseKeywordLiteral();
             if (!keyword_literal)
             {
                 // TODO: Proper error
@@ -1174,7 +1174,7 @@ namespace OpenAutoIt
         return {};
     }
 
-    phi::scope_ptr<ASTKeywordLiteral> Parser::ParseKeywordliteral() noexcept
+    phi::scope_ptr<ASTKeywordLiteral> Parser::ParseKeywordLiteral() noexcept
     {
         if (!m_TokenStream->has_more())
         {
