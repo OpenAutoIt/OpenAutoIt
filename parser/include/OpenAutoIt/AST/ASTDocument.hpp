@@ -3,6 +3,7 @@
 #include "OpenAutoIt/AST/ASTFunctionDefinition.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
 #include "OpenAutoIt/AST/ASTStatement.hpp"
+#include "OpenAutoIt/Utililty.hpp"
 #include <phi/algorithm/string_equals.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/scope_ptr.hpp>
@@ -29,8 +30,9 @@ namespace OpenAutoIt
         {
             for (phi::not_null_observer_ptr<ASTFunctionDefinition> func_definition : m_Functions)
             {
-                // TODO: Should ignore case
-                if (phi::string_equals(func_definition->m_FunctionName, function_name))
+                const phi::string_view function_definition_name = func_definition->m_FunctionName;
+
+                if (string_equals_ignore_case(function_definition_name, function_name))
                 {
                     return phi::move(func_definition);
                 }

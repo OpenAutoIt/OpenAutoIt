@@ -1,7 +1,9 @@
 #pragma once
 
+#include <phi/core/boolean.hpp>
 #include <phi/core/optional.hpp>
 #include <phi/core/types.hpp>
+#include <phi/forward/string_view.hpp>
 #include <filesystem>
 #include <string>
 #include <string_view>
@@ -30,4 +32,7 @@ namespace OpenAutoIt
     void err(std::string_view data);
 
     void disable_output();
+
+    [[nodiscard]] phi::boolean string_equals_ignore_case(const phi::string_view lhs,
+                                                         const phi::string_view rhs) noexcept;
 } // namespace OpenAutoIt

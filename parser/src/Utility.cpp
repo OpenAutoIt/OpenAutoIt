@@ -5,8 +5,10 @@
 #endif
 
 #include "OpenAutoIt/Utililty.hpp"
+#include <phi/container/string_view.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/scope_guard.hpp>
+#include <phi/text/to_lower_case.hpp>
 #include <cstdio>
 #include <iostream>
 
@@ -108,5 +110,30 @@ namespace OpenAutoIt
     void disable_output()
     {
         output_enabled = false;
+    }
+
+    phi::boolean string_equals_ignore_case(const phi::string_view lhs,
+                                           const phi::string_view rhs) noexcept
+    {
+        // If there not the same length they can't be equal
+        if (lhs.length() != rhs.length())
+        {
+            return false;
+        }
+
+        // Case insensitively compare the names
+        for (phi::u64 index{0u}; index < lhs.length(); ++index)
+        {
+            const char lhs_char = lhs.at(index);
+            const char rhs_char = rhs.at(index);
+
+            if (phi::to_lower_case(lhs_char) != phi::to_lower_case(rhs_char))
+            {
+                return false;
+            }
+        }
+
+        // Same length and all characters are equal ignoring case
+        return true;
     }
 } // namespace OpenAutoIt
