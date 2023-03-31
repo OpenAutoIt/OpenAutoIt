@@ -54,6 +54,8 @@ namespace OpenAutoIt
             default:
                 PHI_ASSERT_NOT_REACHED();
         }
+
+        PHI_ASSERT_NOT_REACHED();
     }
 
     class ASTNode
