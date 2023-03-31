@@ -30,7 +30,9 @@ namespace OpenAutoIt
     class Interpreter
     {
     public:
-        explicit Interpreter(phi::not_null_observer_ptr<ASTDocument> document) noexcept;
+        Interpreter() = default;
+
+        void SetDocument(phi::not_null_observer_ptr<ASTDocument> new_document) noexcept;
 
         void Run();
 
@@ -69,8 +71,8 @@ namespace OpenAutoIt
         Variant EvaluateBinaryMultiplyExpression(const Variant& lhs, const Variant& rhs) noexcept;
 
     private:
-        phi::not_null_observer_ptr<ASTDocument> m_Document;
-        VirtualMachine                          m_VirtualMachine;
-        Statements                              m_VirtualBlock;
+        phi::observer_ptr<ASTDocument> m_Document;
+        VirtualMachine                 m_VirtualMachine;
+        Statements                     m_VirtualBlock;
     };
 } // namespace OpenAutoIt

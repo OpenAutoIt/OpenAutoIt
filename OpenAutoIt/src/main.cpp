@@ -1,5 +1,6 @@
 #include "OpenAutoIt/AST/ASTDocument.hpp"
 #include "OpenAutoIt/ParseResult.hpp"
+#include "REPLInterpreter.hpp"
 #include <OpenAutoIt/Interpreter.hpp>
 #include <OpenAutoIt/Lexer.hpp>
 #include <OpenAutoIt/Parser.hpp>
@@ -9,8 +10,8 @@ int main(int argc, char* argv[])
 {
     if (argc < 2)
     {
-        // TODO: Enter REPL mode
-        return -1;
+        OpenAutoIt::REPLInterpreter repl;
+        return repl.Run();
     }
 
     // TODO: Options etc.
@@ -43,7 +44,8 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    OpenAutoIt::Interpreter interpreter{parse_result.m_Document.not_null_observer()};
+    OpenAutoIt::Interpreter interpreter;
+    interpreter.SetDocument(parse_result.m_Document.not_null_observer());
     interpreter.Run();
 
     const phi::u32 exit_code = interpreter.vm().GetExitCode();

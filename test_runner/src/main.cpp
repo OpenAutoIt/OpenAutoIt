@@ -163,7 +163,8 @@ ExpectedBlock extract_expected_block(const OpenAutoIt::TokenStream& tokens) noex
     const ExpectedBlock expected_block = extract_expected_block(parse_result.m_TokenStream);
 
     // Setup interpreter
-    OpenAutoIt::Interpreter interpreter{parse_result.m_Document.not_null_observer()};
+    OpenAutoIt::Interpreter interpreter;
+    interpreter.SetDocument(parse_result.m_Document.not_null_observer());
 
     OutputBuffer buffer;
 

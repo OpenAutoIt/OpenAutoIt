@@ -33,10 +33,10 @@ PHI_MSVC_SUPPRESS_WARNING(4702) // unreachable code
 
 namespace OpenAutoIt
 {
-    Interpreter::Interpreter(phi::not_null_observer_ptr<ASTDocument> document) noexcept
-        : m_Document{phi::move(document)}
+    void Interpreter::SetDocument(phi::not_null_observer_ptr<ASTDocument> new_document) noexcept
     {
-        vm().PushGlobalScope(document->m_Statements);
+        m_Document = new_document;
+        vm().PushGlobalScope(m_Document->m_Statements);
     }
 
     void Interpreter::Run()

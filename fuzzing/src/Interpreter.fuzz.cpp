@@ -39,7 +39,8 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
     }
 
     // Interpreting
-    OpenAutoIt::Interpreter interpreter{parse_result.m_Document.not_null_observer()};
+    OpenAutoIt::Interpreter interpreter;
+    interpreter.SetDocument(parse_result.m_Document.not_null_observer());
 
     // Prevent output
     interpreter.vm().OverwriteIOSreams(nullptr, nullptr);
