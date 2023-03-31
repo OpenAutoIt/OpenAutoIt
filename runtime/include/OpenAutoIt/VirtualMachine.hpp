@@ -90,6 +90,10 @@ namespace OpenAutoIt
 
         [[nodiscard]] phi::boolean CanRun() const noexcept;
 
+        void Exit(phi::u32 exit_code) noexcept;
+
+        [[nodiscard]] phi::u32 GetExitCode() const noexcept;
+
         void OverwriteIOSreams(phi::observer_ptr<std::ostream> out,
                                phi::observer_ptr<std::ostream> err) noexcept;
 
@@ -102,5 +106,6 @@ namespace OpenAutoIt
         phi::observer_ptr<std::ostream> m_Stdout{&std::cout};
         phi::observer_ptr<std::ostream> m_Stderr{&std::cerr};
         phi::boolean                    m_Aborting{false};
+        phi::u32                        m_ExitCode{0u};
     };
 } // namespace OpenAutoIt

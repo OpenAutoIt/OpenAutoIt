@@ -207,6 +207,19 @@ namespace OpenAutoIt
         return !m_Scopes.empty() && !m_Aborting;
     }
 
+    void VirtualMachine::Exit(phi::u32 exit_code) noexcept
+    {
+        m_Scopes.clear();
+        m_ExitCode = exit_code;
+
+        // TODO: Push scopes of registered on exit functions
+    }
+
+    phi::u32 VirtualMachine::GetExitCode() const noexcept
+    {
+        return m_ExitCode;
+    }
+
     void VirtualMachine::OverwriteIOSreams(phi::observer_ptr<std::ostream> out,
                                            phi::observer_ptr<std::ostream> err) noexcept
     {

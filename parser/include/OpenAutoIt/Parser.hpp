@@ -4,6 +4,7 @@
 #include "OpenAutoIt/AST/ASTBinaryExpression.hpp"
 #include "OpenAutoIt/AST/ASTBooleanLiteral.hpp"
 #include "OpenAutoIt/AST/ASTDocument.hpp"
+#include "OpenAutoIt/AST/ASTExitStatement.hpp"
 #include "OpenAutoIt/AST/ASTExpression.hpp"
 #include "OpenAutoIt/AST/ASTExpressionStatement.hpp"
 #include "OpenAutoIt/AST/ASTFloatLiteral.hpp"
@@ -150,6 +151,7 @@ namespace OpenAutoIt
         phi::scope_ptr<ASTVariableExpression>               ParseVariableExpression() noexcept;
         phi::scope_ptr<ASTArraySubscriptExpression> ParseArraySubscriptExpression() noexcept;
         phi::scope_ptr<ASTExpression>               ParseParenExpression() noexcept;
+        phi::scope_ptr<ASTExitStatement>            ParseExitStatement() noexcept;
 
         // Literals
         phi::scope_ptr<ASTIntegerLiteral> ParseIntegerLiteral() noexcept;

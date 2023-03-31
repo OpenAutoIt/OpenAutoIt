@@ -1,8 +1,10 @@
 #include "OpenAutoIt/Parser.hpp"
 
+#include "OpenAutoIt/AST/ASTArraySubscriptExpression.hpp"
 #include "OpenAutoIt/AST/ASTBinaryExpression.hpp"
 #include "OpenAutoIt/AST/ASTBooleanLiteral.hpp"
 #include "OpenAutoIt/AST/ASTDocument.hpp"
+#include "OpenAutoIt/AST/ASTExitStatement.hpp"
 #include "OpenAutoIt/AST/ASTExpression.hpp"
 #include "OpenAutoIt/AST/ASTExpressionStatement.hpp"
 #include "OpenAutoIt/AST/ASTFloatLiteral.hpp"
@@ -297,14 +299,14 @@ namespace OpenAutoIt
         // Next we MUST parse a right parenthesis (RParen)
         if (!MustParse(TokenKind::RParen))
         {
-            // TODO: Proper error
+            err("ERR: Expected ')'");
             return {};
         }
 
         // Next we MUST parse a new line
         if (!MustParse(TokenKind::NewLine))
         {
-            // TODO: Proper error
+            err("ERR: Missing newline!");
             return {};
         }
 
@@ -454,6 +456,17 @@ namespace OpenAutoIt
                 if (!ret_statement)
                 {
                     err("ERR: Failed to parse while statement!\n");
+                    return {};
+                }
+                break;
+            }
+
+            // Exit statement
+            case TokenKind::KW_Exit: {
+                ret_statement = ParseExitStatement();
+                if (!ret_statement)
+                {
+                    err("ERR: Failed to parse exit statement!\n");
                     return {};
                 }
                 break;
@@ -937,6 +950,18 @@ namespace OpenAutoIt
 
             return phi::move(float_literal);
         }
+        // ArraySubscript expression
+        else if (token.GetTokenKind() == TokenKind::LSquare)
+        {
+            auto subscript_expression = ParseArraySubscriptExpression();
+            if (!subscript_expression)
+            {
+                err("ERR: Failed to parse array subscript expression\n");
+                return {};
+            }
+
+            return phi::move(subscript_expression);
+        }
 
         // TODO: Error Unexpected token
         err(fmt::format("Unexpected token '{:s}' while parsing expression\n",
@@ -1141,11 +1166,31 @@ namespace OpenAutoIt
     PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wsuggest-attribute=const")
     PHI_GCC_SUPPRESS_WARNING("-Wsuggest-attribute=pure")
 
-    phi::scope_ptr<ASTArraySubscriptExpression> ParseArraySubscriptExpression() noexcept
+    phi::scope_ptr<ASTArraySubscriptExpression> Parser::ParseArraySubscriptExpression() noexcept
     {
-        // TODO: Implement me
+        if (!m_TokenStream->has_more())
+        {
+            return {};
+        }
 
-        return phi::scope_ptr<ASTArraySubscriptExpression>{nullptr};
+        if (!MustParse(TokenKind::LSquare))
+        {
+            return {};
+        }
+
+        phi::scope_ptr<ASTExpression> expression = ParseExpression();
+        if (!expression)
+        {
+            return {};
+        }
+
+        if (!MustParse(TokenKind::RSquare))
+        {
+            return {};
+        }
+
+        return phi::make_scope<ASTArraySubscriptExpression>(
+                phi::move(expression.release_not_null()));
     }
 
     PHI_GCC_SUPPRESS_WARNING_POP()
@@ -1168,6 +1213,24 @@ namespace OpenAutoIt
         }
 
         return phi::move(expression);
+    }
+
+    phi::scope_ptr<ASTExitStatement> Parser::ParseExitStatement() noexcept
+    {
+        if (!m_TokenStream->has_more())
+        {
+            return {};
+        }
+
+        if (!MustParse(TokenKind::KW_Exit))
+        {
+            return {};
+        }
+
+        // Parse optional expression
+        phi::scope_ptr<ASTExpression> expression = ParseExpression();
+
+        return phi::make_scope<ASTExitStatement>(phi::move(expression));
     }
 
     phi::scope_ptr<ASTBooleanLiteral> Parser::ParseBooleanLiteral() noexcept

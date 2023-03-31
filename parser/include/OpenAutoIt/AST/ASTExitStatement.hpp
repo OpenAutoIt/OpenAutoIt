@@ -1,7 +1,7 @@
 #pragma once
 
 #include "OpenAutoIt/AST/ASTExpression.hpp"
-#include "OpenAutoIt/AST/ASTNode.hpp"
+#include "OpenAutoIt/AST/ASTStatement.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/Utililty.hpp"
 #include <phi/core/scope_ptr.hpp>
@@ -9,28 +9,27 @@
 
 namespace OpenAutoIt
 {
-    class ASTArraySubscriptExpression final : public ASTExpression
+    class ASTExitStatement final : public ASTStatement
     {
     public:
-        ASTArraySubscriptExpression(phi::not_null_scope_ptr<ASTExpression>&& expression)
-            : m_IndexExpression{phi::move(expression)}
+        ASTExitStatement(phi::scope_ptr<ASTExpression>&& expression) noexcept
+            : m_Expression{phi::move(expression)}
         {
-            m_NodeType = ASTNodeType::ArraySubscriptExpression;
+            m_NodeType = ASTNodeType::ExitStatement;
         }
 
         [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
         {
-            (void)indent;
-
             std::string ret;
 
-            // TODO: Implement me
+            // TODO:
+            (void)indent;
 
             return ret;
         }
 
         // TODO: Make these private
     public:
-        phi::not_null_scope_ptr<ASTExpression> m_IndexExpression;
+        phi::scope_ptr<ASTExpression> m_Expression;
     };
 } // namespace OpenAutoIt

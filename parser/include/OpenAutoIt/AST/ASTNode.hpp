@@ -13,6 +13,7 @@ namespace OpenAutoIt
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(ArraySubscriptExpression)                                   \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(BinaryExpression)                                           \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(BooleanLiteral)                                             \
+    OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(ExitStatement)                                              \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(ExpressionStatement)                                        \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(FloatLiteral)                                               \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(FunctionCallExpression)                                     \
@@ -53,9 +54,8 @@ namespace OpenAutoIt
 
             default:
                 PHI_ASSERT_NOT_REACHED();
+                return "";
         }
-
-        PHI_ASSERT_NOT_REACHED();
     }
 
     class ASTNode

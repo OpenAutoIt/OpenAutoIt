@@ -46,5 +46,7 @@ int main(int argc, char* argv[])
     OpenAutoIt::Interpreter interpreter{parse_result.m_Document.not_null_observer()};
     interpreter.Run();
 
-    return 0;
+    const phi::u32 exit_code = interpreter.vm().GetExitCode();
+
+    return exit_code.unsafe();
 }

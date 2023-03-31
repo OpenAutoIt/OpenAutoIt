@@ -1,6 +1,7 @@
 #include "OpenAutoIt/Interpreter.hpp"
 
 #include "OpenAutoIt/AST/ASTBinaryExpression.hpp"
+#include "OpenAutoIt/AST/ASTExitStatement.hpp"
 #include "OpenAutoIt/AST/ASTExpression.hpp"
 #include "OpenAutoIt/AST/ASTFloatLiteral.hpp"
 #include "OpenAutoIt/AST/ASTFunctionCallExpression.hpp"
@@ -20,6 +21,7 @@
 #include <phi/core/assert.hpp>
 #include <phi/core/observer_ptr.hpp>
 #include <phi/core/sized_types.hpp>
+#include <phi/core/unsafe_cast.hpp>
 
 PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wuninitialized")
 
@@ -61,8 +63,8 @@ namespace OpenAutoIt
         // Interpret statement
         StatementFinished result = InterpretStatement(current_statement);
 
-        // Increment index if the statement is finished
-        if (result == StatementFinished::Yes)
+        // Increment index if the statement is finished and we can still run
+        if (result == StatementFinished::Yes && vm().CanRun())
         {
             ++current_scope.index;
         }
@@ -173,6 +175,26 @@ namespace OpenAutoIt
                 // Interpret while statements
                 vm().PushBlockScope(while_statement->m_Statements);
                 return StatementFinished::No;
+            }
+
+            case ASTNodeType::ExitStatement: {
+                auto exit_statement = statement->as<ASTExitStatement>();
+
+                if (exit_statement->m_Expression)
+                {
+                    const Variant exit_code =
+                            InterpretExpression(exit_statement->m_Expression.not_null_observer())
+                                    .CastToInt64();
+
+                    if (exit_code.IsInt64())
+                    {
+                        vm().Exit(phi::unsafe_cast<phi::u32>(exit_code.AsInt64()));
+                        return StatementFinished::Yes;
+                    }
+                }
+
+                vm().Exit(0u);
+                return StatementFinished::Yes;
             }
 
             default:
