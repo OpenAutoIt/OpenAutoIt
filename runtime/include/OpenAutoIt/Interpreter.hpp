@@ -69,6 +69,7 @@ namespace OpenAutoIt
         Variant EvaluateBinaryPlusExpression(const Variant& lhs, const Variant& rhs) noexcept;
         Variant EvaluateBinaryMinusExpression(const Variant& lhs, const Variant& rhs) noexcept;
         Variant EvaluateBinaryMultiplyExpression(const Variant& lhs, const Variant& rhs) noexcept;
+        Variant EvaluateBinaryDivideExpression(const Variant& lhs, const Variant& rhs) noexcept;
 
     private:
         phi::observer_ptr<ASTDocument> m_Document;

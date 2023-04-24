@@ -58,10 +58,10 @@ namespace OpenAutoIt
             return;
         }
 
-        auto current_statement = GetCurrentStatement();
+        const auto current_statement = GetCurrentStatement();
 
         // Interpret statement
-        StatementFinished result = InterpretStatement(current_statement);
+        const StatementFinished result = InterpretStatement(current_statement);
 
         // Increment index if the statement is finished and we can still run
         if (result == StatementFinished::Yes && vm().CanRun())
@@ -274,7 +274,7 @@ namespace OpenAutoIt
                 return {};
 
             case ASTNodeType::VariableExpression: {
-                auto variable_expression = expression->as<ASTVariableExpression>();
+                const auto variable_expression = expression->as<ASTVariableExpression>();
 
                 const phi::string_view variable_name = variable_expression->m_VariableName;
 
@@ -454,6 +454,9 @@ namespace OpenAutoIt
             case TokenKind::OP_Multiply:
                 return EvaluateBinaryMultiplyExpression(lhs, rhs);
 
+            case TokenKind::OP_Divide:
+                return EvaluateBinaryDivideExpression(lhs, rhs);
+
             default:
                 return {};
         }
@@ -491,5 +494,16 @@ namespace OpenAutoIt
         }
 
         return Variant::MakeInt(UnsafeMultiply(lhs.AsInt64(), rhs.AsInt64()));
+    }
+
+    Variant Interpreter::EvaluateBinaryDivideExpression(const Variant& lhs,
+                                                        const Variant& rhs) noexcept
+    {
+        if (!lhs.IsInt64() || !rhs.IsInt64())
+        {
+            return {};
+        }
+
+        return Variant::MakeInt(UnsafeDivide(lhs.AsInt64(), rhs.AsInt64()));
     }
 } // namespace OpenAutoIt

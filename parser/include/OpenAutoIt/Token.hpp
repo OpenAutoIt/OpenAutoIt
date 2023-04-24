@@ -103,6 +103,37 @@ namespace OpenAutoIt
             }
         }
 
+        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsOperator() const noexcept
+        {
+            switch (m_Kind)
+            {
+                case TokenKind::OP_Equals:
+                case TokenKind::OP_PlusEquals:
+                case TokenKind::OP_MinusEquals:
+                case TokenKind::OP_MultiplyEquals:
+                case TokenKind::OP_DivideEquals:
+                case TokenKind::OP_Concatenate:
+                case TokenKind::OP_ConcatenateEquals:
+                case TokenKind::OP_Plus:
+                case TokenKind::OP_Minus:
+                case TokenKind::OP_Multiply:
+                case TokenKind::OP_Divide:
+                case TokenKind::OP_Raise:
+                case TokenKind::OP_EqualsEquals:
+                case TokenKind::OP_NotEqual:
+                case TokenKind::OP_GreaterThan:
+                case TokenKind::OP_GreaterThanEqual:
+                case TokenKind::OP_LessThan:
+                case TokenKind::OP_LessThanEqual:
+                case TokenKind::OP_TernaryIf:
+                case TokenKind::OP_TernaryElse:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
     private:
         TokenKind               m_Kind;
         phi::string_view        m_Text;
