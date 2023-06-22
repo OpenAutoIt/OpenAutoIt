@@ -15,7 +15,7 @@ namespace OpenAutoIt
 
     using array_t  = std::vector<Variant>;
     using binary_t = std::basic_string<char8_t>;
-    using ptr_t    = std::uintptr_t;
+    using ptr_t    = phi::uintptr_t;
     using string_t = std::string;
 
     // https://www.autoitscript.com/autoit3/docs/intro/lang_datatypes.htm
