@@ -26,73 +26,73 @@ namespace OpenAutoIt
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(VariableExpression)                                         \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(WhileStatement)
 
-    enum class ASTNodeType
-    {
-        NONE,
+enum class ASTNodeType
+{
+    NONE,
 
 #define OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(name) name,
+
+    OPENAUTOIT_ENUM_AST_NODE_TYPE()
+
+#undef OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL
+
+    // NOTE: Always keep last
+    COUNT,
+};
+
+[[nodiscard]] PHI_ATTRIBUTE_PURE constexpr const char* enum_name(ASTNodeType node_type) noexcept
+{
+    switch (node_type)
+    {
+#define OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(name)                                                   \
+    case ASTNodeType::name:                                                                        \
+        return "AST" #name;
 
         OPENAUTOIT_ENUM_AST_NODE_TYPE()
 
 #undef OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL
 
-        // NOTE: Always keep last
-        COUNT,
-    };
+        default:
+            PHI_ASSERT_NOT_REACHED();
+            return "";
+    }
+}
 
-    [[nodiscard]] PHI_ATTRIBUTE_PURE constexpr const char* enum_name(ASTNodeType node_type) noexcept
+class ASTNode
+{
+public:
+    ASTNode() = default;
+
+    virtual ~ASTNode() = default;
+
+    [[nodiscard]] const char* Name() const noexcept
     {
-        switch (node_type)
-        {
-#define OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(name)                                                   \
-    case ASTNodeType::name:                                                                        \
-        return "AST" #name;
+        PHI_ASSERT(m_NodeType != ASTNodeType::NONE);
+        PHI_ASSERT(m_NodeType != ASTNodeType::COUNT);
 
-            OPENAUTOIT_ENUM_AST_NODE_TYPE()
-
-#undef OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL
-
-            default:
-                PHI_ASSERT_NOT_REACHED();
-                return "";
-        }
+        return enum_name(m_NodeType);
     }
 
-    class ASTNode
+    [[nodiscard]] virtual std::string DumpAST(phi::usize indent = 0u) const noexcept = 0;
+
+    [[nodiscard]] ASTNodeType NodeType() const noexcept
     {
-    public:
-        ASTNode() = default;
+        return m_NodeType;
+    }
 
-        virtual ~ASTNode() = default;
+    template <typename TypeT>
+    phi::not_null_observer_ptr<TypeT> as() noexcept
+    {
+        static_assert(phi::is_base_of_v<ASTNode, TypeT>,
+                      "Can only cast to derived classes of ASTNode");
 
-        [[nodiscard]] const char* Name() const noexcept
-        {
-            PHI_ASSERT(m_NodeType != ASTNodeType::NONE);
-            PHI_ASSERT(m_NodeType != ASTNodeType::COUNT);
+        TypeT* ret = dynamic_cast<TypeT*>(this);
+        PHI_ASSERT(ret);
 
-            return enum_name(m_NodeType);
-        }
+        return ret;
+    }
 
-        [[nodiscard]] virtual std::string DumpAST(phi::usize indent = 0u) const noexcept = 0;
-
-        [[nodiscard]] ASTNodeType NodeType() const noexcept
-        {
-            return m_NodeType;
-        }
-
-        template <typename TypeT>
-        phi::not_null_observer_ptr<TypeT> as() noexcept
-        {
-            static_assert(phi::is_base_of_v<ASTNode, TypeT>,
-                          "Can only cast to derived classes of ASTNode");
-
-            TypeT* ret = dynamic_cast<TypeT*>(this);
-            PHI_ASSERT(ret);
-
-            return ret;
-        }
-
-    protected:
-        ASTNodeType m_NodeType{ASTNodeType::NONE};
-    };
+protected:
+    ASTNodeType m_NodeType{ASTNodeType::NONE};
+};
 } // namespace OpenAutoIt

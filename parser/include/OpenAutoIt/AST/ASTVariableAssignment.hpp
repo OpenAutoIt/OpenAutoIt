@@ -11,48 +11,48 @@
 
 namespace OpenAutoIt
 {
-    // TODO: Is an variableAssigment also an Expression like in C/C++?
-    class ASTVariableAssignment final : public ASTStatement
+// TODO: Is an variableAssigment also an Expression like in C/C++?
+class ASTVariableAssignment final : public ASTStatement
+{
+public:
+    ASTVariableAssignment()
     {
-    public:
-        ASTVariableAssignment()
+        m_NodeType = ASTNodeType::VariableAssignment;
+    }
+
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    {
+        std::string ret;
+
+        ret += indent_times(indent);
+        ret += "VariableAssignment: [";
+        ret += (m_IsStatic ? "static, " : "");
+        ret += (m_IsConst ? "const, " : "");
+        ret += enum_name(m_Scope);
+        ret += "] $";
+        ret += std::string_view(m_VariableName.data(), m_VariableName.length().unsafe());
+        ret += " =";
+
+        if (m_InitialValueExpression)
         {
-            m_NodeType = ASTNodeType::VariableAssignment;
+            ret += "\n[\n";
+            ret += m_InitialValueExpression->DumpAST(indent + 1u);
+            ret += "\n]\n";
+        }
+        else
+        {
+            ret += " Uninitialized\n";
         }
 
-        [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
-        {
-            std::string ret;
+        return ret;
+    }
 
-            ret += indent_times(indent);
-            ret += "VariableAssignment: [";
-            ret += (m_IsStatic ? "static, " : "");
-            ret += (m_IsConst ? "const, " : "");
-            ret += enum_name(m_Scope);
-            ret += "] $";
-            ret += std::string_view(m_VariableName.data(), m_VariableName.length().unsafe());
-            ret += " =";
-
-            if (m_InitialValueExpression)
-            {
-                ret += "\n[\n";
-                ret += m_InitialValueExpression->DumpAST(indent + 1u);
-                ret += "\n]\n";
-            }
-            else
-            {
-                ret += " Uninitialized\n";
-            }
-
-            return ret;
-        }
-
-        /// TODO: These should not be public
-    public:
-        phi::boolean                  m_IsStatic{false};
-        phi::boolean                  m_IsConst{false};
-        VariableScope                 m_Scope{VariableScope::Auto};
-        phi::string_view              m_VariableName{};
-        phi::scope_ptr<ASTExpression> m_InitialValueExpression;
-    };
+    /// TODO: These should not be public
+public:
+    phi::boolean                  m_IsStatic{false};
+    phi::boolean                  m_IsConst{false};
+    VariableScope                 m_Scope{VariableScope::Auto};
+    phi::string_view              m_VariableName{};
+    phi::scope_ptr<ASTExpression> m_InitialValueExpression;
+};
 } // namespace OpenAutoIt

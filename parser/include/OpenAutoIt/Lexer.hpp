@@ -11,75 +11,75 @@
 
 namespace OpenAutoIt
 {
-    class Lexer
+class Lexer
+{
+public:
+    using iterator = typename phi::string_view::const_iterator;
+
+    explicit Lexer(ParseResult& parse_result) noexcept;
+
+    Lexer(ParseResult& parse_result, phi::string_view source) noexcept;
+
+    void SetInputSource(phi::string_view source) noexcept;
+
+    void Reset() noexcept;
+
+    [[nodiscard]] phi::boolean IsFinished() const noexcept;
+
+    [[nodiscard]] phi::boolean HasInput() const noexcept;
+
+    [[nodiscard]] phi::optional<Token> GetNextToken() noexcept;
+
+    void ProcessAll() noexcept;
+
+    void ProcessString(phi::string_view source) noexcept;
+
+private:
+    void ConsumeCurrentCharacter() noexcept;
+
+    void AdvanceToNextLine() noexcept;
+
+    void SkipCurrentCharacter() noexcept;
+
+    [[nodiscard]] constexpr Token ConstructToken(TokenKind kind) noexcept
     {
-    public:
-        using iterator = typename phi::string_view::const_iterator;
+        Token token{kind,
+                    m_Source.substring_view(
+                            static_cast<typename phi::string_view::size_type::value_type>(
+                                    m_Iterator - m_Source.begin()),
+                            1u),
+                    m_LineNumber, m_Column};
 
-        explicit Lexer(ParseResult& parse_result) noexcept;
+        // 1 character sized token
+        ++m_Column;
 
-        Lexer(ParseResult& parse_result, phi::string_view source) noexcept;
+        return token;
+    }
 
-        void SetInputSource(phi::string_view source) noexcept;
+    [[nodiscard]] constexpr Token ConstructToken(TokenKind kind, iterator token_begin) noexcept
+    {
+        Token token{kind, TokenText(token_begin), m_LineNumber, m_Column};
 
-        void Reset() noexcept;
+        // Consume the amount of characters that make up our new token
+        m_Column += static_cast<typename phi::usize::value_type>(m_Iterator - token_begin);
 
-        [[nodiscard]] phi::boolean IsFinished() const noexcept;
+        return token;
+    }
 
-        [[nodiscard]] phi::boolean HasInput() const noexcept;
+    [[nodiscard]] constexpr phi::string_view TokenText(iterator token_begin) noexcept
+    {
+        return m_Source.substring_view(token_begin, m_Iterator);
+    }
 
-        [[nodiscard]] phi::optional<Token> GetNextToken() noexcept;
+    ParseResult&     m_ParseResult;
+    phi::string_view m_Source;
 
-        void ProcessAll() noexcept;
+    // Lexer state
+    iterator m_Iterator;
 
-        void ProcessString(phi::string_view source) noexcept;
+    phi::boolean m_InsideMultiLineComment{false};
 
-    private:
-        void ConsumeCurrentCharacter() noexcept;
-
-        void AdvanceToNextLine() noexcept;
-
-        void SkipCurrentCharacter() noexcept;
-
-        [[nodiscard]] constexpr Token ConstructToken(TokenKind kind) noexcept
-        {
-            Token token{kind,
-                        m_Source.substring_view(
-                                static_cast<typename phi::string_view::size_type::value_type>(
-                                        m_Iterator - m_Source.begin()),
-                                1u),
-                        m_LineNumber, m_Column};
-
-            // 1 character sized token
-            ++m_Column;
-
-            return token;
-        }
-
-        [[nodiscard]] constexpr Token ConstructToken(TokenKind kind, iterator token_begin) noexcept
-        {
-            Token token{kind, TokenText(token_begin), m_LineNumber, m_Column};
-
-            // Consume the amount of characters that make up our new token
-            m_Column += static_cast<typename phi::usize::value_type>(m_Iterator - token_begin);
-
-            return token;
-        }
-
-        [[nodiscard]] constexpr phi::string_view TokenText(iterator token_begin) noexcept
-        {
-            return m_Source.substring_view(token_begin, m_Iterator);
-        }
-
-        ParseResult&     m_ParseResult;
-        phi::string_view m_Source;
-
-        // Lexer state
-        iterator m_Iterator;
-
-        phi::boolean m_InsideMultiLineComment{false};
-
-        phi::u64 m_LineNumber{1u};
-        phi::u64 m_Column{1u};
-    };
+    phi::u64 m_LineNumber{1u};
+    phi::u64 m_Column{1u};
+};
 } // namespace OpenAutoIt

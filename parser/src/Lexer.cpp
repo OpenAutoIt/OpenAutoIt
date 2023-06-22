@@ -771,543 +771,543 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
 
 namespace OpenAutoIt
 {
-    Lexer::Lexer(ParseResult& parse_result) noexcept
-        : m_ParseResult{parse_result}
-        , m_Iterator{m_Source.begin()}
-    {}
+Lexer::Lexer(ParseResult& parse_result) noexcept
+    : m_ParseResult{parse_result}
+    , m_Iterator{m_Source.begin()}
+{}
 
-    Lexer::Lexer(ParseResult& parse_result, phi::string_view source) noexcept
-        : m_ParseResult{parse_result}
-        , m_Source{source}
-        , m_Iterator{source.begin()}
-    {}
+Lexer::Lexer(ParseResult& parse_result, phi::string_view source) noexcept
+    : m_ParseResult{parse_result}
+    , m_Source{source}
+    , m_Iterator{source.begin()}
+{}
 
-    void Lexer::SetInputSource(phi::string_view source) noexcept
+void Lexer::SetInputSource(phi::string_view source) noexcept
+{
+    m_Source = source;
+
+    Reset();
+}
+
+void Lexer::Reset() noexcept
+{
+    m_Iterator = m_Source.begin();
+
+    m_InsideMultiLineComment = false;
+
+    m_LineNumber = 1u;
+    m_Column     = 1u;
+}
+
+PHI_ATTRIBUTE_PURE phi::boolean Lexer::IsFinished() const noexcept
+{
+    return m_Iterator == m_Source.end();
+}
+
+PHI_ATTRIBUTE_PURE phi::boolean Lexer::HasInput() const noexcept
+{
+    return !m_Source.is_empty();
+}
+
+phi::optional<Token> Lexer::GetNextToken() noexcept
+{
+    while (!IsFinished())
     {
-        m_Source = source;
+        char current_character = *m_Iterator;
 
-        Reset();
-    }
+        /* Embedded null character */
 
-    void Lexer::Reset() noexcept
-    {
-        m_Iterator = m_Source.begin();
-
-        m_InsideMultiLineComment = false;
-
-        m_LineNumber = 1u;
-        m_Column     = 1u;
-    }
-
-    PHI_ATTRIBUTE_PURE phi::boolean Lexer::IsFinished() const noexcept
-    {
-        return m_Iterator == m_Source.end();
-    }
-
-    PHI_ATTRIBUTE_PURE phi::boolean Lexer::HasInput() const noexcept
-    {
-        return !m_Source.is_empty();
-    }
-
-    phi::optional<Token> Lexer::GetNextToken() noexcept
-    {
-        while (!IsFinished())
+        if (current_character == '\0')
         {
-            char current_character = *m_Iterator;
+            m_ParseResult.m_Warnings.emplace_back(
+                    ParseWarning::EmbeddedNullCharacter(m_LineNumber, m_Column));
 
-            /* Embedded null character */
+            SkipCurrentCharacter();
+        }
 
-            if (current_character == '\0')
+        /* Multiline comments */
+
+        else if (m_InsideMultiLineComment)
+        {
+            iterator       begin_of_multiline_comment            = m_Iterator;
+            const phi::u64 beginning_line_of_multiline_comment   = m_LineNumber;
+            const phi::u64 beginning_column_of_multiline_comment = m_Column;
+
+            while (!IsFinished())
             {
-                m_ParseResult.m_Warnings.emplace_back(
-                        ParseWarning::EmbeddedNullCharacter(m_LineNumber, m_Column));
+                current_character = *m_Iterator;
 
-                SkipCurrentCharacter();
-            }
-
-            /* Multiline comments */
-
-            else if (m_InsideMultiLineComment)
-            {
-                iterator       begin_of_multiline_comment            = m_Iterator;
-                const phi::u64 beginning_line_of_multiline_comment   = m_LineNumber;
-                const phi::u64 beginning_column_of_multiline_comment = m_Column;
-
-                while (!IsFinished())
+                // Check for end comment multiline
+                if (current_character == '#')
                 {
-                    current_character = *m_Iterator;
-
-                    // Check for end comment multiline
-                    if (current_character == '#')
-                    {
-                        iterator begin_of_token = m_Iterator;
-                        ConsumeCurrentCharacter();
-
-                        while (!IsFinished())
-                        {
-                            current_character = *m_Iterator;
-
-                            if (is_valid_pp_char(current_character))
-                            {
-                                ConsumeCurrentCharacter();
-                                continue;
-                            }
-
-                            break;
-                        }
-
-                        const TokenKind pre_processor_token_kind =
-                                lookup_pre_processor(TokenText(begin_of_token));
-
-                        if (pre_processor_token_kind == TokenKind::PP_CommentsEnd)
-                        {
-                            m_InsideMultiLineComment = false;
-
-                            // Go back the size of the parsed end token so we can reparse it in the normal pre processor parser
-                            m_Iterator -= TokenText(begin_of_token).length().unsafe();
-
-                            Token token{TokenKind::Comment, TokenText(begin_of_multiline_comment),
-                                        beginning_line_of_multiline_comment,
-                                        beginning_column_of_multiline_comment};
-
-                            return token;
-                        }
-                    }
-                    else if (current_character == '\n')
-                    {
-                        ConsumeCurrentCharacter();
-                        AdvanceToNextLine();
-                    }
-                    else
-                    {
-                        // Otherwise simply consume the character
-                        ConsumeCurrentCharacter();
-                        m_Column += 1u;
-                    }
-                }
-            }
-
-            /* Skip characters */
-
-            else if (is_skip_character(current_character))
-            {
-                SkipCurrentCharacter();
-            }
-
-            /* New Lines */
-
-            else if (current_character == '\n')
-            {
-                Token new_line_token = ConstructToken(TokenKind::NewLine);
-
-                ConsumeCurrentCharacter();
-                AdvanceToNextLine();
-
-                return new_line_token;
-            }
-
-            /* Comment */
-
-            else if (current_character == ';')
-            {
-                iterator begin_of_token = m_Iterator;
-                ConsumeCurrentCharacter();
-
-                while (!IsFinished())
-                {
-                    current_character = *m_Iterator;
-
-                    if (current_character != '\n')
-                    {
-                        ConsumeCurrentCharacter();
-                        continue;
-                    }
-
-                    break;
-                }
-
-                return ConstructToken(TokenKind::Comment, begin_of_token);
-            }
-
-            /* Macros */
-
-            else if (current_character == '@')
-            {
-                iterator begin_of_token = m_Iterator;
-                ConsumeCurrentCharacter();
-
-                while (!IsFinished())
-                {
-                    current_character = *m_Iterator;
-
-                    if (is_valid_identifier_char(current_character))
-                    {
-                        ConsumeCurrentCharacter();
-                        continue;
-                    }
-
-                    break;
-                }
-
-                // Emit token
-                return ConstructToken(lookup_macro(TokenText(begin_of_token)), begin_of_token);
-            }
-
-            /* Variable identifier */
-
-            else if (current_character == '$')
-            {
-                iterator     begin_of_token = m_Iterator;
-                phi::boolean parsed_something{false};
-                ConsumeCurrentCharacter();
-
-                while (!IsFinished())
-                {
-                    current_character = *m_Iterator;
-
-                    if (is_valid_identifier_char(current_character))
-                    {
-                        ConsumeCurrentCharacter();
-                        parsed_something = true;
-                        continue;
-                    }
-
-                    break;
-                }
-
-                // Ensure that '$' is not a valid variable identifier
-                if (!parsed_something)
-                {
-                    return ConstructToken(TokenKind::Garbage, begin_of_token);
-                }
-
-                // Emit Token
-                return ConstructToken(TokenKind::VariableIdentifier, begin_of_token);
-            }
-
-            /* PreProcessor directive */
-
-            else if (current_character == '#')
-            {
-                iterator begin_of_token = m_Iterator;
-                ConsumeCurrentCharacter();
-
-                while (!IsFinished())
-                {
-                    current_character = *m_Iterator;
-
-                    if (is_valid_pp_char(current_character))
-                    {
-                        ConsumeCurrentCharacter();
-                        continue;
-                    }
-
-                    break;
-                }
-
-                // Check for start of multiline comment
-                const TokenKind pre_processor_token_kind =
-                        lookup_pre_processor(TokenText(begin_of_token));
-
-                if (pre_processor_token_kind == TokenKind::PP_CommentsStart)
-                {
-                    m_InsideMultiLineComment = true;
-                }
-
-                return ConstructToken(pre_processor_token_kind, begin_of_token);
-            }
-
-            /* SingleQuoteStringLiteral */
-
-            else if (current_character == '\'')
-            {
-                iterator     begin_of_token = m_Iterator;
-                phi::boolean did_terminate  = false;
-                ConsumeCurrentCharacter();
-
-                while (!IsFinished())
-                {
-                    current_character = *m_Iterator;
+                    iterator begin_of_token = m_Iterator;
                     ConsumeCurrentCharacter();
 
-                    if (current_character == '\'')
+                    while (!IsFinished())
                     {
-                        did_terminate = true;
-                        break;
-                    }
-                }
+                        current_character = *m_Iterator;
 
-                if (did_terminate)
-                {
-                    return ConstructToken(TokenKind::StringLiteral, begin_of_token);
-                }
-
-                // TODO: Warn unterminated string literal
-            }
-
-            /* DoubleQuoteStringLiteral */
-
-            else if (current_character == '\"')
-            {
-                iterator     begin_of_token = m_Iterator;
-                phi::boolean did_terminate  = false;
-                ConsumeCurrentCharacter();
-
-                while (!IsFinished())
-                {
-                    current_character = *m_Iterator;
-                    ConsumeCurrentCharacter();
-
-                    if (current_character == '\"')
-                    {
-                        did_terminate = true;
-                        break;
-                    }
-                }
-
-                if (did_terminate)
-                {
-                    return ConstructToken(TokenKind::StringLiteral, begin_of_token);
-                }
-            }
-
-            /* Number Literals - IntegerLiteral/FloatLiteral */
-
-            else if (phi::is_digit(current_character) || current_character == '.')
-            {
-                const phi::boolean start_with_zero{current_character == '0'};
-                phi::boolean       parsing_hex{false};
-                phi::boolean       parsing_float{current_character == '.'};
-
-                iterator begin_of_token = m_Iterator;
-                ConsumeCurrentCharacter();
-
-                while (!IsFinished())
-                {
-                    current_character = *m_Iterator;
-
-                    // Is the second character
-                    if (m_Iterator - begin_of_token == 1u && start_with_zero)
-                    {
-                        // Hex character
-                        if (current_character == 'x' || current_character == 'X')
-                        {
-                            parsing_hex = true;
-                            ConsumeCurrentCharacter();
-                            continue;
-                        }
-                    }
-
-                    // Actually parsing
-                    if (parsing_hex)
-                    {
-                        if (parsing_float)
-                        {
-                            // TODO: Error hexliteral not allowed for floats
-                            return ConstructToken(TokenKind::Garbage, begin_of_token);
-                        }
-
-                        if (phi::is_hex_digit(current_character))
+                        if (is_valid_pp_char(current_character))
                         {
                             ConsumeCurrentCharacter();
                             continue;
                         }
-                    }
-                    else if (phi::is_digit(current_character))
-                    {
-                        ConsumeCurrentCharacter();
-                        continue;
-                    }
-                    // Literal dot
-                    else if (current_character == '.')
-                    {
-                        if (parsing_float)
-                        {
-                            // TODO: Error more than one dot in float literal
-                            return ConstructToken(TokenKind::Garbage, begin_of_token);
-                        }
 
-                        parsing_float = true;
-                        ConsumeCurrentCharacter();
-                        continue;
+                        break;
                     }
 
-                    break;
+                    const TokenKind pre_processor_token_kind =
+                            lookup_pre_processor(TokenText(begin_of_token));
+
+                    if (pre_processor_token_kind == TokenKind::PP_CommentsEnd)
+                    {
+                        m_InsideMultiLineComment = false;
+
+                        // Go back the size of the parsed end token so we can reparse it in the normal pre processor parser
+                        m_Iterator -= TokenText(begin_of_token).length().unsafe();
+
+                        Token token{TokenKind::Comment, TokenText(begin_of_multiline_comment),
+                                    beginning_line_of_multiline_comment,
+                                    beginning_column_of_multiline_comment};
+
+                        return token;
+                    }
+                }
+                else if (current_character == '\n')
+                {
+                    ConsumeCurrentCharacter();
+                    AdvanceToNextLine();
+                }
+                else
+                {
+                    // Otherwise simply consume the character
+                    ConsumeCurrentCharacter();
+                    m_Column += 1u;
+                }
+            }
+        }
+
+        /* Skip characters */
+
+        else if (is_skip_character(current_character))
+        {
+            SkipCurrentCharacter();
+        }
+
+        /* New Lines */
+
+        else if (current_character == '\n')
+        {
+            Token new_line_token = ConstructToken(TokenKind::NewLine);
+
+            ConsumeCurrentCharacter();
+            AdvanceToNextLine();
+
+            return new_line_token;
+        }
+
+        /* Comment */
+
+        else if (current_character == ';')
+        {
+            iterator begin_of_token = m_Iterator;
+            ConsumeCurrentCharacter();
+
+            while (!IsFinished())
+            {
+                current_character = *m_Iterator;
+
+                if (current_character != '\n')
+                {
+                    ConsumeCurrentCharacter();
+                    continue;
                 }
 
-                if (parsing_float)
+                break;
+            }
+
+            return ConstructToken(TokenKind::Comment, begin_of_token);
+        }
+
+        /* Macros */
+
+        else if (current_character == '@')
+        {
+            iterator begin_of_token = m_Iterator;
+            ConsumeCurrentCharacter();
+
+            while (!IsFinished())
+            {
+                current_character = *m_Iterator;
+
+                if (is_valid_identifier_char(current_character))
                 {
-                    // Were not allowed to end with a dot
-                    // TODO: This is very hacky and looks nasty
-                    if (*(m_Iterator - 1) == '.')
+                    ConsumeCurrentCharacter();
+                    continue;
+                }
+
+                break;
+            }
+
+            // Emit token
+            return ConstructToken(lookup_macro(TokenText(begin_of_token)), begin_of_token);
+        }
+
+        /* Variable identifier */
+
+        else if (current_character == '$')
+        {
+            iterator     begin_of_token = m_Iterator;
+            phi::boolean parsed_something{false};
+            ConsumeCurrentCharacter();
+
+            while (!IsFinished())
+            {
+                current_character = *m_Iterator;
+
+                if (is_valid_identifier_char(current_character))
+                {
+                    ConsumeCurrentCharacter();
+                    parsed_something = true;
+                    continue;
+                }
+
+                break;
+            }
+
+            // Ensure that '$' is not a valid variable identifier
+            if (!parsed_something)
+            {
+                return ConstructToken(TokenKind::Garbage, begin_of_token);
+            }
+
+            // Emit Token
+            return ConstructToken(TokenKind::VariableIdentifier, begin_of_token);
+        }
+
+        /* PreProcessor directive */
+
+        else if (current_character == '#')
+        {
+            iterator begin_of_token = m_Iterator;
+            ConsumeCurrentCharacter();
+
+            while (!IsFinished())
+            {
+                current_character = *m_Iterator;
+
+                if (is_valid_pp_char(current_character))
+                {
+                    ConsumeCurrentCharacter();
+                    continue;
+                }
+
+                break;
+            }
+
+            // Check for start of multiline comment
+            const TokenKind pre_processor_token_kind =
+                    lookup_pre_processor(TokenText(begin_of_token));
+
+            if (pre_processor_token_kind == TokenKind::PP_CommentsStart)
+            {
+                m_InsideMultiLineComment = true;
+            }
+
+            return ConstructToken(pre_processor_token_kind, begin_of_token);
+        }
+
+        /* SingleQuoteStringLiteral */
+
+        else if (current_character == '\'')
+        {
+            iterator     begin_of_token = m_Iterator;
+            phi::boolean did_terminate  = false;
+            ConsumeCurrentCharacter();
+
+            while (!IsFinished())
+            {
+                current_character = *m_Iterator;
+                ConsumeCurrentCharacter();
+
+                if (current_character == '\'')
+                {
+                    did_terminate = true;
+                    break;
+                }
+            }
+
+            if (did_terminate)
+            {
+                return ConstructToken(TokenKind::StringLiteral, begin_of_token);
+            }
+
+            // TODO: Warn unterminated string literal
+        }
+
+        /* DoubleQuoteStringLiteral */
+
+        else if (current_character == '\"')
+        {
+            iterator     begin_of_token = m_Iterator;
+            phi::boolean did_terminate  = false;
+            ConsumeCurrentCharacter();
+
+            while (!IsFinished())
+            {
+                current_character = *m_Iterator;
+                ConsumeCurrentCharacter();
+
+                if (current_character == '\"')
+                {
+                    did_terminate = true;
+                    break;
+                }
+            }
+
+            if (did_terminate)
+            {
+                return ConstructToken(TokenKind::StringLiteral, begin_of_token);
+            }
+        }
+
+        /* Number Literals - IntegerLiteral/FloatLiteral */
+
+        else if (phi::is_digit(current_character) || current_character == '.')
+        {
+            const phi::boolean start_with_zero{current_character == '0'};
+            phi::boolean       parsing_hex{false};
+            phi::boolean       parsing_float{current_character == '.'};
+
+            iterator begin_of_token = m_Iterator;
+            ConsumeCurrentCharacter();
+
+            while (!IsFinished())
+            {
+                current_character = *m_Iterator;
+
+                // Is the second character
+                if (m_Iterator - begin_of_token == 1u && start_with_zero)
+                {
+                    // Hex character
+                    if (current_character == 'x' || current_character == 'X')
                     {
-                        // TODO: Prober error
+                        parsing_hex = true;
+                        ConsumeCurrentCharacter();
+                        continue;
+                    }
+                }
+
+                // Actually parsing
+                if (parsing_hex)
+                {
+                    if (parsing_float)
+                    {
+                        // TODO: Error hexliteral not allowed for floats
                         return ConstructToken(TokenKind::Garbage, begin_of_token);
                     }
 
-                    return ConstructToken(TokenKind::FloatLiteral, begin_of_token);
-                }
-
-                return ConstructToken(TokenKind::IntegerLiteral, begin_of_token);
-            }
-
-            /* Operators */
-
-            else if (is_two_part_operator(current_character))
-            {
-                iterator begin_of_token = m_Iterator;
-                ConsumeCurrentCharacter();
-
-                if (!IsFinished())
-                {
-                    if (*m_Iterator == '=' || (*begin_of_token == '<' && *m_Iterator == '>'))
-                    {
-                        // We have an actual two part operator
-                        ConsumeCurrentCharacter();
-                    }
-                }
-
-                return ConstructToken(lookup_operator(TokenText(begin_of_token)), begin_of_token);
-            }
-
-            else if (is_single_operator(current_character))
-            {
-                Token token = ConstructToken(lookup_operator({m_Iterator, 1u}));
-
-                ConsumeCurrentCharacter();
-
-                return token;
-            }
-
-            /* Punctioation */
-
-            else if (current_character == ',')
-            {
-                Token token = ConstructToken(TokenKind::Comma);
-
-                ConsumeCurrentCharacter();
-
-                return token;
-            }
-
-            else if (current_character == '(')
-            {
-                Token token = ConstructToken(TokenKind::LParen);
-
-                ConsumeCurrentCharacter();
-
-                return token;
-            }
-
-            else if (current_character == ')')
-            {
-                Token token = ConstructToken(TokenKind::RParen);
-
-                ConsumeCurrentCharacter();
-
-                return token;
-            }
-
-            else if (current_character == '.')
-            {
-                Token token = ConstructToken(TokenKind::Dot);
-
-                ConsumeCurrentCharacter();
-
-                return token;
-            }
-
-            else if (current_character == '[')
-            {
-                Token token = ConstructToken(TokenKind::LSquare);
-
-                ConsumeCurrentCharacter();
-
-                return token;
-            }
-
-            else if (current_character == ']')
-            {
-                Token token = ConstructToken(TokenKind::RSquare);
-
-                ConsumeCurrentCharacter();
-
-                return token;
-            }
-
-            /* Identifier */
-
-            else if (is_valid_identifier_char(current_character))
-            {
-                iterator begin_of_token = m_Iterator;
-                ConsumeCurrentCharacter();
-
-                while (!IsFinished())
-                {
-                    current_character = *m_Iterator;
-
-                    if (is_valid_identifier_char(current_character))
+                    if (phi::is_hex_digit(current_character))
                     {
                         ConsumeCurrentCharacter();
                         continue;
                     }
+                }
+                else if (phi::is_digit(current_character))
+                {
+                    ConsumeCurrentCharacter();
+                    continue;
+                }
+                // Literal dot
+                else if (current_character == '.')
+                {
+                    if (parsing_float)
+                    {
+                        // TODO: Error more than one dot in float literal
+                        return ConstructToken(TokenKind::Garbage, begin_of_token);
+                    }
 
-                    break;
+                    parsing_float = true;
+                    ConsumeCurrentCharacter();
+                    continue;
                 }
 
-                return ConstructToken(lookup_identifier(TokenText(begin_of_token)), begin_of_token);
+                break;
             }
 
-            /* Unknown/Unexpected character */
-
-            else
+            if (parsing_float)
             {
-                // TODO: Warn unexpected character encountered
-                SkipCurrentCharacter();
+                // Were not allowed to end with a dot
+                // TODO: This is very hacky and looks nasty
+                if (*(m_Iterator - 1) == '.')
+                {
+                    // TODO: Prober error
+                    return ConstructToken(TokenKind::Garbage, begin_of_token);
+                }
+
+                return ConstructToken(TokenKind::FloatLiteral, begin_of_token);
             }
+
+            return ConstructToken(TokenKind::IntegerLiteral, begin_of_token);
         }
 
-        return {};
-    }
+        /* Operators */
 
-    void Lexer::ProcessAll() noexcept
-    {
-        TokenStream& stream = m_ParseResult.m_TokenStream;
-
-        while (!IsFinished())
+        else if (is_two_part_operator(current_character))
         {
-            phi::optional<Token> maybe_token = GetNextToken();
+            iterator begin_of_token = m_Iterator;
+            ConsumeCurrentCharacter();
 
-            if (maybe_token.has_value())
+            if (!IsFinished())
             {
-                stream.emplace_back(maybe_token.value());
+                if (*m_Iterator == '=' || (*begin_of_token == '<' && *m_Iterator == '>'))
+                {
+                    // We have an actual two part operator
+                    ConsumeCurrentCharacter();
+                }
             }
+
+            return ConstructToken(lookup_operator(TokenText(begin_of_token)), begin_of_token);
         }
 
-        stream.finalize();
+        else if (is_single_operator(current_character))
+        {
+            Token token = ConstructToken(lookup_operator({m_Iterator, 1u}));
+
+            ConsumeCurrentCharacter();
+
+            return token;
+        }
+
+        /* Punctioation */
+
+        else if (current_character == ',')
+        {
+            Token token = ConstructToken(TokenKind::Comma);
+
+            ConsumeCurrentCharacter();
+
+            return token;
+        }
+
+        else if (current_character == '(')
+        {
+            Token token = ConstructToken(TokenKind::LParen);
+
+            ConsumeCurrentCharacter();
+
+            return token;
+        }
+
+        else if (current_character == ')')
+        {
+            Token token = ConstructToken(TokenKind::RParen);
+
+            ConsumeCurrentCharacter();
+
+            return token;
+        }
+
+        else if (current_character == '.')
+        {
+            Token token = ConstructToken(TokenKind::Dot);
+
+            ConsumeCurrentCharacter();
+
+            return token;
+        }
+
+        else if (current_character == '[')
+        {
+            Token token = ConstructToken(TokenKind::LSquare);
+
+            ConsumeCurrentCharacter();
+
+            return token;
+        }
+
+        else if (current_character == ']')
+        {
+            Token token = ConstructToken(TokenKind::RSquare);
+
+            ConsumeCurrentCharacter();
+
+            return token;
+        }
+
+        /* Identifier */
+
+        else if (is_valid_identifier_char(current_character))
+        {
+            iterator begin_of_token = m_Iterator;
+            ConsumeCurrentCharacter();
+
+            while (!IsFinished())
+            {
+                current_character = *m_Iterator;
+
+                if (is_valid_identifier_char(current_character))
+                {
+                    ConsumeCurrentCharacter();
+                    continue;
+                }
+
+                break;
+            }
+
+            return ConstructToken(lookup_identifier(TokenText(begin_of_token)), begin_of_token);
+        }
+
+        /* Unknown/Unexpected character */
+
+        else
+        {
+            // TODO: Warn unexpected character encountered
+            SkipCurrentCharacter();
+        }
     }
 
-    void Lexer::ProcessString(phi::string_view source) noexcept
+    return {};
+}
+
+void Lexer::ProcessAll() noexcept
+{
+    TokenStream& stream = m_ParseResult.m_TokenStream;
+
+    while (!IsFinished())
     {
-        SetInputSource(source);
+        phi::optional<Token> maybe_token = GetNextToken();
 
-        ProcessAll();
+        if (maybe_token.has_value())
+        {
+            stream.emplace_back(maybe_token.value());
+        }
     }
 
-    void Lexer::ConsumeCurrentCharacter() noexcept
-    {
-        ++m_Iterator;
-    }
+    stream.finalize();
+}
 
-    void Lexer::AdvanceToNextLine() noexcept
-    {
-        ++m_LineNumber;
-        m_Column = 1u;
-    }
+void Lexer::ProcessString(phi::string_view source) noexcept
+{
+    SetInputSource(source);
 
-    void Lexer::SkipCurrentCharacter() noexcept
-    {
-        ConsumeCurrentCharacter();
-        ++m_Column;
-    }
+    ProcessAll();
+}
+
+void Lexer::ConsumeCurrentCharacter() noexcept
+{
+    ++m_Iterator;
+}
+
+void Lexer::AdvanceToNextLine() noexcept
+{
+    ++m_LineNumber;
+    m_Column = 1u;
+}
+
+void Lexer::SkipCurrentCharacter() noexcept
+{
+    ConsumeCurrentCharacter();
+    ++m_Column;
+}
 } // namespace OpenAutoIt

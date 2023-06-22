@@ -5,21 +5,21 @@
 
 namespace OpenAutoIt
 {
-    class ASTExpression : public ASTNode
+class ASTExpression : public ASTNode
+{
+public:
+    [[nodiscard]] constexpr phi::boolean IsValidAsStatement() noexcept
     {
-    public:
-        [[nodiscard]] constexpr phi::boolean IsValidAsStatement() noexcept
+        switch (m_NodeType)
         {
-            switch (m_NodeType)
-            {
-                case ASTNodeType::FunctionCallExpression:
-                case ASTNodeType::UnaryExpression:
-                case ASTNodeType::VariableExpression:
-                    return true;
+            case ASTNodeType::FunctionCallExpression:
+            case ASTNodeType::UnaryExpression:
+            case ASTNodeType::VariableExpression:
+                return true;
 
-                default:
-                    return false;
-            }
+            default:
+                return false;
         }
-    };
+    }
+};
 } // namespace OpenAutoIt

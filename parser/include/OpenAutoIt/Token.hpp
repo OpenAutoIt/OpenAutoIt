@@ -10,135 +10,135 @@
 
 namespace OpenAutoIt
 {
-    class Token
+class Token
+{
+public:
+    constexpr Token(TokenKind kind, phi::string_view text, phi::u64 line_number,
+                    phi::u64 column) noexcept
+        : m_Kind{kind}
+        , m_Text{text}
+        , m_LineNumber{line_number}
+        , m_Column{column}
+        , m_Hint{}
+    {}
+
+    template <typename HintT>
+    constexpr Token(TokenKind kind, phi::string_view text, phi::u64 line_number, phi::u64 column,
+                    const HintT hint) noexcept
+        : m_Kind{kind}
+        , m_Text{text}
+        , m_LineNumber{line_number}
+        , m_Column{column}
+        , m_Hint{static_cast<phi::uint32_t>(hint)}
+    {}
+
+    [[nodiscard]] constexpr TokenKind GetTokenKind() const noexcept
     {
-    public:
-        constexpr Token(TokenKind kind, phi::string_view text, phi::u64 line_number,
-                        phi::u64 column) noexcept
-            : m_Kind{kind}
-            , m_Text{text}
-            , m_LineNumber{line_number}
-            , m_Column{column}
-            , m_Hint{}
-        {}
+        return m_Kind;
+    }
 
-        template <typename HintT>
-        constexpr Token(TokenKind kind, phi::string_view text, phi::u64 line_number,
-                        phi::u64 column, const HintT hint) noexcept
-            : m_Kind{kind}
-            , m_Text{text}
-            , m_LineNumber{line_number}
-            , m_Column{column}
-            , m_Hint{static_cast<phi::uint32_t>(hint)}
-        {}
+    [[nodiscard]] constexpr phi::string_view GetText() const noexcept
+    {
+        return m_Text;
+    }
 
-        [[nodiscard]] constexpr TokenKind GetTokenKind() const noexcept
+    [[nodiscard]] constexpr phi::u64 GetLineNumber() const noexcept
+    {
+        return m_LineNumber;
+    }
+
+    [[nodiscard]] constexpr phi::u64 GetColumn() const noexcept
+    {
+        return m_Column;
+    }
+
+    [[nodiscard]] constexpr phi::boolean HasHint() const noexcept
+    {
+        return m_Hint.has_value();
+    }
+
+    [[nodiscard]] constexpr phi::u32 GetHint() const noexcept
+    {
+        PHI_ASSERT(HasHint(), "Token doesn not have a hint");
+
+        return m_Hint.value();
+    }
+
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsBuiltInFunction() const noexcept
+    {
+        const phi::size_t underlying_value = static_cast<phi::size_t>(m_Kind);
+
+        if (underlying_value >= OpenAutoIt::BuiltInFirst &&
+            underlying_value <= OpenAutoIt::BuiltInLast)
         {
-            return m_Kind;
+            return true;
         }
 
-        [[nodiscard]] constexpr phi::string_view GetText() const noexcept
+        return false;
+    }
+
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsKeywordLiteral() const noexcept
+    {
+        switch (m_Kind)
         {
-            return m_Text;
-        }
-
-        [[nodiscard]] constexpr phi::u64 GetLineNumber() const noexcept
-        {
-            return m_LineNumber;
-        }
-
-        [[nodiscard]] constexpr phi::u64 GetColumn() const noexcept
-        {
-            return m_Column;
-        }
-
-        [[nodiscard]] constexpr phi::boolean HasHint() const noexcept
-        {
-            return m_Hint.has_value();
-        }
-
-        [[nodiscard]] constexpr phi::u32 GetHint() const noexcept
-        {
-            PHI_ASSERT(HasHint(), "Token doesn not have a hint");
-
-            return m_Hint.value();
-        }
-
-        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsBuiltInFunction() const noexcept
-        {
-            const phi::size_t underlying_value = static_cast<phi::size_t>(m_Kind);
-
-            if (underlying_value >= OpenAutoIt::BuiltInFirst &&
-                underlying_value <= OpenAutoIt::BuiltInLast)
-            {
+            case TokenKind::KW_Default:
+            case TokenKind::KW_Null:
                 return true;
-            }
 
-            return false;
+            default:
+                return false;
         }
+    }
 
-        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsKeywordLiteral() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsBooleanLiteral() const noexcept
+    {
+        switch (m_Kind)
         {
-            switch (m_Kind)
-            {
-                case TokenKind::KW_Default:
-                case TokenKind::KW_Null:
-                    return true;
+            case TokenKind::KW_True:
+            case TokenKind::KW_False:
+                return true;
 
-                default:
-                    return false;
-            }
+            default:
+                return false;
         }
+    }
 
-        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsBooleanLiteral() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsOperator() const noexcept
+    {
+        switch (m_Kind)
         {
-            switch (m_Kind)
-            {
-                case TokenKind::KW_True:
-                case TokenKind::KW_False:
-                    return true;
+            case TokenKind::OP_Equals:
+            case TokenKind::OP_PlusEquals:
+            case TokenKind::OP_MinusEquals:
+            case TokenKind::OP_MultiplyEquals:
+            case TokenKind::OP_DivideEquals:
+            case TokenKind::OP_Concatenate:
+            case TokenKind::OP_ConcatenateEquals:
+            case TokenKind::OP_Plus:
+            case TokenKind::OP_Minus:
+            case TokenKind::OP_Multiply:
+            case TokenKind::OP_Divide:
+            case TokenKind::OP_Raise:
+            case TokenKind::OP_EqualsEquals:
+            case TokenKind::OP_NotEqual:
+            case TokenKind::OP_GreaterThan:
+            case TokenKind::OP_GreaterThanEqual:
+            case TokenKind::OP_LessThan:
+            case TokenKind::OP_LessThanEqual:
+            case TokenKind::OP_TernaryIf:
+            case TokenKind::OP_TernaryElse:
+                return true;
 
-                default:
-                    return false;
-            }
+            default:
+                return false;
         }
+    }
 
-        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsOperator() const noexcept
-        {
-            switch (m_Kind)
-            {
-                case TokenKind::OP_Equals:
-                case TokenKind::OP_PlusEquals:
-                case TokenKind::OP_MinusEquals:
-                case TokenKind::OP_MultiplyEquals:
-                case TokenKind::OP_DivideEquals:
-                case TokenKind::OP_Concatenate:
-                case TokenKind::OP_ConcatenateEquals:
-                case TokenKind::OP_Plus:
-                case TokenKind::OP_Minus:
-                case TokenKind::OP_Multiply:
-                case TokenKind::OP_Divide:
-                case TokenKind::OP_Raise:
-                case TokenKind::OP_EqualsEquals:
-                case TokenKind::OP_NotEqual:
-                case TokenKind::OP_GreaterThan:
-                case TokenKind::OP_GreaterThanEqual:
-                case TokenKind::OP_LessThan:
-                case TokenKind::OP_LessThanEqual:
-                case TokenKind::OP_TernaryIf:
-                case TokenKind::OP_TernaryElse:
-                    return true;
-
-                default:
-                    return false;
-            }
-        }
-
-    private:
-        TokenKind               m_Kind;
-        phi::string_view        m_Text;
-        phi::u64                m_LineNumber;
-        phi::u64                m_Column;
-        phi::optional<phi::u32> m_Hint;
-    };
+private:
+    TokenKind               m_Kind;
+    phi::string_view        m_Text;
+    phi::u64                m_LineNumber;
+    phi::u64                m_Column;
+    phi::optional<phi::u32> m_Hint;
+};
 } // namespace OpenAutoIt

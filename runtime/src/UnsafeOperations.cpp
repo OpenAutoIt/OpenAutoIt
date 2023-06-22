@@ -14,24 +14,23 @@ PHI_GCC_SUPPRESS_WARNING("-Wsuggest-attribute=pure")
 
 namespace OpenAutoIt
 {
-    ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeAdd(phi::i64 lhs, phi::i64 rhs) noexcept
-    {
-        return lhs.unsafe() + rhs.unsafe();
-    }
+ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeAdd(phi::i64 lhs, phi::i64 rhs) noexcept
+{
+    return lhs.unsafe() + rhs.unsafe();
+}
 
-    ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeMinus(phi::i64 lhs, phi::i64 rhs) noexcept
-    {
-        return lhs.unsafe() - rhs.unsafe();
-    }
+ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeMinus(phi::i64 lhs, phi::i64 rhs) noexcept
+{
+    return lhs.unsafe() - rhs.unsafe();
+}
 
-    ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeMultiply(phi::i64 lhs,
-                                                                 phi::i64 rhs) noexcept
-    {
-        return lhs.unsafe() * rhs.unsafe();
-    }
+ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeMultiply(phi::i64 lhs, phi::i64 rhs) noexcept
+{
+    return lhs.unsafe() * rhs.unsafe();
+}
 
-    ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeDivide(phi::i64 lhs, phi::i64 rhs) noexcept
-    {
-        return lhs.unsafe() / rhs.unsafe();
-    }
+ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeDivide(phi::i64 lhs, phi::i64 rhs) noexcept
+{
+    return lhs.unsafe() / rhs.unsafe();
+}
 } // namespace OpenAutoIt

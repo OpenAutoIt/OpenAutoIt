@@ -7,27 +7,27 @@
 
 namespace OpenAutoIt
 {
-    class ASTStringLiteral final : public ASTExpression
+class ASTStringLiteral final : public ASTExpression
+{
+public:
+    ASTStringLiteral()
     {
-    public:
-        ASTStringLiteral()
-        {
-            m_NodeType = ASTNodeType::StringLiteral;
-        }
+        m_NodeType = ASTNodeType::StringLiteral;
+    }
 
-        [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
-        {
-            std::string ret;
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    {
+        std::string ret;
 
-            ret += indent_times(indent);
-            ret += "StringLiteral [";
-            ret += std::string_view{m_Value.data(), m_Value.length().unsafe()};
-            ret += "]";
+        ret += indent_times(indent);
+        ret += "StringLiteral [";
+        ret += std::string_view{m_Value.data(), m_Value.length().unsafe()};
+        ret += "]";
 
-            return ret;
-        }
+        return ret;
+    }
 
-    public:
-        phi::string_view m_Value;
-    };
+public:
+    phi::string_view m_Value;
+};
 } // namespace OpenAutoIt

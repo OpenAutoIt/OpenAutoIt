@@ -9,28 +9,28 @@
 
 namespace OpenAutoIt
 {
-    class ASTArraySubscriptExpression final : public ASTExpression
+class ASTArraySubscriptExpression final : public ASTExpression
+{
+public:
+    ASTArraySubscriptExpression(phi::not_null_scope_ptr<ASTExpression>&& expression)
+        : m_IndexExpression{phi::move(expression)}
     {
-    public:
-        ASTArraySubscriptExpression(phi::not_null_scope_ptr<ASTExpression>&& expression)
-            : m_IndexExpression{phi::move(expression)}
-        {
-            m_NodeType = ASTNodeType::ArraySubscriptExpression;
-        }
+        m_NodeType = ASTNodeType::ArraySubscriptExpression;
+    }
 
-        [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
-        {
-            (void)indent;
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    {
+        (void)indent;
 
-            std::string ret;
+        std::string ret;
 
-            // TODO: Implement me
+        // TODO: Implement me
 
-            return ret;
-        }
+        return ret;
+    }
 
-        // TODO: Make these private
-    public:
-        phi::not_null_scope_ptr<ASTExpression> m_IndexExpression;
-    };
+    // TODO: Make these private
+public:
+    phi::not_null_scope_ptr<ASTExpression> m_IndexExpression;
+};
 } // namespace OpenAutoIt

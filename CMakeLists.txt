@@ -36,19 +36,10 @@ project(
   LANGUAGES CXX
   VERSION ${OPENAUT_VERSION_MAJOR}.${OPENAUT_VERSION_MINOR}.${OPENAUT_VERSION_PATCH})
 
-# Disable unwanted gcc warning
-set(PHI_HAS_C_FLAG_WABI_TAG
-    0
-    CACHE BOOL "" FORCE)
-set(PHI_HAS_CXX_FLAG_WABI_TAG
-    0
-    CACHE BOOL "" FORCE)
-
 # Dependencies
 add_subdirectory(external)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/external/Phi/scripts/cmake)
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake)
 
 include(Environment)
 include(Testing)

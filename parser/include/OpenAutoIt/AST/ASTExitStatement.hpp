@@ -9,27 +9,27 @@
 
 namespace OpenAutoIt
 {
-    class ASTExitStatement final : public ASTStatement
+class ASTExitStatement final : public ASTStatement
+{
+public:
+    ASTExitStatement(phi::scope_ptr<ASTExpression>&& expression) noexcept
+        : m_Expression{phi::move(expression)}
     {
-    public:
-        ASTExitStatement(phi::scope_ptr<ASTExpression>&& expression) noexcept
-            : m_Expression{phi::move(expression)}
-        {
-            m_NodeType = ASTNodeType::ExitStatement;
-        }
+        m_NodeType = ASTNodeType::ExitStatement;
+    }
 
-        [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
-        {
-            std::string ret;
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    {
+        std::string ret;
 
-            // TODO:
-            (void)indent;
+        // TODO:
+        (void)indent;
 
-            return ret;
-        }
+        return ret;
+    }
 
-        // TODO: Make these private
-    public:
-        phi::scope_ptr<ASTExpression> m_Expression;
-    };
+    // TODO: Make these private
+public:
+    phi::scope_ptr<ASTExpression> m_Expression;
+};
 } // namespace OpenAutoIt

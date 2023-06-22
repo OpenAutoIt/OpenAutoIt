@@ -9,20 +9,20 @@
 
 namespace OpenAutoIt
 {
-    class ParseResult
+class ParseResult
+{
+public:
+    void Clear() noexcept
     {
-    public:
-        void Clear() noexcept
-        {
-            m_TokenStream.clear();
-            m_Document.clear();
-            m_Errors.clear();
-            m_Warnings.clear();
-        }
+        m_TokenStream.clear();
+        m_Document.clear();
+        m_Errors.clear();
+        m_Warnings.clear();
+    }
 
-        TokenStream                 m_TokenStream;
-        phi::scope_ptr<ASTDocument> m_Document;
-        std::vector<ParseError>     m_Errors;
-        std::vector<ParseWarning>   m_Warnings;
-    };
+    TokenStream                 m_TokenStream;
+    phi::scope_ptr<ASTDocument> m_Document;
+    std::vector<ParseError>     m_Errors;
+    std::vector<ParseWarning>   m_Warnings;
+};
 } // namespace OpenAutoIt

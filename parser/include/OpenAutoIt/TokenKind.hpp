@@ -651,48 +651,48 @@ namespace OpenAutoIt
     OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(BI_ConsoleWriteLine)                                           \
     OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(BI_ConsoleWriteErrorLine)
 
-    enum class TokenKind
-    {
+enum class TokenKind
+{
 #define OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(name) name,
+
+    OPENAUTOIT_ENUM_TOKEN_KIND()
+
+#undef OPENAUTOIT_ENUM_TOKEN_KIND_IMPL
+
+    // NOTE: Always keep last
+    COUNT,
+};
+
+PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wunused-const-variable")
+
+static constexpr const phi::size_t NumberOfTokens = static_cast<phi::size_t>(TokenKind::COUNT);
+static constexpr const phi::size_t BuiltInFirst   = static_cast<phi::size_t>(TokenKind::BI_Abs);
+static constexpr const phi::size_t BuiltInLast =
+        static_cast<phi::size_t>(TokenKind::BI_ConsoleWriteErrorLine);
+
+PHI_GCC_SUPPRESS_WARNING_POP()
+
+PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wreturn-type")
+PHI_MSVC_SUPPRESS_WARNING_WITH_PUSH(4702) // Unreachable code
+
+[[nodiscard]] PHI_ATTRIBUTE_PURE constexpr const char* enum_name(TokenKind token_kind) noexcept
+{
+    switch (token_kind)
+    {
+#define OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(name)                                                      \
+    case TokenKind::name:                                                                          \
+        return #name;
 
         OPENAUTOIT_ENUM_TOKEN_KIND()
 
 #undef OPENAUTOIT_ENUM_TOKEN_KIND_IMPL
 
-        // NOTE: Always keep last
-        COUNT,
-    };
-
-    PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wunused-const-variable")
-
-    static constexpr const phi::size_t NumberOfTokens = static_cast<phi::size_t>(TokenKind::COUNT);
-    static constexpr const phi::size_t BuiltInFirst   = static_cast<phi::size_t>(TokenKind::BI_Abs);
-    static constexpr const phi::size_t BuiltInLast =
-            static_cast<phi::size_t>(TokenKind::BI_ConsoleWriteErrorLine);
-
-    PHI_GCC_SUPPRESS_WARNING_POP()
-
-    PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wreturn-type")
-    PHI_MSVC_SUPPRESS_WARNING_WITH_PUSH(4702) // Unreachable code
-
-    [[nodiscard]] PHI_ATTRIBUTE_PURE constexpr const char* enum_name(TokenKind token_kind) noexcept
-    {
-        switch (token_kind)
-        {
-#define OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(name)                                                      \
-    case TokenKind::name:                                                                          \
-        return #name;
-
-            OPENAUTOIT_ENUM_TOKEN_KIND()
-
-#undef OPENAUTOIT_ENUM_TOKEN_KIND_IMPL
-
-            default:
-                PHI_ASSERT_NOT_REACHED();
-        }
+        default:
+            PHI_ASSERT_NOT_REACHED();
     }
+}
 
-    PHI_MSVC_SUPPRESS_WARNING_POP()
-    PHI_GCC_SUPPRESS_WARNING_POP()
+PHI_MSVC_SUPPRESS_WARNING_POP()
+PHI_GCC_SUPPRESS_WARNING_POP()
 
 } // namespace OpenAutoIt

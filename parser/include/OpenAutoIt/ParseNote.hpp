@@ -5,10 +5,10 @@
 
 namespace OpenAutoIt
 {
-    class ParseNote
-    {
-    public:
-        phi::string_view m_Text;
-        SourceLocation   m_Location;
-    };
+class ParseNote
+{
+public:
+    phi::string_view m_Text;
+    SourceLocation   m_Location;
+};
 } // namespace OpenAutoIt

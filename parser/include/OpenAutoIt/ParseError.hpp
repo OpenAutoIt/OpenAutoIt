@@ -9,32 +9,32 @@
 
 namespace OpenAutoIt
 {
-    enum class ParseErrorType
+enum class ParseErrorType
+{
+    UnexpectedToken,
+
+    COUNT,
+};
+
+struct ParseErrorUnexpectedToken
+{
+    TokenKind m_Kind;
+};
+
+class ParseError
+{
+public:
+    static ParseError UnexpectedToken(const Token& token) noexcept;
+
+    ParseErrorType               m_Type;
+    SourceLocation               m_LocationBegin;
+    SourceLocation               m_LocationEnd;
+    std::forward_list<ParseNote> m_Notes;
+
+    // TODO: This should be private and guarded by getter with asserts
+    union
     {
-        UnexpectedToken,
-
-        COUNT,
+        ParseErrorUnexpectedToken m_UnexpectedToken;
     };
-
-    struct ParseErrorUnexpectedToken
-    {
-        TokenKind m_Kind;
-    };
-
-    class ParseError
-    {
-    public:
-        static ParseError UnexpectedToken(const Token& token) noexcept;
-
-        ParseErrorType               m_Type;
-        SourceLocation               m_LocationBegin;
-        SourceLocation               m_LocationEnd;
-        std::forward_list<ParseNote> m_Notes;
-
-        // TODO: This should be private and guarded by getter with asserts
-        union
-        {
-            ParseErrorUnexpectedToken m_UnexpectedToken;
-        };
-    };
+};
 } // namespace OpenAutoIt

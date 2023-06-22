@@ -26,54 +26,53 @@
 
 namespace OpenAutoIt
 {
-    // Simple AST Interpreter
-    class Interpreter
+// Simple AST Interpreter
+class Interpreter
+{
+public:
+    Interpreter() = default;
+
+    void SetDocument(phi::not_null_observer_ptr<ASTDocument> new_document) noexcept;
+
+    void Run();
+
+    void Step();
+
+    [[nodiscard]] phi::not_null_observer_ptr<ASTStatement> GetCurrentStatement() const noexcept;
+
+    [[nodiscard]] VirtualMachine& vm() noexcept;
+
+    [[nodiscard]] const VirtualMachine& vm() const noexcept;
+
+    enum class StatementFinished : bool
     {
-    public:
-        Interpreter() = default;
-
-        void SetDocument(phi::not_null_observer_ptr<ASTDocument> new_document) noexcept;
-
-        void Run();
-
-        void Step();
-
-        [[nodiscard]] phi::not_null_observer_ptr<ASTStatement> GetCurrentStatement() const noexcept;
-
-        [[nodiscard]] VirtualMachine& vm() noexcept;
-
-        [[nodiscard]] const VirtualMachine& vm() const noexcept;
-
-        enum class StatementFinished : bool
-        {
-            Yes = true,
-            No  = false,
-        };
-
-        StatementFinished InterpretStatement(phi::not_null_observer_ptr<ASTStatement> statement);
-
-        Variant InterpretExpression(phi::not_null_observer_ptr<ASTExpression> expression);
-
-        std::vector<Variant> InterpretExpressions(
-                std::vector<phi::not_null_scope_ptr<ASTExpression>>& expressions);
-
-        Variant InterpretBuiltInFunctionCall(const TokenKind             function,
-                                             const std::vector<Variant>& arguments);
-
-        Variant InterpretFunctionCall(const phi::string_view      function,
-                                      const std::vector<Variant>& arguments);
-
-        Variant EvaluateBinaryExpression(const Variant& lhs, const Variant& rhs,
-                                         const TokenKind op);
-
-        Variant EvaluateBinaryPlusExpression(const Variant& lhs, const Variant& rhs) noexcept;
-        Variant EvaluateBinaryMinusExpression(const Variant& lhs, const Variant& rhs) noexcept;
-        Variant EvaluateBinaryMultiplyExpression(const Variant& lhs, const Variant& rhs) noexcept;
-        Variant EvaluateBinaryDivideExpression(const Variant& lhs, const Variant& rhs) noexcept;
-
-    private:
-        phi::observer_ptr<ASTDocument> m_Document;
-        VirtualMachine                 m_VirtualMachine;
-        Statements                     m_VirtualBlock;
+        Yes = true,
+        No  = false,
     };
+
+    StatementFinished InterpretStatement(phi::not_null_observer_ptr<ASTStatement> statement);
+
+    Variant InterpretExpression(phi::not_null_observer_ptr<ASTExpression> expression);
+
+    std::vector<Variant> InterpretExpressions(
+            std::vector<phi::not_null_scope_ptr<ASTExpression>>& expressions);
+
+    Variant InterpretBuiltInFunctionCall(const TokenKind             function,
+                                         const std::vector<Variant>& arguments);
+
+    Variant InterpretFunctionCall(const phi::string_view      function,
+                                  const std::vector<Variant>& arguments);
+
+    Variant EvaluateBinaryExpression(const Variant& lhs, const Variant& rhs, const TokenKind op);
+
+    Variant EvaluateBinaryPlusExpression(const Variant& lhs, const Variant& rhs) noexcept;
+    Variant EvaluateBinaryMinusExpression(const Variant& lhs, const Variant& rhs) noexcept;
+    Variant EvaluateBinaryMultiplyExpression(const Variant& lhs, const Variant& rhs) noexcept;
+    Variant EvaluateBinaryDivideExpression(const Variant& lhs, const Variant& rhs) noexcept;
+
+private:
+    phi::observer_ptr<ASTDocument> m_Document;
+    VirtualMachine                 m_VirtualMachine;
+    Statements                     m_VirtualBlock;
+};
 } // namespace OpenAutoIt

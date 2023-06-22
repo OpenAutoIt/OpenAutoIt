@@ -2,9 +2,9 @@
 
 namespace OpenAutoIt
 {
-    enum class Associativity : bool
-    {
-        Left,
-        Right,
-    };
+enum class Associativity : bool
+{
+    Left,
+    Right,
+};
 }

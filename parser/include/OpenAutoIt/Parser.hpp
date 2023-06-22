@@ -31,136 +31,135 @@
 
 namespace OpenAutoIt
 {
-    class Parser
+class Parser
+{
+public:
+    Parser() noexcept;
+
+    void ParseDocument(ParseResult& parse_result) noexcept;
+
+private:
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static Associativity GetOperatorAssociativity(
+            const TokenKind token_kind) noexcept
     {
-    public:
-        Parser() noexcept;
-
-        void ParseDocument(ParseResult& parse_result) noexcept;
-
-    private:
-        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static Associativity GetOperatorAssociativity(
-                const TokenKind token_kind) noexcept
+        switch (token_kind)
         {
-            switch (token_kind)
-            {
-                case TokenKind::OP_Raise:
-                    return Associativity::Right;
+            case TokenKind::OP_Raise:
+                return Associativity::Right;
 
-                default:
-                    return Associativity::Left;
-            }
+            default:
+                return Associativity::Left;
         }
-        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static Associativity GetTokenAssociativity(
-                const Token& token) noexcept
+    }
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static Associativity GetTokenAssociativity(
+            const Token& token) noexcept
+    {
+        return GetOperatorAssociativity(token.GetTokenKind());
+    }
+
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static phi::boolean IsUnaryOperator(
+            const TokenKind token_kind) noexcept
+    {
+        switch (token_kind)
         {
-            return GetOperatorAssociativity(token.GetTokenKind());
-        }
+            case TokenKind::OP_Plus:
+            case TokenKind::OP_Minus:
+            case TokenKind::KW_Not:
+                return true;
 
-        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static phi::boolean IsUnaryOperator(
-                const TokenKind token_kind) noexcept
+            default:
+                return false;
+        }
+    }
+
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static phi::boolean IsBinaryOperator(
+            const TokenKind token_kind) noexcept
+    {
+        switch (token_kind)
         {
-            switch (token_kind)
-            {
-                case TokenKind::OP_Plus:
-                case TokenKind::OP_Minus:
-                case TokenKind::KW_Not:
-                    return true;
+            case TokenKind::KW_And:
+            case TokenKind::KW_Or:
+            case TokenKind::OP_Equals:
+            case TokenKind::OP_PlusEquals:
+            case TokenKind::OP_MinusEquals:
+            case TokenKind::OP_MultiplyEquals:
+            case TokenKind::OP_DivideEquals:
+            case TokenKind::OP_Plus:
+            case TokenKind::OP_Minus:
+            case TokenKind::OP_Multiply:
+            case TokenKind::OP_Divide:
+            case TokenKind::OP_Raise:
+            case TokenKind::OP_EqualsEquals:
+            case TokenKind::OP_NotEqual:
+            case TokenKind::OP_GreaterThan:
+            case TokenKind::OP_GreaterThanEqual:
+            case TokenKind::OP_LessThan:
+            case TokenKind::OP_LessThanEqual:
+                return true;
 
-                default:
-                    return false;
-            }
+            default:
+                return false;
         }
+    }
 
-        [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static phi::boolean IsBinaryOperator(
-                const TokenKind token_kind) noexcept
-        {
-            switch (token_kind)
-            {
-                case TokenKind::KW_And:
-                case TokenKind::KW_Or:
-                case TokenKind::OP_Equals:
-                case TokenKind::OP_PlusEquals:
-                case TokenKind::OP_MinusEquals:
-                case TokenKind::OP_MultiplyEquals:
-                case TokenKind::OP_DivideEquals:
-                case TokenKind::OP_Plus:
-                case TokenKind::OP_Minus:
-                case TokenKind::OP_Multiply:
-                case TokenKind::OP_Divide:
-                case TokenKind::OP_Raise:
-                case TokenKind::OP_EqualsEquals:
-                case TokenKind::OP_NotEqual:
-                case TokenKind::OP_GreaterThan:
-                case TokenKind::OP_GreaterThanEqual:
-                case TokenKind::OP_LessThan:
-                case TokenKind::OP_LessThanEqual:
-                    return true;
+    [[nodiscard]] const Token& CurrentToken() const noexcept;
 
-                default:
-                    return false;
-            }
-        }
+    void ConsumeCurrent() noexcept;
 
-        [[nodiscard]] const Token& CurrentToken() const noexcept;
+    void ConsumeComments() noexcept;
 
-        void ConsumeCurrent() noexcept;
+    void ConsumeNewLineAndComments() noexcept;
 
-        void ConsumeComments() noexcept;
+    [[nodiscard]] phi::optional<const Token&> MustParse(TokenKind kind) noexcept;
 
-        void ConsumeNewLineAndComments() noexcept;
+    template <typename TypeT>
+    void AppendStatementToDocument(phi::not_null_scope_ptr<TypeT> statement) noexcept
+    {
+        m_ParseResult->m_Document->AppendStatement(phi::move(statement));
+    }
 
-        [[nodiscard]] phi::optional<const Token&> MustParse(TokenKind kind) noexcept;
+    // TODO: Move to .cpp
+    void AppendFunctionToDocument(phi::not_null_scope_ptr<ASTFunctionDefinition> function) noexcept
+    {
+        m_ParseResult->m_Document->AppendFunction(phi::move(function));
+    }
 
-        template <typename TypeT>
-        void AppendStatementToDocument(phi::not_null_scope_ptr<TypeT> statement) noexcept
-        {
-            m_ParseResult->m_Document->AppendStatement(phi::move(statement));
-        }
+    // Main nodes
 
-        // TODO: Move to .cpp
-        void AppendFunctionToDocument(
-                phi::not_null_scope_ptr<ASTFunctionDefinition> function) noexcept
-        {
-            m_ParseResult->m_Document->AppendFunction(phi::move(function));
-        }
+    phi::scope_ptr<ASTFunctionDefinition> ParseFunctionDefinition() noexcept;
 
-        // Main nodes
+    phi::optional<FunctionParameter> ParseFunctionParameterDefinition() noexcept;
 
-        phi::scope_ptr<ASTFunctionDefinition> ParseFunctionDefinition() noexcept;
+    // Statements
+    phi::scope_ptr<ASTStatement> ParseStatement() noexcept;
 
-        phi::optional<FunctionParameter> ParseFunctionParameterDefinition() noexcept;
+    phi::scope_ptr<ASTWhileStatement>      ParseWhileStatement() noexcept;
+    phi::scope_ptr<ASTVariableAssignment>  ParseVariableAssignment() noexcept;
+    phi::scope_ptr<ASTExpressionStatement> ParseExpressionStatement() noexcept;
+    phi::scope_ptr<ASTIfStatement>         ParseIfStatement() noexcept;
 
-        // Statements
-        phi::scope_ptr<ASTStatement> ParseStatement() noexcept;
+    // Expressions
+    phi::scope_ptr<ASTExpression> ParseExpression() noexcept;
 
-        phi::scope_ptr<ASTWhileStatement>      ParseWhileStatement() noexcept;
-        phi::scope_ptr<ASTVariableAssignment>  ParseVariableAssignment() noexcept;
-        phi::scope_ptr<ASTExpressionStatement> ParseExpressionStatement() noexcept;
-        phi::scope_ptr<ASTIfStatement>         ParseIfStatement() noexcept;
+    phi::scope_ptr<ASTExpression> ParseExpressionLhs() noexcept;
+    phi::scope_ptr<ASTExpression> ParseExpressionRhs(phi::not_null_scope_ptr<ASTExpression> lhs,
+                                                     int precedence) noexcept;
 
-        // Expressions
-        phi::scope_ptr<ASTExpression> ParseExpression() noexcept;
+    phi::scope_ptr<ASTFunctionCallExpression>           ParseFunctionCallExpression() noexcept;
+    std::vector<phi::not_null_scope_ptr<ASTExpression>> ParseFunctionCallArguments() noexcept;
+    phi::scope_ptr<ASTVariableExpression>               ParseVariableExpression() noexcept;
+    phi::scope_ptr<ASTArraySubscriptExpression>         ParseArraySubscriptExpression() noexcept;
+    phi::scope_ptr<ASTExpression>                       ParseParenExpression() noexcept;
+    phi::scope_ptr<ASTExitStatement>                    ParseExitStatement() noexcept;
 
-        phi::scope_ptr<ASTExpression> ParseExpressionLhs() noexcept;
-        phi::scope_ptr<ASTExpression> ParseExpressionRhs(phi::not_null_scope_ptr<ASTExpression> lhs,
-                                                         int precedence) noexcept;
+    // Literals
+    phi::scope_ptr<ASTIntegerLiteral> ParseIntegerLiteral() noexcept;
+    phi::scope_ptr<ASTStringLiteral>  ParseStringLiteral() noexcept;
+    phi::scope_ptr<ASTBooleanLiteral> ParseBooleanLiteral() noexcept;
+    phi::scope_ptr<ASTKeywordLiteral> ParseKeywordLiteral() noexcept;
+    phi::scope_ptr<ASTFloatLiteral>   ParseFloatLiteral() noexcept;
 
-        phi::scope_ptr<ASTFunctionCallExpression>           ParseFunctionCallExpression() noexcept;
-        std::vector<phi::not_null_scope_ptr<ASTExpression>> ParseFunctionCallArguments() noexcept;
-        phi::scope_ptr<ASTVariableExpression>               ParseVariableExpression() noexcept;
-        phi::scope_ptr<ASTArraySubscriptExpression> ParseArraySubscriptExpression() noexcept;
-        phi::scope_ptr<ASTExpression>               ParseParenExpression() noexcept;
-        phi::scope_ptr<ASTExitStatement>            ParseExitStatement() noexcept;
-
-        // Literals
-        phi::scope_ptr<ASTIntegerLiteral> ParseIntegerLiteral() noexcept;
-        phi::scope_ptr<ASTStringLiteral>  ParseStringLiteral() noexcept;
-        phi::scope_ptr<ASTBooleanLiteral> ParseBooleanLiteral() noexcept;
-        phi::scope_ptr<ASTKeywordLiteral> ParseKeywordLiteral() noexcept;
-        phi::scope_ptr<ASTFloatLiteral>   ParseFloatLiteral() noexcept;
-
-        ParseResult* m_ParseResult;
-        TokenStream* m_TokenStream;
-    };
+    ParseResult* m_ParseResult;
+    TokenStream* m_TokenStream;
+};
 } // namespace OpenAutoIt

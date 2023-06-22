@@ -6,25 +6,25 @@
 
 namespace OpenAutoIt
 {
-    enum class ParseWarningType
-    {
-        EmbeddedNullCharacter,
+enum class ParseWarningType
+{
+    EmbeddedNullCharacter,
 
-        COUNT,
-    };
+    COUNT,
+};
 
-    class ParseWarning
-    {
-    public:
-        static ParseWarning EmbeddedNullCharacter(phi::u64 line, phi::u64 column) noexcept;
+class ParseWarning
+{
+public:
+    static ParseWarning EmbeddedNullCharacter(phi::u64 line, phi::u64 column) noexcept;
 
-        ParseWarningType             m_Type;
-        SourceLocation               m_LocationBegin;
-        SourceLocation               m_LocationEnd;
-        std::forward_list<ParseNote> m_Notes;
+    ParseWarningType             m_Type;
+    SourceLocation               m_LocationBegin;
+    SourceLocation               m_LocationEnd;
+    std::forward_list<ParseNote> m_Notes;
 
-        // TODO: This should be private and guarded by getter with asserts
-        union warning_data
-        {};
-    };
+    // TODO: This should be private and guarded by getter with asserts
+    union warning_data
+    {};
+};
 } // namespace OpenAutoIt

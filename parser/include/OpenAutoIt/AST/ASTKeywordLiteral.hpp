@@ -10,23 +10,23 @@
 
 namespace OpenAutoIt
 {
-    class ASTKeywordLiteral final : public ASTExpression
+class ASTKeywordLiteral final : public ASTExpression
+{
+public:
+    ASTKeywordLiteral(TokenKind keyword) noexcept
+        : m_Keyword{keyword}
     {
-    public:
-        ASTKeywordLiteral(TokenKind keyword) noexcept
-            : m_Keyword{keyword}
-        {
-            m_NodeType = ASTNodeType::KeywordLiteral;
-            PHI_ASSERT(keyword == TokenKind::KW_Default || keyword == TokenKind::KW_Null);
-        }
+        m_NodeType = ASTNodeType::KeywordLiteral;
+        PHI_ASSERT(keyword == TokenKind::KW_Default || keyword == TokenKind::KW_Null);
+    }
 
-        [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
-        {
-            return indent_times(indent) + "KeywordLiteral [" + enum_name(m_Keyword) + "]";
-        }
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    {
+        return indent_times(indent) + "KeywordLiteral [" + enum_name(m_Keyword) + "]";
+    }
 
-        // TODO: Make private
-    public:
-        TokenKind m_Keyword;
-    };
+    // TODO: Make private
+public:
+    TokenKind m_Keyword;
+};
 } // namespace OpenAutoIt

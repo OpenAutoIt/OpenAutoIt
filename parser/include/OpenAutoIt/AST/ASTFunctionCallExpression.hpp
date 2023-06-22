@@ -12,60 +12,60 @@
 
 namespace OpenAutoIt
 {
-    class ASTFunctionCallExpression final : public ASTExpression
+class ASTFunctionCallExpression final : public ASTExpression
+{
+public:
+    ASTFunctionCallExpression() noexcept
+        : m_FunctionName{}
     {
-    public:
-        ASTFunctionCallExpression() noexcept
-            : m_FunctionName{}
+        m_NodeType = ASTNodeType::FunctionCallExpression;
+    }
+
+    [[nodiscard]] phi::string_view FunctionName() const noexcept
+    {
+        if (m_IsBuiltIn)
         {
-            m_NodeType = ASTNodeType::FunctionCallExpression;
+            return enum_name(m_BuiltInFunction);
         }
 
-        [[nodiscard]] phi::string_view FunctionName() const noexcept
+        return m_FunctionName;
+    }
+
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    {
+        std::string ret;
+
+        ret += indent_times(indent);
+        ret += "FunctionCallExpression: \"";
+        ret += FunctionName();
+        ret += "\"\n";
+        ret += indent_times(indent);
+
+        if (m_Arguments.empty())
         {
-            if (m_IsBuiltIn)
+            ret += "[]";
+        }
+        else
+        {
+            ret += "[\n";
+
+            for (const auto& exp : m_Arguments)
             {
-                return enum_name(m_BuiltInFunction);
+                ret += exp->DumpAST(indent + 1u) + ",\n";
             }
-
-            return m_FunctionName;
-        }
-
-        [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
-        {
-            std::string ret;
-
             ret += indent_times(indent);
-            ret += "FunctionCallExpression: \"";
-            ret += FunctionName();
-            ret += "\"\n";
-            ret += indent_times(indent);
-
-            if (m_Arguments.empty())
-            {
-                ret += "[]";
-            }
-            else
-            {
-                ret += "[\n";
-
-                for (const auto& exp : m_Arguments)
-                {
-                    ret += exp->DumpAST(indent + 1u) + ",\n";
-                }
-                ret += indent_times(indent);
-                ret += "]";
-            }
-
-            return ret;
+            ret += "]";
         }
 
-        phi::boolean m_IsBuiltIn{false};
-        union
-        {
-            TokenKind        m_BuiltInFunction;
-            phi::string_view m_FunctionName;
-        };
-        std::vector<phi::not_null_scope_ptr<ASTExpression>> m_Arguments;
+        return ret;
+    }
+
+    phi::boolean m_IsBuiltIn{false};
+    union
+    {
+        TokenKind        m_BuiltInFunction;
+        phi::string_view m_FunctionName;
     };
+    std::vector<phi::not_null_scope_ptr<ASTExpression>> m_Arguments;
+};
 } // namespace OpenAutoIt

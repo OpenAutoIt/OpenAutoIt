@@ -33,477 +33,472 @@ PHI_MSVC_SUPPRESS_WARNING(4702) // unreachable code
 
 namespace OpenAutoIt
 {
-    void Interpreter::SetDocument(phi::not_null_observer_ptr<ASTDocument> new_document) noexcept
+void Interpreter::SetDocument(phi::not_null_observer_ptr<ASTDocument> new_document) noexcept
+{
+    m_Document = new_document;
+    vm().PushGlobalScope(m_Document->m_Statements);
+}
+
+void Interpreter::Run()
+{
+    while (vm().CanRun())
     {
-        m_Document = new_document;
-        vm().PushGlobalScope(m_Document->m_Statements);
+        Step();
+    }
+}
+
+void Interpreter::Step()
+{
+    Scope& current_scope = vm().GetCurrentScope();
+
+    // Check if we reached the end of the current scope
+    if (current_scope.index >= current_scope.statements.size())
+    {
+        vm().PopScope();
+        return;
     }
 
-    void Interpreter::Run()
+    const auto current_statement = GetCurrentStatement();
+
+    // Interpret statement
+    const StatementFinished result = InterpretStatement(current_statement);
+
+    // Increment index if the statement is finished and we can still run
+    if (result == StatementFinished::Yes && vm().CanRun())
     {
-        while (vm().CanRun())
-        {
-            Step();
+        ++current_scope.index;
+    }
+}
+
+phi::not_null_observer_ptr<ASTStatement> Interpreter::GetCurrentStatement() const noexcept
+{
+    const Scope& current_scope = vm().GetCurrentScope();
+    PHI_ASSERT(!current_scope.statements.empty());
+    PHI_ASSERT(current_scope.index < current_scope.statements.size());
+
+    return current_scope.statements.at(current_scope.index.unsafe());
+}
+
+PHI_ATTRIBUTE_CONST VirtualMachine& Interpreter::vm() noexcept
+{
+    return m_VirtualMachine;
+}
+
+PHI_ATTRIBUTE_CONST const VirtualMachine& Interpreter::vm() const noexcept
+{
+    return m_VirtualMachine;
+}
+
+Interpreter::StatementFinished Interpreter::InterpretStatement(
+        phi::not_null_observer_ptr<ASTStatement> statement)
+{
+    // NOTE: Generally we return Yes for finished statments and the ending of loops
+    //       While returning No for unfinished loops like While and For
+
+    switch (statement->NodeType())
+    {
+        case ASTNodeType::ExpressionStatement: {
+            auto expression_statement = statement->as<ASTExpressionStatement>();
+
+            InterpretExpression(expression_statement->m_Expression);
+            return StatementFinished::Yes;
         }
-    }
 
-    void Interpreter::Step()
-    {
-        Scope& current_scope = vm().GetCurrentScope();
+        case ASTNodeType::IfStatement: {
+            auto if_statement = statement->as<ASTIfStatement>();
 
-        // Check if we reached the end of the current scope
-        if (current_scope.index >= current_scope.statements.size())
-        {
-            vm().PopScope();
-            return;
-        }
+            const Variant if_condition_value =
+                    InterpretExpression(if_statement->m_IfCase.condition).CastToBoolean();
+            PHI_ASSERT(if_condition_value.IsBoolean());
 
-        const auto current_statement = GetCurrentStatement();
-
-        // Interpret statement
-        const StatementFinished result = InterpretStatement(current_statement);
-
-        // Increment index if the statement is finished and we can still run
-        if (result == StatementFinished::Yes && vm().CanRun())
-        {
-            ++current_scope.index;
-        }
-    }
-
-    phi::not_null_observer_ptr<ASTStatement> Interpreter::GetCurrentStatement() const noexcept
-    {
-        const Scope& current_scope = vm().GetCurrentScope();
-        PHI_ASSERT(!current_scope.statements.empty());
-        PHI_ASSERT(current_scope.index < current_scope.statements.size());
-
-        return current_scope.statements.at(current_scope.index.unsafe());
-    }
-
-    PHI_ATTRIBUTE_CONST VirtualMachine& Interpreter::vm() noexcept
-    {
-        return m_VirtualMachine;
-    }
-
-    PHI_ATTRIBUTE_CONST const VirtualMachine& Interpreter::vm() const noexcept
-    {
-        return m_VirtualMachine;
-    }
-
-    Interpreter::StatementFinished Interpreter::InterpretStatement(
-            phi::not_null_observer_ptr<ASTStatement> statement)
-    {
-        // NOTE: Generally we return Yes for finished statments and the ending of loops
-        //       While returning No for unfinished loops like While and For
-
-        switch (statement->NodeType())
-        {
-            case ASTNodeType::ExpressionStatement: {
-                auto expression_statement = statement->as<ASTExpressionStatement>();
-
-                InterpretExpression(expression_statement->m_Expression);
+            if (if_condition_value.AsBoolean())
+            {
+                vm().PushBlockScope(if_statement->m_IfCase.body);
                 return StatementFinished::Yes;
             }
 
-            case ASTNodeType::IfStatement: {
-                auto if_statement = statement->as<ASTIfStatement>();
+            // Handle all ElseIf cases
+            for (auto&& else_if_case : if_statement->m_ElseIfCases)
+            {
+                const Variant condition_value =
+                        InterpretExpression(else_if_case.condition).CastToBoolean();
+                PHI_ASSERT(condition_value.IsBoolean());
 
-                const Variant if_condition_value =
-                        InterpretExpression(if_statement->m_IfCase.condition).CastToBoolean();
-                PHI_ASSERT(if_condition_value.IsBoolean());
-
-                if (if_condition_value.AsBoolean())
+                if (condition_value.AsBoolean())
                 {
-                    vm().PushBlockScope(if_statement->m_IfCase.body);
+                    vm().PushBlockScope(else_if_case.body);
                     return StatementFinished::Yes;
                 }
+            }
 
-                // Handle all ElseIf cases
-                for (auto&& else_if_case : if_statement->m_ElseIfCases)
-                {
-                    const Variant condition_value =
-                            InterpretExpression(else_if_case.condition).CastToBoolean();
-                    PHI_ASSERT(condition_value.IsBoolean());
+            // Handle Else case
+            vm().PushBlockScope(if_statement->m_ElseCase);
+            return StatementFinished::Yes;
+        }
 
-                    if (condition_value.AsBoolean())
-                    {
-                        vm().PushBlockScope(else_if_case.body);
-                        return StatementFinished::Yes;
-                    }
-                }
+        case ASTNodeType::VariableAssignment: {
+            auto variable_assignment = statement->as<ASTVariableAssignment>();
 
-                // Handle Else case
-                vm().PushBlockScope(if_statement->m_ElseCase);
+            const phi::string_view variable_name = variable_assignment->m_VariableName;
+            PHI_ASSERT(!variable_name.is_empty());
+
+            // TODO: Const?
+            phi::observer_ptr<ASTExpression> initial_expression =
+                    variable_assignment->m_InitialValueExpression;
+            if (initial_expression)
+            {
+                const Variant expression_value =
+                        InterpretExpression(initial_expression.release_not_null());
+
+                vm().PushOrAssignVariable(variable_name, expression_value);
                 return StatementFinished::Yes;
             }
 
-            case ASTNodeType::VariableAssignment: {
-                auto variable_assignment = statement->as<ASTVariableAssignment>();
+            // Insert a default initialized variable
+            vm().PushVariable(variable_name, {});
+            return StatementFinished::Yes;
+        }
 
-                const phi::string_view variable_name = variable_assignment->m_VariableName;
-                PHI_ASSERT(!variable_name.is_empty());
+        case ASTNodeType::WhileStatement: {
+            auto while_statement = statement->as<ASTWhileStatement>();
 
-                // TODO: Const?
-                phi::observer_ptr<ASTExpression> initial_expression =
-                        variable_assignment->m_InitialValueExpression;
-                if (initial_expression)
+            // Evalaute condition
+            const Variant condition =
+                    InterpretExpression(while_statement->m_ConditionExpression).CastToBoolean();
+            PHI_ASSERT(condition.IsBoolean());
+
+            if (!condition.AsBoolean())
+            {
+                return StatementFinished::Yes;
+            }
+
+            // Interpret while statements
+            vm().PushBlockScope(while_statement->m_Statements);
+            return StatementFinished::No;
+        }
+
+        case ASTNodeType::ExitStatement: {
+            auto exit_statement = statement->as<ASTExitStatement>();
+
+            if (exit_statement->m_Expression)
+            {
+                const Variant exit_code =
+                        InterpretExpression(exit_statement->m_Expression.not_null_observer())
+                                .CastToInt64();
+
+                if (exit_code.IsInt64())
                 {
-                    const Variant expression_value =
-                            InterpretExpression(initial_expression.release_not_null());
-
-                    vm().PushOrAssignVariable(variable_name, expression_value);
+                    vm().Exit(phi::unsafe_cast<phi::u32>(exit_code.AsInt64()));
                     return StatementFinished::Yes;
                 }
-
-                // Insert a default initialized variable
-                vm().PushVariable(variable_name, {});
-                return StatementFinished::Yes;
             }
 
-            case ASTNodeType::WhileStatement: {
-                auto while_statement = statement->as<ASTWhileStatement>();
-
-                // Evalaute condition
-                const Variant condition =
-                        InterpretExpression(while_statement->m_ConditionExpression).CastToBoolean();
-                PHI_ASSERT(condition.IsBoolean());
-
-                if (!condition.AsBoolean())
-                {
-                    return StatementFinished::Yes;
-                }
-
-                // Interpret while statements
-                vm().PushBlockScope(while_statement->m_Statements);
-                return StatementFinished::No;
-            }
-
-            case ASTNodeType::ExitStatement: {
-                auto exit_statement = statement->as<ASTExitStatement>();
-
-                if (exit_statement->m_Expression)
-                {
-                    const Variant exit_code =
-                            InterpretExpression(exit_statement->m_Expression.not_null_observer())
-                                    .CastToInt64();
-
-                    if (exit_code.IsInt64())
-                    {
-                        vm().Exit(phi::unsafe_cast<phi::u32>(exit_code.AsInt64()));
-                        return StatementFinished::Yes;
-                    }
-                }
-
-                vm().Exit(0u);
-                return StatementFinished::Yes;
-            }
-
-            default:
-                PHI_ASSERT_NOT_REACHED();
-                return StatementFinished::No;
-        }
-    }
-
-    Variant Interpreter::InterpretExpression(phi::not_null_observer_ptr<ASTExpression> expression)
-    {
-        switch (expression->NodeType())
-        {
-            case ASTNodeType::ArraySubscriptExpression:
-                // TODO: ArraySubscriptExpression
-                return {};
-
-            case ASTNodeType::BinaryExpression: {
-                auto binary_expression = expression->as<ASTBinaryExpression>();
-
-                const Variant lhs_value = InterpretExpression(binary_expression->m_LHS);
-                const Variant rhs_value = InterpretExpression(binary_expression->m_RHS);
-
-                return EvaluateBinaryExpression(lhs_value, rhs_value,
-                                                binary_expression->m_Operator);
-            }
-
-            case ASTNodeType::BooleanLiteral: {
-                auto boolean_literal = expression->as<ASTBooleanLiteral>();
-
-                return Variant::MakeBoolean(boolean_literal->m_Value);
-            }
-
-            case ASTNodeType::FunctionCallExpression: {
-                // TODO: What happens when you assign variable to the return of a void function?
-                auto function_call_expression = expression->as<ASTFunctionCallExpression>();
-
-                // Evaluate all arguments
-                const std::vector<Variant> arguments =
-                        InterpretExpressions(function_call_expression->m_Arguments);
-
-                // Handle builtin functions seperately
-                if (function_call_expression->m_IsBuiltIn)
-                {
-                    return InterpretBuiltInFunctionCall(function_call_expression->m_BuiltInFunction,
-                                                        arguments);
-                }
-
-                return InterpretFunctionCall(function_call_expression->m_FunctionName, arguments);
-            }
-
-            case ASTNodeType::IntegerLiteral: {
-                auto integer_literal = expression->as<ASTIntegerLiteral>();
-
-                return Variant::MakeInt(integer_literal->m_Value);
-            }
-
-            case ASTNodeType::KeywordLiteral: {
-                auto keyword_literal = expression->as<ASTKeywordLiteral>();
-
-                return Variant::MakeKeyword(keyword_literal->m_Keyword);
-            }
-
-            case ASTNodeType::FloatLiteral: {
-                auto float_literal = expression->as<ASTFloatLiteral>();
-
-                return Variant::MakeDouble(float_literal->m_Value);
-            }
-
-            case ASTNodeType::StringLiteral: {
-                auto string_literal = expression->as<ASTStringLiteral>();
-
-                return Variant::MakeString(string_literal->m_Value);
-            }
-
-            case ASTNodeType::UnaryExpression:
-                // TODO: UnaryExpression
-                return {};
-
-            case ASTNodeType::VariableExpression: {
-                const auto variable_expression = expression->as<ASTVariableExpression>();
-
-                const phi::string_view variable_name = variable_expression->m_VariableName;
-
-                auto value = vm().LookupVariableByName(variable_name);
-                if (!value)
-                {
-                    vm().RuntimeError("No variable named '{}'", std::string_view(variable_name));
-                    return {};
-                }
-
-                return value.value();
-            }
-
-            default:
-                PHI_ASSERT_NOT_REACHED();
+            vm().Exit(0u);
+            return StatementFinished::Yes;
         }
 
-        PHI_ASSERT_NOT_REACHED();
-        return {};
+        default:
+            PHI_ASSERT_NOT_REACHED();
+            return StatementFinished::No;
     }
+}
 
-    std::vector<Variant> Interpreter::InterpretExpressions(
-            std::vector<phi::not_null_scope_ptr<ASTExpression>>& expressions)
+Variant Interpreter::InterpretExpression(phi::not_null_observer_ptr<ASTExpression> expression)
+{
+    switch (expression->NodeType())
     {
-        std::vector<Variant> ret;
-        ret.reserve(expressions.size());
-
-        for (auto& expression : expressions)
-        {
-            ret.emplace_back(InterpretExpression(expression));
-        }
-
-        return ret;
-    }
-
-    Variant Interpreter::InterpretBuiltInFunctionCall(const TokenKind             function,
-                                                      const std::vector<Variant>& arguments)
-    {
-        // TODO: Is pretty incovinient that every function has to check for itself that it hast the right amount of arguments etc.
-
-        switch (function)
-        {
-            // https://www.autoitscript.com/autoit3/docs/functions/Abs.htm
-            case TokenKind::BI_Abs: {
-                if (arguments.size() != 1u)
-                {
-                    // TODO: Error
-                    return {};
-                }
-
-                return BuiltIn_Abs(m_VirtualMachine, arguments.at(0u));
-            }
-
-            // https://www.autoitscript.com/autoit3/docs/functions/ConsoleWrite.htm
-            case TokenKind::BI_ConsoleWrite: {
-                if (arguments.size() != 1u)
-                {
-                    // TODO: Error
-                    return {};
-                }
-
-                return BuiltIn_ConsoleWrite(m_VirtualMachine, arguments.at(0u));
-            }
-
-            // https://www.autoitscript.com/autoit3/docs/functions/ConsoleWriteError.htm
-            case TokenKind::BI_ConsoleWriteError: {
-                if (arguments.size() != 1u)
-                {
-                    // TODO: Error
-                    return {};
-                }
-
-                return BuiltIn_ConsoleWriteError(m_VirtualMachine, arguments.at(0u));
-            }
-
-            // https://www.autoitscript.com/autoit3/docs/functions/VarGetType.htm
-            case TokenKind::BI_VarGetType: {
-                if (arguments.size() != 1u)
-                {
-                    // TODO: Error
-                    return {};
-                }
-
-                return BuiltIn_VarGetType(m_VirtualMachine, arguments.at(0u));
-            }
-
-            case TokenKind::BI_ConsoleWriteLine: {
-                if (arguments.size() != 1u)
-                {
-                    // TODO: Error:
-                    return {};
-                }
-
-                return BuiltIn_ConsoleWriteLine(vm(), arguments.at(0u));
-            }
-
-            case TokenKind::BI_ConsoleWriteErrorLine: {
-                if (arguments.size() != 1u)
-                {
-                    // TODO: Error
-                    return {};
-                }
-
-                return BuiltIn_ConsoleWriteErrorLine(vm(), arguments.at(0u));
-            }
-
-            default:
-                vm().RuntimeError("Builtin function '{:s}' not implemented", enum_name(function));
-                return {};
-        }
-
-        PHI_ASSERT_NOT_REACHED();
-        return {};
-    }
-
-    Variant Interpreter::InterpretFunctionCall(const phi::string_view      function,
-                                               const std::vector<Variant>& arguments)
-    {
-        phi::observer_ptr<ASTFunctionDefinition> function_definition =
-                m_Document->LookupFunctionDefinitionByName(function);
-
-        if (!function_definition)
-        {
-            vm().RuntimeError("Function '{:s}' not found'", std::string_view(function));
+        case ASTNodeType::ArraySubscriptExpression:
+            // TODO: ArraySubscriptExpression
             return {};
+
+        case ASTNodeType::BinaryExpression: {
+            auto binary_expression = expression->as<ASTBinaryExpression>();
+
+            const Variant lhs_value = InterpretExpression(binary_expression->m_LHS);
+            const Variant rhs_value = InterpretExpression(binary_expression->m_RHS);
+
+            return EvaluateBinaryExpression(lhs_value, rhs_value, binary_expression->m_Operator);
         }
 
-        // Push new function scope
-        vm().PushFunctionScope(function, function_definition->m_FunctionBody);
+        case ASTNodeType::BooleanLiteral: {
+            auto boolean_literal = expression->as<ASTBooleanLiteral>();
 
-        // Push arguments into the new scope
-        for (phi::usize index{0u}; index < function_definition->m_Parameters.size(); ++index)
-        {
-            // TODO: This should be const but theres currently a bug in Phi which prevents us more doing so
-            FunctionParameter& parameter = function_definition->m_Parameters.at(index.unsafe());
-
-            // Check if the argument was explicitly provided
-            if (index < arguments.size())
-            {
-                // Simply set the parameter to be the given argument
-                vm().PushVariable(parameter.name, arguments.at(index.unsafe()));
-            }
-            else
-            {
-                // Otherwise the parameter MUST be defaultet
-                if (parameter.default_value_init.empty())
-                {
-                    // TODO: Better error message
-                    vm().RuntimeError("Missing argument");
-                    break;
-                }
-
-                // Push the parameter with an empty value
-                vm().PushVariable(parameter.name, {});
-
-                // Push a virtual block scope which handles the initialization of the default value
-                // We do this since function default values can themselves be function calls etc.
-                vm().PushBlockScope(parameter.default_value_init);
-            }
+            return Variant::MakeBoolean(boolean_literal->m_Value);
         }
 
+        case ASTNodeType::FunctionCallExpression: {
+            // TODO: What happens when you assign variable to the return of a void function?
+            auto function_call_expression = expression->as<ASTFunctionCallExpression>();
+
+            // Evaluate all arguments
+            const std::vector<Variant> arguments =
+                    InterpretExpressions(function_call_expression->m_Arguments);
+
+            // Handle builtin functions seperately
+            if (function_call_expression->m_IsBuiltIn)
+            {
+                return InterpretBuiltInFunctionCall(function_call_expression->m_BuiltInFunction,
+                                                    arguments);
+            }
+
+            return InterpretFunctionCall(function_call_expression->m_FunctionName, arguments);
+        }
+
+        case ASTNodeType::IntegerLiteral: {
+            auto integer_literal = expression->as<ASTIntegerLiteral>();
+
+            return Variant::MakeInt(integer_literal->m_Value);
+        }
+
+        case ASTNodeType::KeywordLiteral: {
+            auto keyword_literal = expression->as<ASTKeywordLiteral>();
+
+            return Variant::MakeKeyword(keyword_literal->m_Keyword);
+        }
+
+        case ASTNodeType::FloatLiteral: {
+            auto float_literal = expression->as<ASTFloatLiteral>();
+
+            return Variant::MakeDouble(float_literal->m_Value);
+        }
+
+        case ASTNodeType::StringLiteral: {
+            auto string_literal = expression->as<ASTStringLiteral>();
+
+            return Variant::MakeString(string_literal->m_Value);
+        }
+
+        case ASTNodeType::UnaryExpression:
+            // TODO: UnaryExpression
+            return {};
+
+        case ASTNodeType::VariableExpression: {
+            const auto variable_expression = expression->as<ASTVariableExpression>();
+
+            const phi::string_view variable_name = variable_expression->m_VariableName;
+
+            auto value = vm().LookupVariableByName(variable_name);
+            if (!value)
+            {
+                vm().RuntimeError("No variable named '{}'", std::string_view(variable_name));
+                return {};
+            }
+
+            return value.value();
+        }
+
+        default:
+            PHI_ASSERT_NOT_REACHED();
+    }
+
+    PHI_ASSERT_NOT_REACHED();
+    return {};
+}
+
+std::vector<Variant> Interpreter::InterpretExpressions(
+        std::vector<phi::not_null_scope_ptr<ASTExpression>>& expressions)
+{
+    std::vector<Variant> ret;
+    ret.reserve(expressions.size());
+
+    for (auto& expression : expressions)
+    {
+        ret.emplace_back(InterpretExpression(expression));
+    }
+
+    return ret;
+}
+
+Variant Interpreter::InterpretBuiltInFunctionCall(const TokenKind             function,
+                                                  const std::vector<Variant>& arguments)
+{
+    // TODO: Is pretty incovinient that every function has to check for itself that it hast the right amount of arguments etc.
+
+    switch (function)
+    {
+        // https://www.autoitscript.com/autoit3/docs/functions/Abs.htm
+        case TokenKind::BI_Abs: {
+            if (arguments.size() != 1u)
+            {
+                // TODO: Error
+                return {};
+            }
+
+            return BuiltIn_Abs(m_VirtualMachine, arguments.at(0u));
+        }
+
+        // https://www.autoitscript.com/autoit3/docs/functions/ConsoleWrite.htm
+        case TokenKind::BI_ConsoleWrite: {
+            if (arguments.size() != 1u)
+            {
+                // TODO: Error
+                return {};
+            }
+
+            return BuiltIn_ConsoleWrite(m_VirtualMachine, arguments.at(0u));
+        }
+
+        // https://www.autoitscript.com/autoit3/docs/functions/ConsoleWriteError.htm
+        case TokenKind::BI_ConsoleWriteError: {
+            if (arguments.size() != 1u)
+            {
+                // TODO: Error
+                return {};
+            }
+
+            return BuiltIn_ConsoleWriteError(m_VirtualMachine, arguments.at(0u));
+        }
+
+        // https://www.autoitscript.com/autoit3/docs/functions/VarGetType.htm
+        case TokenKind::BI_VarGetType: {
+            if (arguments.size() != 1u)
+            {
+                // TODO: Error
+                return {};
+            }
+
+            return BuiltIn_VarGetType(m_VirtualMachine, arguments.at(0u));
+        }
+
+        case TokenKind::BI_ConsoleWriteLine: {
+            if (arguments.size() != 1u)
+            {
+                // TODO: Error:
+                return {};
+            }
+
+            return BuiltIn_ConsoleWriteLine(vm(), arguments.at(0u));
+        }
+
+        case TokenKind::BI_ConsoleWriteErrorLine: {
+            if (arguments.size() != 1u)
+            {
+                // TODO: Error
+                return {};
+            }
+
+            return BuiltIn_ConsoleWriteErrorLine(vm(), arguments.at(0u));
+        }
+
+        default:
+            vm().RuntimeError("Builtin function '{:s}' not implemented", enum_name(function));
+            return {};
+    }
+
+    PHI_ASSERT_NOT_REACHED();
+    return {};
+}
+
+Variant Interpreter::InterpretFunctionCall(const phi::string_view      function,
+                                           const std::vector<Variant>& arguments)
+{
+    phi::observer_ptr<ASTFunctionDefinition> function_definition =
+            m_Document->LookupFunctionDefinitionByName(function);
+
+    if (!function_definition)
+    {
+        vm().RuntimeError("Function '{:s}' not found'", std::string_view(function));
         return {};
     }
 
-    Variant Interpreter::EvaluateBinaryExpression(const Variant& lhs, const Variant& rhs,
-                                                  TokenKind op)
+    // Push new function scope
+    vm().PushFunctionScope(function, function_definition->m_FunctionBody);
+
+    // Push arguments into the new scope
+    for (phi::usize index{0u}; index < function_definition->m_Parameters.size(); ++index)
     {
-        // TODO: Lots of operators missing here
-        switch (op)
+        // TODO: This should be const but theres currently a bug in Phi which prevents us more doing so
+        FunctionParameter& parameter = function_definition->m_Parameters.at(index.unsafe());
+
+        // Check if the argument was explicitly provided
+        if (index < arguments.size())
         {
-            case TokenKind::OP_Plus:
-                return EvaluateBinaryPlusExpression(lhs, rhs);
+            // Simply set the parameter to be the given argument
+            vm().PushVariable(parameter.name, arguments.at(index.unsafe()));
+        }
+        else
+        {
+            // Otherwise the parameter MUST be defaultet
+            if (parameter.default_value_init.empty())
+            {
+                // TODO: Better error message
+                vm().RuntimeError("Missing argument");
+                break;
+            }
 
-            case TokenKind::OP_Minus:
-                return EvaluateBinaryMinusExpression(lhs, rhs);
+            // Push the parameter with an empty value
+            vm().PushVariable(parameter.name, {});
 
-            case TokenKind::OP_Multiply:
-                return EvaluateBinaryMultiplyExpression(lhs, rhs);
-
-            case TokenKind::OP_Divide:
-                return EvaluateBinaryDivideExpression(lhs, rhs);
-
-            default:
-                return {};
+            // Push a virtual block scope which handles the initialization of the default value
+            // We do this since function default values can themselves be function calls etc.
+            vm().PushBlockScope(parameter.default_value_init);
         }
     }
 
-    Variant Interpreter::EvaluateBinaryPlusExpression(const Variant& lhs,
+    return {};
+}
+
+Variant Interpreter::EvaluateBinaryExpression(const Variant& lhs, const Variant& rhs, TokenKind op)
+{
+    // TODO: Lots of operators missing here
+    switch (op)
+    {
+        case TokenKind::OP_Plus:
+            return EvaluateBinaryPlusExpression(lhs, rhs);
+
+        case TokenKind::OP_Minus:
+            return EvaluateBinaryMinusExpression(lhs, rhs);
+
+        case TokenKind::OP_Multiply:
+            return EvaluateBinaryMultiplyExpression(lhs, rhs);
+
+        case TokenKind::OP_Divide:
+            return EvaluateBinaryDivideExpression(lhs, rhs);
+
+        default:
+            return {};
+    }
+}
+
+Variant Interpreter::EvaluateBinaryPlusExpression(const Variant& lhs, const Variant& rhs) noexcept
+{
+    // TODO: We currently only support adding integer which is not correct
+    if (!lhs.IsInt64() || !rhs.IsInt64())
+    {
+        return {};
+    }
+
+    return Variant::MakeInt(UnsafeAdd(lhs.AsInt64(), rhs.AsInt64()));
+}
+
+Variant Interpreter::EvaluateBinaryMinusExpression(const Variant& lhs, const Variant& rhs) noexcept
+{
+    if (!lhs.IsInt64() || !rhs.IsInt64())
+    {
+        return {};
+    }
+
+    return Variant::MakeInt(UnsafeMinus(lhs.AsInt64(), rhs.AsInt64()));
+}
+
+Variant Interpreter::EvaluateBinaryMultiplyExpression(const Variant& lhs,
                                                       const Variant& rhs) noexcept
+{
+    if (!lhs.IsInt64() || !rhs.IsInt64())
     {
-        // TODO: We currently only support adding integer which is not correct
-        if (!lhs.IsInt64() || !rhs.IsInt64())
-        {
-            return {};
-        }
-
-        return Variant::MakeInt(UnsafeAdd(lhs.AsInt64(), rhs.AsInt64()));
+        return {};
     }
 
-    Variant Interpreter::EvaluateBinaryMinusExpression(const Variant& lhs,
-                                                       const Variant& rhs) noexcept
-    {
-        if (!lhs.IsInt64() || !rhs.IsInt64())
-        {
-            return {};
-        }
+    return Variant::MakeInt(UnsafeMultiply(lhs.AsInt64(), rhs.AsInt64()));
+}
 
-        return Variant::MakeInt(UnsafeMinus(lhs.AsInt64(), rhs.AsInt64()));
+Variant Interpreter::EvaluateBinaryDivideExpression(const Variant& lhs, const Variant& rhs) noexcept
+{
+    if (!lhs.IsInt64() || !rhs.IsInt64())
+    {
+        return {};
     }
 
-    Variant Interpreter::EvaluateBinaryMultiplyExpression(const Variant& lhs,
-                                                          const Variant& rhs) noexcept
-    {
-        if (!lhs.IsInt64() || !rhs.IsInt64())
-        {
-            return {};
-        }
-
-        return Variant::MakeInt(UnsafeMultiply(lhs.AsInt64(), rhs.AsInt64()));
-    }
-
-    Variant Interpreter::EvaluateBinaryDivideExpression(const Variant& lhs,
-                                                        const Variant& rhs) noexcept
-    {
-        if (!lhs.IsInt64() || !rhs.IsInt64())
-        {
-            return {};
-        }
-
-        return Variant::MakeInt(UnsafeDivide(lhs.AsInt64(), rhs.AsInt64()));
-    }
+    return Variant::MakeInt(UnsafeDivide(lhs.AsInt64(), rhs.AsInt64()));
+}
 } // namespace OpenAutoIt

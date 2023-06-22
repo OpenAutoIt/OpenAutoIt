@@ -20,7 +20,7 @@ DerivePointerAlignment: false
 PointerAlignment: Left
 IndentCaseLabels: true
 ContinuationIndentWidth: 8
-NamespaceIndentation: All
+NamespaceIndentation: Inner
 CompactNamespaces: false
 FixNamespaceComments: true
 AccessModifierOffset: -4

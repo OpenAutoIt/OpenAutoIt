@@ -8,24 +8,23 @@
 
 namespace OpenAutoIt
 {
-    class ASTIntegerLiteral final : public ASTExpression
+class ASTIntegerLiteral final : public ASTExpression
+{
+public:
+    ASTIntegerLiteral(phi::i64 value) noexcept
+        : m_Value{value}
     {
-    public:
-        ASTIntegerLiteral(phi::i64 value) noexcept
-            : m_Value{value}
-        {
-            m_NodeType = ASTNodeType::IntegerLiteral;
-        }
+        m_NodeType = ASTNodeType::IntegerLiteral;
+    }
 
-        [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
-        {
-            return indent_times(indent) + "IntegerLiteral [" + std::to_string(m_Value.unsafe()) +
-                   "]";
-        }
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    {
+        return indent_times(indent) + "IntegerLiteral [" + std::to_string(m_Value.unsafe()) + "]";
+    }
 
-        // TODO: Make private
-    public:
-        // TODO: Support signed AND unsigned
-        phi::i64 m_Value;
-    };
+    // TODO: Make private
+public:
+    // TODO: Support signed AND unsigned
+    phi::i64 m_Value;
+};
 } // namespace OpenAutoIt

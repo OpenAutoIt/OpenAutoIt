@@ -5,15 +5,15 @@
 
 namespace OpenAutoIt
 {
-    class REPLInterpreter
-    {
-    public:
-        int Run();
+class REPLInterpreter
+{
+public:
+    int Run();
 
-    private:
-        void Loop();
+private:
+    void Loop();
 
-        Interpreter  m_Interpreter;
-        phi::boolean m_Running{true};
-    };
+    Interpreter  m_Interpreter;
+    phi::boolean m_Running{true};
+};
 } // namespace OpenAutoIt

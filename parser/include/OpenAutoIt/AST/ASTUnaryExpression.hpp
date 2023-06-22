@@ -4,11 +4,11 @@
 
 namespace OpenAutoIt
 {
-    class ASTUnaryExpression : public ASTExpression
+class ASTUnaryExpression : public ASTExpression
+{
+    ASTUnaryExpression()
     {
-        ASTUnaryExpression()
-        {
-            m_NodeType = ASTNodeType::UnaryExpression;
-        }
-    };
+        m_NodeType = ASTNodeType::UnaryExpression;
+    }
+};
 } // namespace OpenAutoIt

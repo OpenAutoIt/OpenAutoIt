@@ -5,8 +5,8 @@
 
 namespace OpenAutoIt
 {
-    class ASTStatement : public ASTNode
-    {
-    public:
-    };
+class ASTStatement : public ASTNode
+{
+public:
+};
 } // namespace OpenAutoIt

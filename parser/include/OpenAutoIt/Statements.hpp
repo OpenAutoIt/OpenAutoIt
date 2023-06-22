@@ -6,5 +6,5 @@
 
 namespace OpenAutoIt
 {
-    using Statements = std::vector<phi::not_null_scope_ptr<ASTStatement>>;
+using Statements = std::vector<phi::not_null_scope_ptr<ASTStatement>>;
 }

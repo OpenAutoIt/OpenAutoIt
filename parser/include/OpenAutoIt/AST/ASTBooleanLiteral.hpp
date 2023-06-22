@@ -9,29 +9,29 @@
 
 namespace OpenAutoIt
 {
-    class ASTBooleanLiteral final : public ASTExpression
+class ASTBooleanLiteral final : public ASTExpression
+{
+public:
+    ASTBooleanLiteral(phi::boolean value) noexcept
+        : m_Value{value}
     {
-    public:
-        ASTBooleanLiteral(phi::boolean value) noexcept
-            : m_Value{value}
-        {
-            m_NodeType = ASTNodeType::BooleanLiteral;
-        }
+        m_NodeType = ASTNodeType::BooleanLiteral;
+    }
 
-        [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
-        {
-            std::string ret;
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    {
+        std::string ret;
 
-            ret += indent_times(indent);
-            ret += "BooleanLiteral [";
-            ret += m_Value ? "True" : "False";
-            ret += "]";
+        ret += indent_times(indent);
+        ret += "BooleanLiteral [";
+        ret += m_Value ? "True" : "False";
+        ret += "]";
 
-            return ret;
-        }
+        return ret;
+    }
 
-        // TODO: Make private
-    public:
-        phi::boolean m_Value;
-    };
+    // TODO: Make private
+public:
+    phi::boolean m_Value;
+};
 } // namespace OpenAutoIt
