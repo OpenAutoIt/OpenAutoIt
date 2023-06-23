@@ -11,7 +11,7 @@ namespace OpenAutoIt
 void TokenStream::push_back(const Token& value)
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(!m_Finialized);
+    PHI_ASSERT(!m_Finalized);
 #endif
 
     m_Tokens.push_back(value);
@@ -20,7 +20,7 @@ void TokenStream::push_back(const Token& value)
 void TokenStream::push_back(Token&& value)
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(!m_Finialized);
+    PHI_ASSERT(!m_Finalized);
 #endif
 
     m_Tokens.push_back(value);
@@ -29,19 +29,19 @@ void TokenStream::push_back(Token&& value)
 void TokenStream::finalize()
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(!m_Finialized);
+    PHI_ASSERT(!m_Finalized);
 #endif
 
     m_Index = 0u;
 #if defined(PHI_DEBUG)
-    m_Finialized = true;
+    m_Finalized = true;
 #endif
 }
 
 void TokenStream::reset()
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     m_Index = 0u;
@@ -50,7 +50,7 @@ void TokenStream::reset()
 [[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::has_x_more(phi::usize amount) const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     for (phi::usize index = m_Index; amount > 0u; ++index, --amount)
@@ -67,7 +67,7 @@ void TokenStream::reset()
 [[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::has_more() const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Index < m_Tokens.size();
@@ -76,7 +76,7 @@ void TokenStream::reset()
 [[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::reached_end() const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Index >= m_Tokens.size();
@@ -86,7 +86,7 @@ PHI_ATTRIBUTE_PURE const Token& TokenStream::look_ahead() const
 {
     PHI_ASSERT(!reached_end());
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Tokens[m_Index.unsafe()];
@@ -96,7 +96,7 @@ void TokenStream::consume()
 {
     PHI_ASSERT(!reached_end());
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     m_Index += 1u;
@@ -108,7 +108,7 @@ void TokenStream::skip(phi::usize n)
 {
     PHI_ASSERT(!reached_end());
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
     PHI_ASSERT(has_x_more(n));
     PHI_ASSERT(n != 0u);
@@ -121,7 +121,7 @@ PHI_GCC_SUPPRESS_WARNING_POP()
 PHI_ATTRIBUTE_PURE const Token* TokenStream::find_first_token_of_type(TokenKind type) const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     for (const Token& token : m_Tokens)
@@ -138,7 +138,7 @@ PHI_ATTRIBUTE_PURE const Token* TokenStream::find_first_token_of_type(TokenKind 
 PHI_ATTRIBUTE_PURE const Token* TokenStream::find_last_token_of_type(TokenKind type) const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     const Token* last = nullptr;
@@ -157,7 +157,7 @@ PHI_ATTRIBUTE_PURE const Token* TokenStream::find_last_token_of_type(TokenKind t
 [[nodiscard]] PHI_ATTRIBUTE_PURE const Token& TokenStream::at(phi::usize index) const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
     PHI_ASSERT(index < m_Tokens.size());
 
@@ -167,7 +167,7 @@ PHI_ATTRIBUTE_PURE const Token* TokenStream::find_last_token_of_type(TokenKind t
 [[nodiscard]] PHI_ATTRIBUTE_PURE phi::usize TokenStream::size() const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Tokens.size();
@@ -181,7 +181,7 @@ PHI_ATTRIBUTE_PURE const Token* TokenStream::find_last_token_of_type(TokenKind t
 [[nodiscard]] PHI_ATTRIBUTE_PURE phi::usize TokenStream::current_position()
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Index;
@@ -190,7 +190,7 @@ PHI_ATTRIBUTE_PURE const Token* TokenStream::find_last_token_of_type(TokenKind t
 void TokenStream::set_position(phi::usize index)
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     m_Index = index;
@@ -199,7 +199,7 @@ void TokenStream::set_position(phi::usize index)
 PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::begin() const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Tokens.begin();
@@ -208,7 +208,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::begin() const
 PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cbegin() const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Tokens.cbegin();
@@ -217,7 +217,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cbegin() const
 PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::end() const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Tokens.end();
@@ -226,7 +226,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::end() const
 PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cend() const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Tokens.cend();
@@ -235,7 +235,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cend() const
 [[nodiscard]] PHI_ATTRIBUTE_PURE TokenStream::const_reverse_iterator TokenStream::rbegin() const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Tokens.rbegin();
@@ -244,7 +244,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cend() const
 [[nodiscard]] PHI_ATTRIBUTE_PURE TokenStream::const_reverse_iterator TokenStream::rend() const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Tokens.rend();
@@ -253,7 +253,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cend() const
 [[nodiscard]] PHI_ATTRIBUTE_PURE const Token& TokenStream::front() const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Tokens.front();
@@ -262,7 +262,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cend() const
 [[nodiscard]] PHI_ATTRIBUTE_PURE const Token& TokenStream::back() const
 {
 #if defined(PHI_DEBUG)
-    PHI_ASSERT(m_Finialized);
+    PHI_ASSERT(m_Finalized);
 #endif
 
     return m_Tokens.back();

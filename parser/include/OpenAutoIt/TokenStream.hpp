@@ -19,7 +19,7 @@ public:
     void emplace_back(ArgsT&&... args)
     {
 #if defined(PHI_DEBUG)
-        PHI_ASSERT(!m_Finialized);
+        PHI_ASSERT(!m_Finalized);
 #endif
 
         m_Tokens.emplace_back(std::forward<ArgsT>(args)...);
@@ -53,7 +53,7 @@ public:
     [[nodiscard]] const Token* find_first_token_if(PredicateT pred) const
     {
 #if defined(PHI_DEBUG)
-        PHI_ASSERT(m_Finialized);
+        PHI_ASSERT(m_Finalized);
 #endif
 
         for (const Token& token : m_Tokens)
@@ -71,7 +71,7 @@ public:
     [[nodiscard]] const Token* find_last_token_if(PredicateT pred) const
     {
 #if defined(PHI_DEBUG)
-        PHI_ASSERT(m_Finialized);
+        PHI_ASSERT(m_Finalized);
 #endif
 
         const Token* last = nullptr;
@@ -119,7 +119,7 @@ public:
         m_Tokens.clear();
         m_Index = 0u;
 #if defined(PHI_DEBUG)
-        m_Finialized = false;
+        m_Finalized = false;
 #endif
     }
 
@@ -127,7 +127,7 @@ private:
     storage_type m_Tokens;
     phi::usize   m_Index = 0u;
 #if defined(PHI_DEBUG)
-    phi::boolean m_Finialized{false};
+    phi::boolean m_Finalized{false};
 #endif
 };
 } // namespace OpenAutoIt
