@@ -531,7 +531,7 @@ Variant Variant::UnaryMinus() const
             return MakeDouble(-AsDouble());
 
         case Type::Int64:
-            return MakeInt(-AsInt64());
+            return MakeInt(-AsInt64().unsafe());
 
         // TODO: I think this first needs a cast to int64 first
         case Type::String:
