@@ -16,6 +16,7 @@
 #include "OpenAutoIt/AST/ASTNode.hpp"
 #include "OpenAutoIt/AST/ASTStatement.hpp"
 #include "OpenAutoIt/AST/ASTStringLiteral.hpp"
+#include "OpenAutoIt/AST/ASTTernaryIfExpression.hpp"
 #include "OpenAutoIt/AST/ASTVariableAssignment.hpp"
 #include "OpenAutoIt/AST/ASTVariableExpression.hpp"
 #include "OpenAutoIt/AST/ASTWhileStatement.hpp"
@@ -983,9 +984,10 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionRhs(phi::not_null_scope_ptr
         }
 
         const Token& operator_token = CurrentToken();
-        if (!IsBinaryOperator(operator_token.GetTokenKind()))
+        if (!IsBinaryOperator(operator_token.GetTokenKind()) &&
+            operator_token.GetTokenKind() != TokenKind::OP_TernaryIf)
         {
-            // If its not a binary operator just return the lhs expression
+            // If its not a binary operator and not a ternary just return the lhs expression
             return phi::move(lhs);
         }
         int token_precedence = OperatorPrecedence.lookup(operator_token.GetTokenKind());
@@ -994,6 +996,19 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionRhs(phi::not_null_scope_ptr
         if (token_precedence < precedence)
         {
             return phi::move(lhs);
+        }
+
+        if (operator_token.GetTokenKind() == TokenKind::OP_TernaryIf)
+        {
+            phi::scope_ptr<ASTTernaryIfExpression> ternary_if_expression =
+                    ParseTernaryIfExpression(phi::move(lhs));
+            if (!ternary_if_expression)
+            {
+                // TODO: Proper error
+                return {};
+            }
+
+            return phi::move(ternary_if_expression);
         }
 
         // This must be an binary expression
@@ -1252,6 +1267,38 @@ phi::scope_ptr<ASTUnaryExpression> Parser::ParseUnaryExpression(const TokenKind 
 
     return phi::make_scope<ASTUnaryExpression>(operator_kind,
                                                phi::move(expression.release_not_null()));
+}
+
+phi::scope_ptr<ASTTernaryIfExpression> Parser::ParseTernaryIfExpression(
+        phi::not_null_scope_ptr<ASTExpression>&& condition)
+{
+    if (!m_TokenStream->has_more())
+    {
+        return {};
+    }
+
+    phi::scope_ptr<ASTExpression> true_expression = ParseExpression();
+    if (!true_expression)
+    {
+        return {};
+    }
+
+    // Must parse the else part ":"
+    if (!MustParse(TokenKind::OP_TernaryElse))
+    {
+        err("Missing ':' for ternary if\n");
+        return {};
+    }
+
+    phi::scope_ptr<ASTExpression> false_expression = ParseExpression();
+    if (!false_expression)
+    {
+        return {};
+    }
+
+    return phi::make_scope<ASTTernaryIfExpression>(phi::move(condition),
+                                                   phi::move(true_expression.release_not_null()),
+                                                   phi::move(false_expression.release_not_null()));
 }
 
 phi::scope_ptr<ASTBooleanLiteral> Parser::ParseBooleanLiteral()

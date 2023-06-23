@@ -8,6 +8,7 @@
 #include "OpenAutoIt/AST/ASTFunctionDefinition.hpp"
 #include "OpenAutoIt/AST/ASTKeywordLiteral.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
+#include "OpenAutoIt/AST/ASTTernaryIfExpression.hpp"
 #include "OpenAutoIt/AST/ASTUnaryExpression.hpp"
 #include "OpenAutoIt/AST/ASTWhileStatement.hpp"
 #include "OpenAutoIt/BuiltinFunctions.hpp"
@@ -164,7 +165,7 @@ Interpreter::StatementFinished Interpreter::InterpretStatement(
         case ASTNodeType::WhileStatement: {
             auto while_statement = statement->as<ASTWhileStatement>();
 
-            // Evalaute condition
+            // Evaluate condition
             const Variant condition =
                     InterpretExpression(while_statement->m_ConditionExpression).CastToBoolean();
             PHI_ASSERT(condition.IsBoolean());
@@ -268,6 +269,20 @@ Variant Interpreter::InterpretExpression(phi::not_null_observer_ptr<ASTExpressio
             auto string_literal = expression->as<ASTStringLiteral>();
 
             return Variant::MakeString(string_literal->m_Value);
+        }
+
+        case ASTNodeType::TernaryIfExpression: {
+            auto ternary_expression = expression->as<ASTTernaryIfExpression>();
+
+            const Variant condition_value =
+                    InterpretExpression(ternary_expression->m_ConditionExpression);
+
+            if (condition_value.CastToBoolean().AsBoolean())
+            {
+                return InterpretExpression(ternary_expression->m_TrueExpression);
+            }
+
+            return InterpretExpression(ternary_expression->m_FalseExpression);
         }
 
         case ASTNodeType::UnaryExpression: {

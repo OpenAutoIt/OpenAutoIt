@@ -21,6 +21,7 @@ namespace OpenAutoIt
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(IntegerLiteral)                                             \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(KeywordLiteral)                                             \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(StringLiteral)                                              \
+    OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(TernaryIfExpression)                                        \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(UnaryExpression)                                            \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(VariableAssignment)                                         \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(VariableExpression)                                         \
