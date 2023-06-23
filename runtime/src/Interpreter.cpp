@@ -499,6 +499,13 @@ Variant Interpreter::EvaluateBinaryDivideExpression(const Variant& lhs, const Va
         return {};
     }
 
+    // Return infinity when dividing by 0
+    if (rhs.AsInt64() == 0)
+    {
+        return Variant::MakeDouble(phi::f64::limits_type::infinity());
+    }
+
     return Variant::MakeInt(UnsafeDivide(lhs.AsInt64(), rhs.AsInt64()));
 }
+
 } // namespace OpenAutoIt
