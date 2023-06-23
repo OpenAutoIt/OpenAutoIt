@@ -137,10 +137,11 @@ private:
     // Statements
     phi::scope_ptr<ASTStatement> ParseStatement();
 
-    phi::scope_ptr<ASTWhileStatement>      ParseWhileStatement();
-    phi::scope_ptr<ASTVariableAssignment>  ParseVariableAssignment();
-    phi::scope_ptr<ASTExpressionStatement> ParseExpressionStatement();
-    phi::scope_ptr<ASTIfStatement>         ParseIfStatement();
+    phi::scope_ptr<ASTWhileStatement>                  ParseWhileStatement();
+    phi::scope_ptr<ASTVariableAssignment>              ParseVariableAssignment();
+    phi::scope_ptr<ASTExpressionStatement>             ParseExpressionStatement();
+    phi::scope_ptr<ASTIfStatement>                     ParseIfStatement();
+    std::vector<phi::not_null_scope_ptr<ASTStatement>> ParseIfCaseStatements();
 
     // Expressions
     phi::scope_ptr<ASTExpression> ParseExpression();

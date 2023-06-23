@@ -737,7 +737,45 @@ phi::scope_ptr<ASTIfStatement> Parser::ParseIfStatement()
 
     auto if_statement = phi::make_not_null_scope<ASTIfStatement>(phi::move(if_case));
 
-    // TODO: Handle ElseIf, Else
+    // Handle all ElseIf cases which are optional
+    while (m_TokenStream->has_more() && CurrentToken().GetTokenKind() == TokenKind::KW_ElseIf)
+    {
+        // Consume KW_ElseIf token
+        ConsumeCurrent();
+
+        // Parse the condition
+        auto else_if_condition = ParseExpression();
+        if (!else_if_condition)
+        {
+            return {};
+        }
+
+        // Parse KW_Then
+        if (!MustParse(TokenKind::KW_Then))
+        {
+            // TODO: Better error message and this error should be recoverable
+            err("ERR: Missing then!\n");
+        }
+
+        ConsumeNewLineAndComments();
+
+        IfCase else_if_case{.condition{else_if_condition.release_not_null()},
+                            .body{ParseIfCaseStatements()}};
+
+        // Append our case to the if statement
+        if_statement->m_ElseIfCases.emplace_back(phi::move(else_if_case));
+    }
+
+    // Handle optional else case
+    if (m_TokenStream->has_more() && CurrentToken().GetTokenKind() == TokenKind::KW_Else)
+    {
+        // Consume KW_Else token
+        ConsumeCurrent();
+
+        ConsumeNewLineAndComments();
+
+        if_statement->m_ElseCase = ParseIfCaseStatements();
+    }
 
     if (!MustParse(TokenKind::KW_EndIf))
     {
@@ -747,6 +785,30 @@ phi::scope_ptr<ASTIfStatement> Parser::ParseIfStatement()
     }
 
     return phi::move(if_statement);
+}
+
+std::vector<phi::not_null_scope_ptr<ASTStatement>> Parser::ParseIfCaseStatements()
+{
+    std::vector<phi::not_null_scope_ptr<ASTStatement>> statements;
+
+    // Parse statements until KW_EndIf, KW_Else, KW_ElseIf
+    while (m_TokenStream->has_more() && CurrentToken().GetTokenKind() != TokenKind::KW_EndIf &&
+           CurrentToken().GetTokenKind() != TokenKind::KW_Else &&
+           CurrentToken().GetTokenKind() != TokenKind::KW_ElseIf)
+    {
+        auto statement = ParseStatement();
+        if (!statement)
+        {
+            err("ERR: Failed to parse statement inside of IF\n");
+            return {};
+        }
+
+        statements.emplace_back(statement.release_not_null());
+
+        ConsumeNewLineAndComments();
+    }
+
+    return statements;
 }
 
 phi::scope_ptr<ASTIntegerLiteral> Parser::ParseIntegerLiteral()
