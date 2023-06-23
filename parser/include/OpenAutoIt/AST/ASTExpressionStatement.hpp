@@ -11,13 +11,13 @@ namespace OpenAutoIt
 class ASTExpressionStatement final : public ASTStatement
 {
 public:
-    ASTExpressionStatement(phi::not_null_scope_ptr<ASTExpression>&& expression) noexcept
+    ASTExpressionStatement(phi::not_null_scope_ptr<ASTExpression>&& expression)
         : m_Expression{phi::move(expression)}
     {
         m_NodeType = ASTNodeType::ExpressionStatement;
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         std::string ret;
 

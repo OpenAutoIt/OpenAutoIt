@@ -15,13 +15,13 @@ namespace OpenAutoIt
 class ASTFunctionCallExpression final : public ASTExpression
 {
 public:
-    ASTFunctionCallExpression() noexcept
+    ASTFunctionCallExpression()
         : m_FunctionName{}
     {
         m_NodeType = ASTNodeType::FunctionCallExpression;
     }
 
-    [[nodiscard]] phi::string_view FunctionName() const noexcept
+    [[nodiscard]] phi::string_view FunctionName() const
     {
         if (m_IsBuiltIn)
         {
@@ -31,7 +31,7 @@ public:
         return m_FunctionName;
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         std::string ret;
 

@@ -14,56 +14,55 @@ PHI_GCC_SUPPRESS_WARNING("-Wsuggest-attribute=pure")
 
 namespace OpenAutoIt
 {
-void VirtualMachine::PushFunctionScope(std::string_view function_name,
-                                       Statements&      statements) noexcept
+void VirtualMachine::PushFunctionScope(std::string_view function_name, Statements& statements)
 {
     m_Scopes.emplace_front(ScopeKind::Function, function_name, statements);
 }
 
-void VirtualMachine::PushBlockScope(Statements& statements) noexcept
+void VirtualMachine::PushBlockScope(Statements& statements)
 {
     m_Scopes.emplace_front(ScopeKind::Block, "<block_scope>", statements);
 }
 
-void VirtualMachine::PushGlobalScope(Statements& statements) noexcept
+void VirtualMachine::PushGlobalScope(Statements& statements)
 {
     m_Scopes.emplace_back(ScopeKind::Function, "<global>", statements);
 }
 
-void VirtualMachine::PopScope() noexcept
+void VirtualMachine::PopScope()
 {
     m_Scopes.pop_front();
 }
 
-PHI_ATTRIBUTE_PURE Scope& VirtualMachine::GetCurrentScope() noexcept
+PHI_ATTRIBUTE_PURE Scope& VirtualMachine::GetCurrentScope()
 {
     PHI_ASSERT(!m_Scopes.empty());
 
     return m_Scopes.front();
 }
 
-PHI_ATTRIBUTE_PURE const Scope& VirtualMachine::GetCurrentScope() const noexcept
+PHI_ATTRIBUTE_PURE const Scope& VirtualMachine::GetCurrentScope() const
 {
     PHI_ASSERT(!m_Scopes.empty());
 
     return m_Scopes.front();
 }
 
-PHI_ATTRIBUTE_PURE Scope& VirtualMachine::GetGlobalScope() noexcept
+PHI_ATTRIBUTE_PURE Scope& VirtualMachine::GetGlobalScope()
 {
     PHI_ASSERT(!m_Scopes.empty());
 
     return m_Scopes.back();
 }
 
-PHI_ATTRIBUTE_PURE const Scope& VirtualMachine::GetGlobalScope() const noexcept
+PHI_ATTRIBUTE_PURE const Scope& VirtualMachine::GetGlobalScope() const
 {
     PHI_ASSERT(!m_Scopes.empty());
 
     return m_Scopes.back();
 }
 
-StackTrace VirtualMachine::GetStackTrace() const noexcept
+StackTrace VirtualMachine::GetStackTrace() const
 {
     // Count number of function elements
     phi::u64 count = 0u;
@@ -92,7 +91,7 @@ StackTrace VirtualMachine::GetStackTrace() const noexcept
     return phi::move(stack_trace);
 }
 
-phi::boolean VirtualMachine::PushVariable(std::string_view name, Variant value) noexcept
+phi::boolean VirtualMachine::PushVariable(std::string_view name, Variant value)
 {
     Scope& current_scope = GetCurrentScope();
 
@@ -105,7 +104,7 @@ phi::boolean VirtualMachine::PushVariable(std::string_view name, Variant value) 
     return true;
 }
 
-phi::boolean VirtualMachine::PushVariableGlobal(std::string_view name, Variant value) noexcept
+phi::boolean VirtualMachine::PushVariableGlobal(std::string_view name, Variant value)
 {
     Scope& global_scope = GetGlobalScope();
 
@@ -119,7 +118,7 @@ phi::boolean VirtualMachine::PushVariableGlobal(std::string_view name, Variant v
 }
 
 phi::boolean VirtualMachine::PushVariableWithScope(std::string_view name, Variant value,
-                                                   VariableScope scope) noexcept
+                                                   VariableScope scope)
 {
     switch (scope)
     {
@@ -131,7 +130,7 @@ phi::boolean VirtualMachine::PushVariableWithScope(std::string_view name, Varian
     }
 }
 
-void VirtualMachine::PushOrAssignVariable(std::string_view name, Variant value) noexcept
+void VirtualMachine::PushOrAssignVariable(std::string_view name, Variant value)
 {
     auto variable_opt = LookupVariableRefByName(name);
     if (variable_opt)
@@ -145,8 +144,7 @@ void VirtualMachine::PushOrAssignVariable(std::string_view name, Variant value) 
     current_scope.variables[name] = phi::move(value);
 }
 
-phi::optional<Variant> VirtualMachine::LookupVariableByName(
-        std::string_view variable_name) const noexcept
+phi::optional<Variant> VirtualMachine::LookupVariableByName(std::string_view variable_name) const
 {
     auto variable = LookupVariableRefByName(variable_name);
     if (variable.has_value())
@@ -157,8 +155,7 @@ phi::optional<Variant> VirtualMachine::LookupVariableByName(
     return {};
 }
 
-phi::optional<Variant&> VirtualMachine::LookupVariableRefByName(
-        std::string_view variable_name) noexcept
+phi::optional<Variant&> VirtualMachine::LookupVariableRefByName(std::string_view variable_name)
 {
     phi::boolean found_function_boundary{false};
 
@@ -191,7 +188,7 @@ phi::optional<Variant&> VirtualMachine::LookupVariableRefByName(
 }
 
 phi::optional<const Variant&> VirtualMachine::LookupVariableRefByName(
-        std::string_view variable_name) const noexcept
+        std::string_view variable_name) const
 {
     auto res = const_cast<VirtualMachine&>(*this).LookupVariableRefByName(variable_name);
     if (res.has_value())
@@ -202,12 +199,12 @@ phi::optional<const Variant&> VirtualMachine::LookupVariableRefByName(
     return {};
 }
 
-PHI_ATTRIBUTE_PURE phi::boolean VirtualMachine::CanRun() const noexcept
+PHI_ATTRIBUTE_PURE phi::boolean VirtualMachine::CanRun() const
 {
     return !m_Scopes.empty() && !m_Aborting;
 }
 
-void VirtualMachine::Exit(phi::u32 exit_code) noexcept
+void VirtualMachine::Exit(phi::u32 exit_code)
 {
     m_Scopes.clear();
     m_ExitCode = exit_code;
@@ -215,24 +212,24 @@ void VirtualMachine::Exit(phi::u32 exit_code) noexcept
     // TODO: Push scopes of registered on exit functions
 }
 
-phi::u32 VirtualMachine::GetExitCode() const noexcept
+phi::u32 VirtualMachine::GetExitCode() const
 {
     return m_ExitCode;
 }
 
 void VirtualMachine::OverwriteIOSreams(phi::observer_ptr<std::ostream> out,
-                                       phi::observer_ptr<std::ostream> err) noexcept
+                                       phi::observer_ptr<std::ostream> err)
 {
     m_Stdout = out;
     m_Stderr = err;
 }
 
-PHI_ATTRIBUTE_CONST phi::observer_ptr<std::ostream> VirtualMachine::GetStdout() const noexcept
+PHI_ATTRIBUTE_CONST phi::observer_ptr<std::ostream> VirtualMachine::GetStdout() const
 {
     return m_Stdout;
 }
 
-PHI_ATTRIBUTE_CONST phi::observer_ptr<std::ostream> VirtualMachine::GetStderr() const noexcept
+PHI_ATTRIBUTE_CONST phi::observer_ptr<std::ostream> VirtualMachine::GetStderr() const
 {
     return m_Stderr;
 }

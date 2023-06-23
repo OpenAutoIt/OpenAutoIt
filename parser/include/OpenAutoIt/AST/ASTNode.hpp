@@ -40,7 +40,7 @@ enum class ASTNodeType
     COUNT,
 };
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE constexpr const char* enum_name(ASTNodeType node_type) noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE constexpr const char* enum_name(ASTNodeType node_type)
 {
     switch (node_type)
     {
@@ -65,7 +65,7 @@ public:
 
     virtual ~ASTNode() = default;
 
-    [[nodiscard]] const char* Name() const noexcept
+    [[nodiscard]] const char* Name() const
     {
         PHI_ASSERT(m_NodeType != ASTNodeType::NONE);
         PHI_ASSERT(m_NodeType != ASTNodeType::COUNT);
@@ -73,15 +73,15 @@ public:
         return enum_name(m_NodeType);
     }
 
-    [[nodiscard]] virtual std::string DumpAST(phi::usize indent = 0u) const noexcept = 0;
+    [[nodiscard]] virtual std::string DumpAST(phi::usize indent = 0u) const = 0;
 
-    [[nodiscard]] ASTNodeType NodeType() const noexcept
+    [[nodiscard]] ASTNodeType NodeType() const
     {
         return m_NodeType;
     }
 
     template <typename TypeT>
-    phi::not_null_observer_ptr<TypeT> as() noexcept
+    phi::not_null_observer_ptr<TypeT> as()
     {
         static_assert(phi::is_base_of_v<ASTNode, TypeT>,
                       "Can only cast to derived classes of ASTNode");

@@ -35,7 +35,7 @@ class VirtualMachine
 {
 public:
     template <typename... ArgsT>
-    void RuntimeError(std::string_view format_string, ArgsT&&... args) noexcept
+    void RuntimeError(std::string_view format_string, ArgsT&&... args)
     {
         err("[OpenAutoIt] ");
         err("\033[31m");
@@ -60,45 +60,42 @@ public:
         m_Aborting = true;
     }
 
-    void PushFunctionScope(std::string_view function_name, Statements& statements) noexcept;
-    void PushBlockScope(Statements& statements) noexcept;
-    void PushGlobalScope(Statements& statements) noexcept;
-    void PopScope() noexcept;
+    void PushFunctionScope(std::string_view function_name, Statements& statements);
+    void PushBlockScope(Statements& statements);
+    void PushGlobalScope(Statements& statements);
+    void PopScope();
 
-    [[nodiscard]] Scope&       GetCurrentScope() noexcept;
-    [[nodiscard]] const Scope& GetCurrentScope() const noexcept;
+    [[nodiscard]] Scope&       GetCurrentScope();
+    [[nodiscard]] const Scope& GetCurrentScope() const;
 
-    [[nodiscard]] Scope&       GetGlobalScope() noexcept;
-    [[nodiscard]] const Scope& GetGlobalScope() const noexcept;
+    [[nodiscard]] Scope&       GetGlobalScope();
+    [[nodiscard]] const Scope& GetGlobalScope() const;
 
-    [[nodiscard]] StackTrace GetStackTrace() const noexcept;
+    [[nodiscard]] StackTrace GetStackTrace() const;
 
-    phi::boolean PushVariable(std::string_view name, Variant value) noexcept;
-    phi::boolean PushVariableGlobal(std::string_view name, Variant value) noexcept;
-    phi::boolean PushVariableWithScope(std::string_view name, Variant value,
-                                       VariableScope scope) noexcept;
+    phi::boolean PushVariable(std::string_view name, Variant value);
+    phi::boolean PushVariableGlobal(std::string_view name, Variant value);
+    phi::boolean PushVariableWithScope(std::string_view name, Variant value, VariableScope scope);
 
-    void PushOrAssignVariable(std::string_view name, Variant value) noexcept;
+    void PushOrAssignVariable(std::string_view name, Variant value);
 
     // Needs to be the variable name without a leading $
-    [[nodiscard]] phi::optional<Variant> LookupVariableByName(
-            std::string_view variable_name) const noexcept;
-    [[nodiscard]] phi::optional<Variant&> LookupVariableRefByName(
-            std::string_view variable_name) noexcept;
+    [[nodiscard]] phi::optional<Variant> LookupVariableByName(std::string_view variable_name) const;
+    [[nodiscard]] phi::optional<Variant&> LookupVariableRefByName(std::string_view variable_name);
     [[nodiscard]] phi::optional<const Variant&> LookupVariableRefByName(
-            std::string_view variable_name) const noexcept;
+            std::string_view variable_name) const;
 
-    [[nodiscard]] phi::boolean CanRun() const noexcept;
+    [[nodiscard]] phi::boolean CanRun() const;
 
-    void Exit(phi::u32 exit_code) noexcept;
+    void Exit(phi::u32 exit_code);
 
-    [[nodiscard]] phi::u32 GetExitCode() const noexcept;
+    [[nodiscard]] phi::u32 GetExitCode() const;
 
     void OverwriteIOSreams(phi::observer_ptr<std::ostream> out,
-                           phi::observer_ptr<std::ostream> err) noexcept;
+                           phi::observer_ptr<std::ostream> err);
 
-    [[nodiscard]] phi::observer_ptr<std::ostream> GetStdout() const noexcept;
-    [[nodiscard]] phi::observer_ptr<std::ostream> GetStderr() const noexcept;
+    [[nodiscard]] phi::observer_ptr<std::ostream> GetStdout() const;
+    [[nodiscard]] phi::observer_ptr<std::ostream> GetStderr() const;
 
 private:
     std::list<Scope> m_Scopes;

@@ -19,13 +19,13 @@ struct IfCase
 class ASTIfStatement final : public ASTStatement
 {
 public:
-    ASTIfStatement(IfCase&& if_case) noexcept
+    ASTIfStatement(IfCase&& if_case)
         : m_IfCase{phi::move(if_case)}
     {
         m_NodeType = ASTNodeType::IfStatement;
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         std::string ret;
 

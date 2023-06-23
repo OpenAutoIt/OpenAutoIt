@@ -12,13 +12,13 @@ namespace OpenAutoIt
 class ASTExitStatement final : public ASTStatement
 {
 public:
-    ASTExitStatement(phi::scope_ptr<ASTExpression>&& expression) noexcept
+    ASTExitStatement(phi::scope_ptr<ASTExpression>&& expression)
         : m_Expression{phi::move(expression)}
     {
         m_NodeType = ASTNodeType::ExitStatement;
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         std::string ret;
 

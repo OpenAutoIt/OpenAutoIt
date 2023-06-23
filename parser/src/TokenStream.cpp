@@ -8,7 +8,7 @@
 
 namespace OpenAutoIt
 {
-void TokenStream::push_back(const Token& value) noexcept
+void TokenStream::push_back(const Token& value)
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(!m_Finialized);
@@ -17,7 +17,7 @@ void TokenStream::push_back(const Token& value) noexcept
     m_Tokens.push_back(value);
 }
 
-void TokenStream::push_back(Token&& value) noexcept
+void TokenStream::push_back(Token&& value)
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(!m_Finialized);
@@ -26,7 +26,7 @@ void TokenStream::push_back(Token&& value) noexcept
     m_Tokens.push_back(value);
 }
 
-void TokenStream::finalize() noexcept
+void TokenStream::finalize()
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(!m_Finialized);
@@ -38,7 +38,7 @@ void TokenStream::finalize() noexcept
 #endif
 }
 
-void TokenStream::reset() noexcept
+void TokenStream::reset()
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -47,8 +47,7 @@ void TokenStream::reset() noexcept
     m_Index = 0u;
 }
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::has_x_more(
-        phi::usize amount) const noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::has_x_more(phi::usize amount) const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -65,7 +64,7 @@ void TokenStream::reset() noexcept
     return true;
 }
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::has_more() const noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::has_more() const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -74,7 +73,7 @@ void TokenStream::reset() noexcept
     return m_Index < m_Tokens.size();
 }
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::reached_end() const noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::reached_end() const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -83,7 +82,7 @@ void TokenStream::reset() noexcept
     return m_Index >= m_Tokens.size();
 }
 
-PHI_ATTRIBUTE_PURE const Token& TokenStream::look_ahead() const noexcept
+PHI_ATTRIBUTE_PURE const Token& TokenStream::look_ahead() const
 {
     PHI_ASSERT(!reached_end());
 #if defined(PHI_DEBUG)
@@ -93,7 +92,7 @@ PHI_ATTRIBUTE_PURE const Token& TokenStream::look_ahead() const noexcept
     return m_Tokens[m_Index.unsafe()];
 }
 
-void TokenStream::consume() noexcept
+void TokenStream::consume()
 {
     PHI_ASSERT(!reached_end());
 #if defined(PHI_DEBUG)
@@ -105,7 +104,7 @@ void TokenStream::consume() noexcept
 
 PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wsuggest-attribute=noreturn")
 
-void TokenStream::skip(phi::usize n) noexcept
+void TokenStream::skip(phi::usize n)
 {
     PHI_ASSERT(!reached_end());
 #if defined(PHI_DEBUG)
@@ -119,7 +118,7 @@ void TokenStream::skip(phi::usize n) noexcept
 
 PHI_GCC_SUPPRESS_WARNING_POP()
 
-PHI_ATTRIBUTE_PURE const Token* TokenStream::find_first_token_of_type(TokenKind type) const noexcept
+PHI_ATTRIBUTE_PURE const Token* TokenStream::find_first_token_of_type(TokenKind type) const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -136,7 +135,7 @@ PHI_ATTRIBUTE_PURE const Token* TokenStream::find_first_token_of_type(TokenKind 
     return nullptr;
 }
 
-PHI_ATTRIBUTE_PURE const Token* TokenStream::find_last_token_of_type(TokenKind type) const noexcept
+PHI_ATTRIBUTE_PURE const Token* TokenStream::find_last_token_of_type(TokenKind type) const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -155,7 +154,7 @@ PHI_ATTRIBUTE_PURE const Token* TokenStream::find_last_token_of_type(TokenKind t
     return last;
 }
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE const Token& TokenStream::at(phi::usize index) const noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE const Token& TokenStream::at(phi::usize index) const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -165,7 +164,7 @@ PHI_ATTRIBUTE_PURE const Token* TokenStream::find_last_token_of_type(TokenKind t
     return m_Tokens[index.unsafe()];
 }
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE phi::usize TokenStream::size() const noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE phi::usize TokenStream::size() const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -174,12 +173,12 @@ PHI_ATTRIBUTE_PURE const Token* TokenStream::find_last_token_of_type(TokenKind t
     return m_Tokens.size();
 }
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::is_empty() const noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE phi::boolean TokenStream::is_empty() const
 {
     return m_Tokens.empty();
 }
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE phi::usize TokenStream::current_position() noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE phi::usize TokenStream::current_position()
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -188,7 +187,7 @@ PHI_ATTRIBUTE_PURE const Token* TokenStream::find_last_token_of_type(TokenKind t
     return m_Index;
 }
 
-void TokenStream::set_position(phi::usize index) noexcept
+void TokenStream::set_position(phi::usize index)
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -197,7 +196,7 @@ void TokenStream::set_position(phi::usize index) noexcept
     m_Index = index;
 }
 
-PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::begin() const noexcept
+PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::begin() const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -206,7 +205,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::begin() const noexce
     return m_Tokens.begin();
 }
 
-PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cbegin() const noexcept
+PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cbegin() const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -215,7 +214,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cbegin() const noexc
     return m_Tokens.cbegin();
 }
 
-PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::end() const noexcept
+PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::end() const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -224,7 +223,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::end() const noexcept
     return m_Tokens.end();
 }
 
-PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cend() const noexcept
+PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cend() const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -233,8 +232,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cend() const noexcep
     return m_Tokens.cend();
 }
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE TokenStream::const_reverse_iterator TokenStream::rbegin()
-        const noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE TokenStream::const_reverse_iterator TokenStream::rbegin() const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -243,8 +241,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cend() const noexcep
     return m_Tokens.rbegin();
 }
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE TokenStream::const_reverse_iterator TokenStream::rend()
-        const noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE TokenStream::const_reverse_iterator TokenStream::rend() const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -253,7 +250,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cend() const noexcep
     return m_Tokens.rend();
 }
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE const Token& TokenStream::front() const noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE const Token& TokenStream::front() const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);
@@ -262,7 +259,7 @@ PHI_ATTRIBUTE_PURE TokenStream::const_iterator TokenStream::cend() const noexcep
     return m_Tokens.front();
 }
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE const Token& TokenStream::back() const noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE const Token& TokenStream::back() const
 {
 #if defined(PHI_DEBUG)
     PHI_ASSERT(m_Finialized);

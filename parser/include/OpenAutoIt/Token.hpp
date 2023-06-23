@@ -13,8 +13,7 @@ namespace OpenAutoIt
 class Token
 {
 public:
-    constexpr Token(TokenKind kind, phi::string_view text, phi::u64 line_number,
-                    phi::u64 column) noexcept
+    constexpr Token(TokenKind kind, phi::string_view text, phi::u64 line_number, phi::u64 column)
         : m_Kind{kind}
         , m_Text{text}
         , m_LineNumber{line_number}
@@ -24,7 +23,7 @@ public:
 
     template <typename HintT>
     constexpr Token(TokenKind kind, phi::string_view text, phi::u64 line_number, phi::u64 column,
-                    const HintT hint) noexcept
+                    const HintT hint)
         : m_Kind{kind}
         , m_Text{text}
         , m_LineNumber{line_number}
@@ -32,39 +31,39 @@ public:
         , m_Hint{static_cast<phi::uint32_t>(hint)}
     {}
 
-    [[nodiscard]] constexpr TokenKind GetTokenKind() const noexcept
+    [[nodiscard]] constexpr TokenKind GetTokenKind() const
     {
         return m_Kind;
     }
 
-    [[nodiscard]] constexpr phi::string_view GetText() const noexcept
+    [[nodiscard]] constexpr phi::string_view GetText() const
     {
         return m_Text;
     }
 
-    [[nodiscard]] constexpr phi::u64 GetLineNumber() const noexcept
+    [[nodiscard]] constexpr phi::u64 GetLineNumber() const
     {
         return m_LineNumber;
     }
 
-    [[nodiscard]] constexpr phi::u64 GetColumn() const noexcept
+    [[nodiscard]] constexpr phi::u64 GetColumn() const
     {
         return m_Column;
     }
 
-    [[nodiscard]] constexpr phi::boolean HasHint() const noexcept
+    [[nodiscard]] constexpr phi::boolean HasHint() const
     {
         return m_Hint.has_value();
     }
 
-    [[nodiscard]] constexpr phi::u32 GetHint() const noexcept
+    [[nodiscard]] constexpr phi::u32 GetHint() const
     {
         PHI_ASSERT(HasHint(), "Token doesn not have a hint");
 
         return m_Hint.value();
     }
 
-    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsBuiltInFunction() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsBuiltInFunction() const
     {
         const phi::size_t underlying_value = static_cast<phi::size_t>(m_Kind);
 
@@ -77,7 +76,7 @@ public:
         return false;
     }
 
-    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsKeywordLiteral() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsKeywordLiteral() const
     {
         switch (m_Kind)
         {
@@ -90,7 +89,7 @@ public:
         }
     }
 
-    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsBooleanLiteral() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsBooleanLiteral() const
     {
         switch (m_Kind)
         {
@@ -103,7 +102,7 @@ public:
         }
     }
 
-    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsOperator() const noexcept
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsOperator() const
     {
         switch (m_Kind)
         {

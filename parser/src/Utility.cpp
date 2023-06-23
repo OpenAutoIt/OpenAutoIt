@@ -12,7 +12,7 @@ namespace OpenAutoIt
 {
 static phi::boolean output_enabled{true};
 
-phi::optional<std::string> read_file(const std::filesystem::path& file_path) noexcept
+phi::optional<std::string> read_file(const std::filesystem::path& file_path)
 {
     // Check that the file actually exists
     if (!std::filesystem::exists(file_path))
@@ -61,7 +61,7 @@ phi::optional<std::string> read_file(const std::filesystem::path& file_path) noe
     return phi::move(str);
 }
 
-phi::boolean write_file(const std::filesystem::path& file_path, std::string_view data) noexcept
+phi::boolean write_file(const std::filesystem::path& file_path, std::string_view data)
 {
     std::FILE* file =
 #if PHI_PLATFORM_IS(WINDOWS)
@@ -108,8 +108,7 @@ void disable_output()
     output_enabled = false;
 }
 
-phi::boolean string_equals_ignore_case(const phi::string_view lhs,
-                                       const phi::string_view rhs) noexcept
+phi::boolean string_equals_ignore_case(const phi::string_view lhs, const phi::string_view rhs)
 {
     // If there not the same length they can't be equal
     if (lhs.length() != rhs.length())

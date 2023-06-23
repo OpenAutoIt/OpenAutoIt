@@ -16,7 +16,7 @@ enum class ParseWarningType
 class ParseWarning
 {
 public:
-    static ParseWarning EmbeddedNullCharacter(phi::u64 line, phi::u64 column) noexcept;
+    static ParseWarning EmbeddedNullCharacter(phi::u64 line, phi::u64 column);
 
     ParseWarningType             m_Type;
     SourceLocation               m_LocationBegin;

@@ -8,7 +8,7 @@
 namespace OpenAutoIt
 {
 // https://www.autoitscript.com/autoit3/docs/functions/Abs.htm
-Variant BuiltIn_Abs(const VirtualMachine& /*vm*/, const Variant& input) noexcept
+Variant BuiltIn_Abs(const VirtualMachine& /*vm*/, const Variant& input)
 {
     switch (input.GetType())
     {
@@ -24,7 +24,7 @@ Variant BuiltIn_Abs(const VirtualMachine& /*vm*/, const Variant& input) noexcept
 }
 
 // https://www.autoitscript.com/autoit3/docs/functions/ConsoleWrite.htm
-Variant BuiltIn_ConsoleWrite(VirtualMachine& vm, const Variant& input) noexcept
+Variant BuiltIn_ConsoleWrite(VirtualMachine& vm, const Variant& input)
 {
     const Variant value = input.CastToString();
     PHI_ASSERT(value.IsString());
@@ -42,7 +42,7 @@ Variant BuiltIn_ConsoleWrite(VirtualMachine& vm, const Variant& input) noexcept
 }
 
 // https://www.autoitscript.com/autoit3/docs/functions/ConsoleWriteError.htm
-Variant BuiltIn_ConsoleWriteError(VirtualMachine& vm, const Variant& input) noexcept
+Variant BuiltIn_ConsoleWriteError(VirtualMachine& vm, const Variant& input)
 {
     const Variant value = input.CastToString();
     PHI_ASSERT(value.IsString());
@@ -60,13 +60,13 @@ Variant BuiltIn_ConsoleWriteError(VirtualMachine& vm, const Variant& input) noex
 }
 
 // https://www.autoitscript.com/autoit3/docs/functions/VarGetType.htm
-Variant BuiltIn_VarGetType(const VirtualMachine& /*vm*/, const Variant& input) noexcept
+Variant BuiltIn_VarGetType(const VirtualMachine& /*vm*/, const Variant& input)
 {
     return Variant::MakeString(input.GetTypeName());
 }
 
 // OpenAutoIt extension
-Variant BuiltIn_ConsoleWriteLine(VirtualMachine& vm, const Variant& input) noexcept
+Variant BuiltIn_ConsoleWriteLine(VirtualMachine& vm, const Variant& input)
 {
     const Variant value = input.CastToString();
     PHI_ASSERT(value.IsString());
@@ -84,7 +84,7 @@ Variant BuiltIn_ConsoleWriteLine(VirtualMachine& vm, const Variant& input) noexc
 }
 
 // OpenAutoIt extension
-Variant BuiltIn_ConsoleWriteErrorLine(VirtualMachine& vm, const Variant& input) noexcept
+Variant BuiltIn_ConsoleWriteErrorLine(VirtualMachine& vm, const Variant& input)
 {
     const Variant value = input.CastToString();
     PHI_ASSERT(value.IsString());

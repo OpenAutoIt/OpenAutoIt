@@ -20,7 +20,7 @@ enum class ScopeKind : phi::uint8_t
 class Scope
 {
 public:
-    Scope(ScopeKind scope_kind, std::string_view scope_name, Statements& scope_statements) noexcept
+    Scope(ScopeKind scope_kind, std::string_view scope_name, Statements& scope_statements)
         : kind{scope_kind}
         , name{scope_name}
         , statements{scope_statements}

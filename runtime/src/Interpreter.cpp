@@ -21,6 +21,7 @@
 #include <phi/core/assert.hpp>
 #include <phi/core/observer_ptr.hpp>
 #include <phi/core/sized_types.hpp>
+#include <phi/core/types.hpp>
 #include <phi/core/unsafe_cast.hpp>
 
 PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wuninitialized")
@@ -33,7 +34,7 @@ PHI_MSVC_SUPPRESS_WARNING(4702) // unreachable code
 
 namespace OpenAutoIt
 {
-void Interpreter::SetDocument(phi::not_null_observer_ptr<ASTDocument> new_document) noexcept
+void Interpreter::SetDocument(phi::not_null_observer_ptr<ASTDocument> new_document)
 {
     m_Document = new_document;
     vm().PushGlobalScope(m_Document->m_Statements);
@@ -70,7 +71,7 @@ void Interpreter::Step()
     }
 }
 
-phi::not_null_observer_ptr<ASTStatement> Interpreter::GetCurrentStatement() const noexcept
+phi::not_null_observer_ptr<ASTStatement> Interpreter::GetCurrentStatement() const
 {
     const Scope& current_scope = vm().GetCurrentScope();
     PHI_ASSERT(!current_scope.statements.empty());
@@ -79,12 +80,12 @@ phi::not_null_observer_ptr<ASTStatement> Interpreter::GetCurrentStatement() cons
     return current_scope.statements.at(current_scope.index.unsafe());
 }
 
-PHI_ATTRIBUTE_CONST VirtualMachine& Interpreter::vm() noexcept
+PHI_ATTRIBUTE_CONST VirtualMachine& Interpreter::vm()
 {
     return m_VirtualMachine;
 }
 
-PHI_ATTRIBUTE_CONST const VirtualMachine& Interpreter::vm() const noexcept
+PHI_ATTRIBUTE_CONST const VirtualMachine& Interpreter::vm() const
 {
     return m_VirtualMachine;
 }
@@ -460,7 +461,7 @@ Variant Interpreter::EvaluateBinaryExpression(const Variant& lhs, const Variant&
     }
 }
 
-Variant Interpreter::EvaluateBinaryPlusExpression(const Variant& lhs, const Variant& rhs) noexcept
+Variant Interpreter::EvaluateBinaryPlusExpression(const Variant& lhs, const Variant& rhs)
 {
     // TODO: We currently only support adding integer which is not correct
     if (!lhs.IsInt64() || !rhs.IsInt64())
@@ -471,7 +472,7 @@ Variant Interpreter::EvaluateBinaryPlusExpression(const Variant& lhs, const Vari
     return Variant::MakeInt(UnsafeAdd(lhs.AsInt64(), rhs.AsInt64()));
 }
 
-Variant Interpreter::EvaluateBinaryMinusExpression(const Variant& lhs, const Variant& rhs) noexcept
+Variant Interpreter::EvaluateBinaryMinusExpression(const Variant& lhs, const Variant& rhs)
 {
     if (!lhs.IsInt64() || !rhs.IsInt64())
     {
@@ -481,8 +482,7 @@ Variant Interpreter::EvaluateBinaryMinusExpression(const Variant& lhs, const Var
     return Variant::MakeInt(UnsafeMinus(lhs.AsInt64(), rhs.AsInt64()));
 }
 
-Variant Interpreter::EvaluateBinaryMultiplyExpression(const Variant& lhs,
-                                                      const Variant& rhs) noexcept
+Variant Interpreter::EvaluateBinaryMultiplyExpression(const Variant& lhs, const Variant& rhs)
 {
     if (!lhs.IsInt64() || !rhs.IsInt64())
     {
@@ -492,7 +492,7 @@ Variant Interpreter::EvaluateBinaryMultiplyExpression(const Variant& lhs,
     return Variant::MakeInt(UnsafeMultiply(lhs.AsInt64(), rhs.AsInt64()));
 }
 
-Variant Interpreter::EvaluateBinaryDivideExpression(const Variant& lhs, const Variant& rhs) noexcept
+Variant Interpreter::EvaluateBinaryDivideExpression(const Variant& lhs, const Variant& rhs)
 {
     if (!lhs.IsInt64() || !rhs.IsInt64())
     {

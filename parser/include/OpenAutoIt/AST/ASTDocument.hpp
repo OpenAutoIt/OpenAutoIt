@@ -15,18 +15,18 @@ namespace OpenAutoIt
 class ASTDocument final : public ASTNode
 {
 public:
-    void AppendStatement(phi::not_null_scope_ptr<ASTStatement> child) noexcept
+    void AppendStatement(phi::not_null_scope_ptr<ASTStatement> child)
     {
         m_Statements.emplace_back(phi::move(child));
     }
 
-    void AppendFunction(phi::not_null_scope_ptr<ASTFunctionDefinition> child) noexcept
+    void AppendFunction(phi::not_null_scope_ptr<ASTFunctionDefinition> child)
     {
         m_Functions.emplace_back(phi::move(child));
     }
 
     [[nodiscard]] phi::observer_ptr<ASTFunctionDefinition> LookupFunctionDefinitionByName(
-            phi::string_view function_name) noexcept
+            phi::string_view function_name)
     {
         for (phi::not_null_observer_ptr<ASTFunctionDefinition> func_definition : m_Functions)
         {
@@ -41,7 +41,7 @@ public:
         return nullptr;
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         std::string ret{"Document:\n"};
 

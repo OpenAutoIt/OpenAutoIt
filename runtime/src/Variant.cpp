@@ -19,13 +19,13 @@ PHI_MSVC_SUPPRESS_WARNING(4582) // constructor is not implicitly called
 PHI_MSVC_SUPPRESS_WARNING(4583) // destructor is not implicitly called
 
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-Variant::Variant() noexcept
+Variant::Variant()
     : m_Type{Type::String}
     , string{} // NOLINT(readability-redundant-member-init)
 {}
 
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-Variant::Variant(const Variant& other) noexcept
+Variant::Variant(const Variant& other)
     : m_Type{Type::Keyword}
     , keyword{TokenKind::KW_Null}
 {
@@ -33,21 +33,21 @@ Variant::Variant(const Variant& other) noexcept
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
-Variant::Variant(Variant&& other) noexcept
+Variant::Variant(Variant&& other)
     : m_Type{Type::Keyword}
     , keyword{TokenKind::KW_Null}
 {
     move_from(phi::move(other));
 }
 
-Variant::~Variant() noexcept
+Variant::~Variant()
 {
     Clear();
 }
 
 PHI_MSVC_SUPPRESS_WARNING_POP()
 
-Variant& Variant::operator=(const Variant& other) noexcept
+Variant& Variant::operator=(const Variant& other)
 {
     PHI_ASSERT(this != &other);
 
@@ -57,7 +57,7 @@ Variant& Variant::operator=(const Variant& other) noexcept
     return *this;
 }
 
-Variant& Variant::operator=(Variant&& other) noexcept
+Variant& Variant::operator=(Variant&& other)
 {
     Clear();
     move_from(phi::move(other));
@@ -65,7 +65,7 @@ Variant& Variant::operator=(Variant&& other) noexcept
     return *this;
 }
 
-void Variant::Clear() noexcept
+void Variant::Clear()
 {
     switch (m_Type)
     {
@@ -98,14 +98,14 @@ void Variant::Clear() noexcept
 
 PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wsuggest-attribute=pure")
 
-PHI_ATTRIBUTE_CONST Variant::Type Variant::GetType() const noexcept
+PHI_ATTRIBUTE_CONST Variant::Type Variant::GetType() const
 {
     return m_Type;
 }
 
 PHI_GCC_SUPPRESS_WARNING_POP()
 
-PHI_ATTRIBUTE_PURE phi::string_view Variant::GetTypeName() const noexcept
+PHI_ATTRIBUTE_PURE phi::string_view Variant::GetTypeName() const
 {
     switch (m_Type)
     {
@@ -135,57 +135,57 @@ PHI_ATTRIBUTE_PURE phi::string_view Variant::GetTypeName() const noexcept
 
 PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wsuggest-attribute=pure")
 
-PHI_ATTRIBUTE_CONST phi::boolean Variant::IsInt64() const noexcept
+PHI_ATTRIBUTE_CONST phi::boolean Variant::IsInt64() const
 {
     return m_Type == Type::Int64;
 }
 
-PHI_ATTRIBUTE_CONST phi::boolean Variant::IsDouble() const noexcept
+PHI_ATTRIBUTE_CONST phi::boolean Variant::IsDouble() const
 {
     return m_Type == Type::Double;
 }
 
-PHI_ATTRIBUTE_CONST phi::boolean Variant::IsBoolean() const noexcept
+PHI_ATTRIBUTE_CONST phi::boolean Variant::IsBoolean() const
 {
     return m_Type == Type::Boolean;
 }
 
-PHI_ATTRIBUTE_CONST phi::boolean Variant::IsString() const noexcept
+PHI_ATTRIBUTE_CONST phi::boolean Variant::IsString() const
 {
     return m_Type == Type::String;
 }
 
-PHI_ATTRIBUTE_CONST phi::boolean Variant::IsBinary() const noexcept
+PHI_ATTRIBUTE_CONST phi::boolean Variant::IsBinary() const
 {
     return m_Type == Type::Binary;
 }
 
-PHI_ATTRIBUTE_CONST phi::boolean Variant::IsPointer() const noexcept
+PHI_ATTRIBUTE_CONST phi::boolean Variant::IsPointer() const
 {
     return m_Type == Type::Pointer;
 }
 
-PHI_ATTRIBUTE_CONST phi::boolean Variant::IsArray() const noexcept
+PHI_ATTRIBUTE_CONST phi::boolean Variant::IsArray() const
 {
     return m_Type == Type::Array;
 }
 
-PHI_ATTRIBUTE_CONST phi::boolean Variant::IsFunction() const noexcept
+PHI_ATTRIBUTE_CONST phi::boolean Variant::IsFunction() const
 {
     return m_Type == Type::Function;
 }
 
-PHI_ATTRIBUTE_CONST phi::boolean Variant::IsKeyword() const noexcept
+PHI_ATTRIBUTE_CONST phi::boolean Variant::IsKeyword() const
 {
     return m_Type == Type::Keyword;
 }
 
-PHI_ATTRIBUTE_CONST phi::boolean Variant::IsDefault() const noexcept
+PHI_ATTRIBUTE_CONST phi::boolean Variant::IsDefault() const
 {
     return m_Type == Type::Keyword && keyword == TokenKind::KW_Default;
 }
 
-PHI_ATTRIBUTE_CONST phi::boolean Variant::IsNull() const noexcept
+PHI_ATTRIBUTE_CONST phi::boolean Variant::IsNull() const
 {
     return m_Type == Type::Keyword && keyword == TokenKind::KW_Null;
 }
@@ -194,140 +194,140 @@ PHI_GCC_SUPPRESS_WARNING_POP()
 
 // Access to the underlying types
 
-PHI_ATTRIBUTE_PURE phi::i64& Variant::AsInt64() noexcept
+PHI_ATTRIBUTE_PURE phi::i64& Variant::AsInt64()
 {
     PHI_ASSERT(m_Type == Type::Int64);
 
     return int64;
 }
 
-PHI_ATTRIBUTE_PURE const phi::i64& Variant::AsInt64() const noexcept
+PHI_ATTRIBUTE_PURE const phi::i64& Variant::AsInt64() const
 {
     PHI_ASSERT(m_Type == Type::Int64);
 
     return int64;
 }
 
-PHI_ATTRIBUTE_PURE phi::f64& Variant::AsDouble() noexcept
+PHI_ATTRIBUTE_PURE phi::f64& Variant::AsDouble()
 {
     PHI_ASSERT(m_Type == Type::Double);
 
     return floating_point;
 }
 
-PHI_ATTRIBUTE_PURE const phi::f64& Variant::AsDouble() const noexcept
+PHI_ATTRIBUTE_PURE const phi::f64& Variant::AsDouble() const
 {
     PHI_ASSERT(m_Type == Type::Double);
 
     return floating_point;
 }
 
-PHI_ATTRIBUTE_PURE phi::boolean& Variant::AsBoolean() noexcept
+PHI_ATTRIBUTE_PURE phi::boolean& Variant::AsBoolean()
 {
     PHI_ASSERT(m_Type == Type::Boolean);
 
     return boolean;
 }
 
-PHI_ATTRIBUTE_PURE const phi::boolean& Variant::AsBoolean() const noexcept
+PHI_ATTRIBUTE_PURE const phi::boolean& Variant::AsBoolean() const
 {
     PHI_ASSERT(m_Type == Type::Boolean);
 
     return boolean;
 }
 
-PHI_ATTRIBUTE_PURE string_t& Variant::AsString() noexcept
+PHI_ATTRIBUTE_PURE string_t& Variant::AsString()
 {
     PHI_ASSERT(m_Type == Type::String);
 
     return string;
 }
 
-PHI_ATTRIBUTE_PURE const string_t& Variant::AsString() const noexcept
+PHI_ATTRIBUTE_PURE const string_t& Variant::AsString() const
 {
     PHI_ASSERT(m_Type == Type::String);
 
     return string;
 }
 
-PHI_ATTRIBUTE_PURE binary_t& Variant::AsBinary() noexcept
+PHI_ATTRIBUTE_PURE binary_t& Variant::AsBinary()
 {
     PHI_ASSERT(m_Type == Type::Binary);
 
     return binary;
 }
 
-PHI_ATTRIBUTE_PURE const binary_t& Variant::AsBinary() const noexcept
+PHI_ATTRIBUTE_PURE const binary_t& Variant::AsBinary() const
 {
     PHI_ASSERT(m_Type == Type::Binary);
 
     return binary;
 }
 
-PHI_ATTRIBUTE_PURE ptr_t& Variant::AsPointer() noexcept
+PHI_ATTRIBUTE_PURE ptr_t& Variant::AsPointer()
 {
     PHI_ASSERT(m_Type == Type::Pointer);
 
     return pointer;
 }
 
-PHI_ATTRIBUTE_PURE const ptr_t& Variant::AsPointer() const noexcept
+PHI_ATTRIBUTE_PURE const ptr_t& Variant::AsPointer() const
 {
     PHI_ASSERT(m_Type == Type::Pointer);
 
     return pointer;
 }
 
-PHI_ATTRIBUTE_PURE array_t& Variant::AsArray() noexcept
+PHI_ATTRIBUTE_PURE array_t& Variant::AsArray()
 {
     PHI_ASSERT(m_Type == Type::Array);
 
     return array;
 }
 
-PHI_ATTRIBUTE_PURE const array_t& Variant::AsArray() const noexcept
+PHI_ATTRIBUTE_PURE const array_t& Variant::AsArray() const
 {
     PHI_ASSERT(m_Type == Type::Array);
 
     return array;
 }
 
-PHI_ATTRIBUTE_PURE string_t& Variant::AsFunction() noexcept
+PHI_ATTRIBUTE_PURE string_t& Variant::AsFunction()
 {
     PHI_ASSERT(m_Type == Type::Function);
 
     return string;
 }
 
-PHI_ATTRIBUTE_PURE const string_t& Variant::AsFunction() const noexcept
+PHI_ATTRIBUTE_PURE const string_t& Variant::AsFunction() const
 {
     PHI_ASSERT(m_Type == Type::Function);
 
     return string;
 }
 
-PHI_ATTRIBUTE_PURE OpenAutoIt::TokenKind& Variant::AsKeyword() noexcept
+PHI_ATTRIBUTE_PURE OpenAutoIt::TokenKind& Variant::AsKeyword()
 {
     PHI_ASSERT(m_Type == Type::Keyword);
 
     return keyword;
 }
 
-PHI_ATTRIBUTE_PURE const OpenAutoIt::TokenKind& Variant::AsKeyword() const noexcept
+PHI_ATTRIBUTE_PURE const OpenAutoIt::TokenKind& Variant::AsKeyword() const
 {
     PHI_ASSERT(m_Type == Type::Keyword);
 
     return keyword;
 }
 
-PHI_ATTRIBUTE_CONST Variant Variant::CastToBinary() const noexcept
+PHI_ATTRIBUTE_CONST Variant Variant::CastToBinary() const
 {
     // TODO: Implement me
 
     return {};
 }
 
-Variant Variant::CastToBoolean() const noexcept
+Variant Variant::CastToBoolean() const
 {
     // https://www.autoitscript.com/autoit3/docs/intro/lang_datatypes.htm
     // "Strings and numbers can be used as Booleans. An empty string "" equals Boolean False as does the number 0. Any other number value will be equal to Boolean True"
@@ -388,25 +388,25 @@ Variant Variant::CastToBoolean() const noexcept
     return {};
 }
 
-PHI_ATTRIBUTE_CONST Variant Variant::CastToDouble() const noexcept
+PHI_ATTRIBUTE_CONST Variant Variant::CastToDouble() const
 {
     // TODO
     return {};
 }
 
-PHI_ATTRIBUTE_CONST Variant Variant::CastToInt64() const noexcept
+PHI_ATTRIBUTE_CONST Variant Variant::CastToInt64() const
 {
     // TODO
     return {};
 }
 
-PHI_ATTRIBUTE_CONST Variant Variant::CastToPointer() const noexcept
+PHI_ATTRIBUTE_CONST Variant Variant::CastToPointer() const
 {
     // TODO:
     return {};
 }
 
-Variant Variant::CastToString() const noexcept
+Variant Variant::CastToString() const
 {
     // https://www.autoitscript.com/autoit3/docs/functions/String.htm
     switch (m_Type)
@@ -485,12 +485,12 @@ Variant Variant::CastToString() const noexcept
     return {};
 }
 
-PHI_ATTRIBUTE_CONST Variant Variant::MakeUndefined() noexcept
+PHI_ATTRIBUTE_CONST Variant Variant::MakeUndefined()
 {
     return Variant{};
 }
 
-PHI_ATTRIBUTE_CONST Variant Variant::MakeBoolean(phi::boolean value) noexcept
+PHI_ATTRIBUTE_CONST Variant Variant::MakeBoolean(phi::boolean value)
 {
     Variant variant;
 
@@ -500,7 +500,7 @@ PHI_ATTRIBUTE_CONST Variant Variant::MakeBoolean(phi::boolean value) noexcept
     return variant;
 }
 
-PHI_ATTRIBUTE_CONST Variant Variant::MakeDouble(phi::f64 value) noexcept
+PHI_ATTRIBUTE_CONST Variant Variant::MakeDouble(phi::f64 value)
 {
     Variant variant;
 
@@ -510,7 +510,7 @@ PHI_ATTRIBUTE_CONST Variant Variant::MakeDouble(phi::f64 value) noexcept
     return variant;
 }
 
-PHI_ATTRIBUTE_CONST Variant Variant::MakeInt(phi::i64 value) noexcept
+PHI_ATTRIBUTE_CONST Variant Variant::MakeInt(phi::i64 value)
 {
     Variant variant;
 
@@ -522,7 +522,7 @@ PHI_ATTRIBUTE_CONST Variant Variant::MakeInt(phi::i64 value) noexcept
 
 PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wsuggest-attribute=const")
 
-PHI_ATTRIBUTE_PURE Variant Variant::MakeKeyword(OpenAutoIt::TokenKind value) noexcept
+PHI_ATTRIBUTE_PURE Variant Variant::MakeKeyword(OpenAutoIt::TokenKind value)
 {
     PHI_ASSERT(value == TokenKind::KW_Default || value == TokenKind::KW_Null);
 
@@ -536,7 +536,7 @@ PHI_ATTRIBUTE_PURE Variant Variant::MakeKeyword(OpenAutoIt::TokenKind value) noe
 
 PHI_GCC_SUPPRESS_WARNING_POP()
 
-PHI_ATTRIBUTE_CONST Variant Variant::MakePointer(ptr_t value) noexcept
+PHI_ATTRIBUTE_CONST Variant Variant::MakePointer(ptr_t value)
 {
     Variant variant;
 
@@ -546,7 +546,7 @@ PHI_ATTRIBUTE_CONST Variant Variant::MakePointer(ptr_t value) noexcept
     return variant;
 }
 
-Variant Variant::MakeString(const char* value) noexcept
+Variant Variant::MakeString(const char* value)
 {
     Variant variant;
 
@@ -559,7 +559,7 @@ Variant Variant::MakeString(const char* value) noexcept
     return variant;
 }
 
-Variant Variant::MakeString(phi::string_view value) noexcept
+Variant Variant::MakeString(phi::string_view value)
 {
     Variant variant;
 
@@ -575,7 +575,7 @@ Variant Variant::MakeString(phi::string_view value) noexcept
     return variant;
 }
 
-Variant Variant::MakeString(const string_t& value) noexcept
+Variant Variant::MakeString(const string_t& value)
 {
     Variant variant;
 
@@ -588,7 +588,7 @@ Variant Variant::MakeString(const string_t& value) noexcept
     return variant;
 }
 
-Variant Variant::MakeString(string_t&& value) noexcept
+Variant Variant::MakeString(string_t&& value)
 {
     Variant variant;
 
@@ -601,7 +601,7 @@ Variant Variant::MakeString(string_t&& value) noexcept
     return variant;
 }
 
-void Variant::copy_from(const Variant& other) noexcept
+void Variant::copy_from(const Variant& other)
 {
     m_Type = other.m_Type;
 
@@ -647,7 +647,7 @@ void Variant::copy_from(const Variant& other) noexcept
     PHI_ASSERT_NOT_REACHED();
 }
 
-void Variant::move_from(Variant&& other) noexcept
+void Variant::move_from(Variant&& other)
 {
     m_Type = other.m_Type;
 

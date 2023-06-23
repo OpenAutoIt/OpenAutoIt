@@ -16,32 +16,32 @@ class Lexer
 public:
     using iterator = typename phi::string_view::const_iterator;
 
-    explicit Lexer(ParseResult& parse_result) noexcept;
+    explicit Lexer(ParseResult& parse_result);
 
-    Lexer(ParseResult& parse_result, phi::string_view source) noexcept;
+    Lexer(ParseResult& parse_result, phi::string_view source);
 
-    void SetInputSource(phi::string_view source) noexcept;
+    void SetInputSource(phi::string_view source);
 
-    void Reset() noexcept;
+    void Reset();
 
-    [[nodiscard]] phi::boolean IsFinished() const noexcept;
+    [[nodiscard]] phi::boolean IsFinished() const;
 
-    [[nodiscard]] phi::boolean HasInput() const noexcept;
+    [[nodiscard]] phi::boolean HasInput() const;
 
-    [[nodiscard]] phi::optional<Token> GetNextToken() noexcept;
+    [[nodiscard]] phi::optional<Token> GetNextToken();
 
-    void ProcessAll() noexcept;
+    void ProcessAll();
 
-    void ProcessString(phi::string_view source) noexcept;
+    void ProcessString(phi::string_view source);
 
 private:
-    void ConsumeCurrentCharacter() noexcept;
+    void ConsumeCurrentCharacter();
 
-    void AdvanceToNextLine() noexcept;
+    void AdvanceToNextLine();
 
-    void SkipCurrentCharacter() noexcept;
+    void SkipCurrentCharacter();
 
-    [[nodiscard]] constexpr Token ConstructToken(TokenKind kind) noexcept
+    [[nodiscard]] constexpr Token ConstructToken(TokenKind kind)
     {
         Token token{kind,
                     m_Source.substring_view(
@@ -56,7 +56,7 @@ private:
         return token;
     }
 
-    [[nodiscard]] constexpr Token ConstructToken(TokenKind kind, iterator token_begin) noexcept
+    [[nodiscard]] constexpr Token ConstructToken(TokenKind kind, iterator token_begin)
     {
         Token token{kind, TokenText(token_begin), m_LineNumber, m_Column};
 
@@ -66,7 +66,7 @@ private:
         return token;
     }
 
-    [[nodiscard]] constexpr phi::string_view TokenText(iterator token_begin) noexcept
+    [[nodiscard]] constexpr phi::string_view TokenText(iterator token_begin)
     {
         return m_Source.substring_view(token_begin, m_Iterator);
     }

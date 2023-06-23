@@ -24,7 +24,7 @@ struct ParseErrorUnexpectedToken
 class ParseError
 {
 public:
-    static ParseError UnexpectedToken(const Token& token) noexcept;
+    static ParseError UnexpectedToken(const Token& token);
 
     ParseErrorType               m_Type;
     SourceLocation               m_LocationBegin;

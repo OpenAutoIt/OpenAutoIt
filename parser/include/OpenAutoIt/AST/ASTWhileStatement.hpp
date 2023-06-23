@@ -12,13 +12,13 @@ namespace OpenAutoIt
 class ASTWhileStatement final : public ASTStatement
 {
 public:
-    ASTWhileStatement(phi::not_null_scope_ptr<ASTExpression>&& condition) noexcept
+    ASTWhileStatement(phi::not_null_scope_ptr<ASTExpression>&& condition)
         : m_ConditionExpression{phi::move(condition)}
     {
         m_NodeType = ASTNodeType::WhileStatement;
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         std::string ret;
 

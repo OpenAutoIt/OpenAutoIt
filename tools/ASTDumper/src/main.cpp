@@ -21,7 +21,7 @@ OpenAutoIt::Parser parser;
 
 PHI_CLANG_SUPPRESS_WARNING_POP()
 
-phi::boolean process_file(const std::filesystem::path& file_path) noexcept
+phi::boolean process_file(const std::filesystem::path& file_path)
 {
     const std::string base_name = file_path.filename().replace_extension().string();
 

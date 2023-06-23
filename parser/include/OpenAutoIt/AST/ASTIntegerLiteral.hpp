@@ -11,13 +11,13 @@ namespace OpenAutoIt
 class ASTIntegerLiteral final : public ASTExpression
 {
 public:
-    ASTIntegerLiteral(phi::i64 value) noexcept
+    ASTIntegerLiteral(phi::i64 value)
         : m_Value{value}
     {
         m_NodeType = ASTNodeType::IntegerLiteral;
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         return indent_times(indent) + "IntegerLiteral [" + std::to_string(m_Value.unsafe()) + "]";
     }

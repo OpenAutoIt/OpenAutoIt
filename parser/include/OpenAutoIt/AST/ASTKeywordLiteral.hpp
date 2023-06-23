@@ -13,14 +13,14 @@ namespace OpenAutoIt
 class ASTKeywordLiteral final : public ASTExpression
 {
 public:
-    ASTKeywordLiteral(TokenKind keyword) noexcept
+    ASTKeywordLiteral(TokenKind keyword)
         : m_Keyword{keyword}
     {
         m_NodeType = ASTNodeType::KeywordLiteral;
         PHI_ASSERT(keyword == TokenKind::KW_Default || keyword == TokenKind::KW_Null);
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         return indent_times(indent) + "KeywordLiteral [" + enum_name(m_Keyword) + "]";
     }

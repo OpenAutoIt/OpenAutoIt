@@ -25,7 +25,7 @@ class LookUpMap
 {
 public:
     constexpr LookUpMap(const std::array<std::pair<KeyT, ValueT>, SizeT>& data,
-                        ValueT                                            default_value) noexcept
+                        ValueT                                            default_value)
         : m_Data(data)
         , m_Default(default_value)
     {}
@@ -153,7 +153,7 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
         {"@year", OpenAutoIt::TokenKind::MK_YEAR},
 }};
 
-[[nodiscard]] OpenAutoIt::TokenKind lookup_macro(phi::string_view token) noexcept
+[[nodiscard]] OpenAutoIt::TokenKind lookup_macro(phi::string_view token)
 {
     static constexpr auto map =
             LookUpMap<phi::string_view, OpenAutoIt::TokenKind, MacroValues.size()>(
@@ -179,7 +179,7 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
                 {"#requireadmin", OpenAutoIt::TokenKind::PP_RequireAdmin},
         }};
 
-[[nodiscard]] OpenAutoIt::TokenKind lookup_pre_processor(phi::string_view token) noexcept
+[[nodiscard]] OpenAutoIt::TokenKind lookup_pre_processor(phi::string_view token)
 {
     static constexpr auto map =
             LookUpMap<phi::string_view, OpenAutoIt::TokenKind, PreProcessorValues.size()>(
@@ -600,8 +600,7 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
                 {"winwaitnotactive", OpenAutoIt::TokenKind::BI_WinWaitNotActive},
         }};
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE OpenAutoIt::TokenKind lookup_builtin(
-        phi::string_view token) noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE OpenAutoIt::TokenKind lookup_builtin(phi::string_view token)
 {
     static constexpr auto map =
             LookUpMap<phi::string_view, OpenAutoIt::TokenKind, BuiltInValues.size()>(
@@ -656,7 +655,7 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
          {"or", OpenAutoIt::TokenKind::KW_Or},
          {"not", OpenAutoIt::TokenKind::KW_Not}}};
 
-[[nodiscard]] OpenAutoIt::TokenKind lookup_identifier(phi::string_view token) noexcept
+[[nodiscard]] OpenAutoIt::TokenKind lookup_identifier(phi::string_view token)
 {
     static constexpr auto keyword_map =
             LookUpMap<phi::string_view, OpenAutoIt::TokenKind, KeyWordsValues.size()>(
@@ -701,8 +700,7 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
          {"?", OpenAutoIt::TokenKind::OP_TernaryIf},
          {":", OpenAutoIt::TokenKind::OP_TernaryElse}}};
 
-[[nodiscard]] PHI_ATTRIBUTE_PURE OpenAutoIt::TokenKind lookup_operator(
-        phi::string_view token) noexcept
+[[nodiscard]] PHI_ATTRIBUTE_PURE OpenAutoIt::TokenKind lookup_operator(phi::string_view token)
 {
     static constexpr auto map =
             LookUpMap<phi::string_view, OpenAutoIt::TokenKind, OperatorValues.size()>(
@@ -711,7 +709,7 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
     return map.at(token);
 }
 
-[[nodiscard]] constexpr phi::boolean is_skip_character(const char c) noexcept
+[[nodiscard]] constexpr phi::boolean is_skip_character(const char c)
 {
     switch (c)
     {
@@ -726,17 +724,17 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
     }
 }
 
-[[nodiscard]] constexpr phi::boolean is_valid_identifier_char(const char c) noexcept
+[[nodiscard]] constexpr phi::boolean is_valid_identifier_char(const char c)
 {
     return phi::is_alpha_numeric(c) || c == '_';
 }
 
-[[nodiscard]] constexpr phi::boolean is_valid_pp_char(const char c) noexcept
+[[nodiscard]] constexpr phi::boolean is_valid_pp_char(const char c)
 {
     return phi::is_alpha_numeric(c) || c == '-';
 }
 
-[[nodiscard]] constexpr phi::boolean is_two_part_operator(const char c) noexcept
+[[nodiscard]] constexpr phi::boolean is_two_part_operator(const char c)
 {
     switch (c)
     {
@@ -755,7 +753,7 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
     }
 }
 
-[[nodiscard]] constexpr phi::boolean is_single_operator(const char c) noexcept
+[[nodiscard]] constexpr phi::boolean is_single_operator(const char c)
 {
     switch (c)
     {
@@ -771,25 +769,25 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
 
 namespace OpenAutoIt
 {
-Lexer::Lexer(ParseResult& parse_result) noexcept
+Lexer::Lexer(ParseResult& parse_result)
     : m_ParseResult{parse_result}
     , m_Iterator{m_Source.begin()}
 {}
 
-Lexer::Lexer(ParseResult& parse_result, phi::string_view source) noexcept
+Lexer::Lexer(ParseResult& parse_result, phi::string_view source)
     : m_ParseResult{parse_result}
     , m_Source{source}
     , m_Iterator{source.begin()}
 {}
 
-void Lexer::SetInputSource(phi::string_view source) noexcept
+void Lexer::SetInputSource(phi::string_view source)
 {
     m_Source = source;
 
     Reset();
 }
 
-void Lexer::Reset() noexcept
+void Lexer::Reset()
 {
     m_Iterator = m_Source.begin();
 
@@ -799,17 +797,17 @@ void Lexer::Reset() noexcept
     m_Column     = 1u;
 }
 
-PHI_ATTRIBUTE_PURE phi::boolean Lexer::IsFinished() const noexcept
+PHI_ATTRIBUTE_PURE phi::boolean Lexer::IsFinished() const
 {
     return m_Iterator == m_Source.end();
 }
 
-PHI_ATTRIBUTE_PURE phi::boolean Lexer::HasInput() const noexcept
+PHI_ATTRIBUTE_PURE phi::boolean Lexer::HasInput() const
 {
     return !m_Source.is_empty();
 }
 
-phi::optional<Token> Lexer::GetNextToken() noexcept
+phi::optional<Token> Lexer::GetNextToken()
 {
     while (!IsFinished())
     {
@@ -1270,7 +1268,7 @@ phi::optional<Token> Lexer::GetNextToken() noexcept
     return {};
 }
 
-void Lexer::ProcessAll() noexcept
+void Lexer::ProcessAll()
 {
     TokenStream& stream = m_ParseResult.m_TokenStream;
 
@@ -1287,25 +1285,25 @@ void Lexer::ProcessAll() noexcept
     stream.finalize();
 }
 
-void Lexer::ProcessString(phi::string_view source) noexcept
+void Lexer::ProcessString(phi::string_view source)
 {
     SetInputSource(source);
 
     ProcessAll();
 }
 
-void Lexer::ConsumeCurrentCharacter() noexcept
+void Lexer::ConsumeCurrentCharacter()
 {
     ++m_Iterator;
 }
 
-void Lexer::AdvanceToNextLine() noexcept
+void Lexer::AdvanceToNextLine()
 {
     ++m_LineNumber;
     m_Column = 1u;
 }
 
-void Lexer::SkipCurrentCharacter() noexcept
+void Lexer::SkipCurrentCharacter()
 {
     ConsumeCurrentCharacter();
     ++m_Column;

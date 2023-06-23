@@ -12,7 +12,7 @@ namespace OpenAutoIt
 class ParseResult
 {
 public:
-    void Clear() noexcept
+    void Clear()
     {
         m_TokenStream.clear();
         m_Document.clear();

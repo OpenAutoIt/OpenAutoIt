@@ -38,103 +38,103 @@ public:
     };
 
     // Default constructor
-    Variant() noexcept;
+    Variant();
 
-    Variant(const Variant& other) noexcept;
-    Variant(Variant&& other) noexcept;
+    Variant(const Variant& other);
+    Variant(Variant&& other);
 
-    ~Variant() noexcept;
+    ~Variant();
 
-    Variant& operator=(const Variant& other) noexcept;
-    Variant& operator=(Variant&& other) noexcept;
+    Variant& operator=(const Variant& other);
+    Variant& operator=(Variant&& other);
 
-    void Clear() noexcept;
+    void Clear();
 
-    [[nodiscard]] Type             GetType() const noexcept;
-    [[nodiscard]] phi::string_view GetTypeName() const noexcept;
+    [[nodiscard]] Type             GetType() const;
+    [[nodiscard]] phi::string_view GetTypeName() const;
 
     // General type tests
-    [[nodiscard]] phi::boolean IsArray() const noexcept;
-    [[nodiscard]] phi::boolean IsBinary() const noexcept;
-    [[nodiscard]] phi::boolean IsBoolean() const noexcept;
-    [[nodiscard]] phi::boolean IsDouble() const noexcept;
-    [[nodiscard]] phi::boolean IsFunction() const noexcept;
-    [[nodiscard]] phi::boolean IsInt64() const noexcept;
-    [[nodiscard]] phi::boolean IsKeyword() const noexcept;
-    [[nodiscard]] phi::boolean IsPointer() const noexcept;
-    [[nodiscard]] phi::boolean IsString() const noexcept;
+    [[nodiscard]] phi::boolean IsArray() const;
+    [[nodiscard]] phi::boolean IsBinary() const;
+    [[nodiscard]] phi::boolean IsBoolean() const;
+    [[nodiscard]] phi::boolean IsDouble() const;
+    [[nodiscard]] phi::boolean IsFunction() const;
+    [[nodiscard]] phi::boolean IsInt64() const;
+    [[nodiscard]] phi::boolean IsKeyword() const;
+    [[nodiscard]] phi::boolean IsPointer() const;
+    [[nodiscard]] phi::boolean IsString() const;
 
     // Specific tests
-    [[nodiscard]] phi::boolean IsDefault() const noexcept;
-    [[nodiscard]] phi::boolean IsNull() const noexcept;
+    [[nodiscard]] phi::boolean IsDefault() const;
+    [[nodiscard]] phi::boolean IsNull() const;
 
     // Access to the underlying types
-    [[nodiscard]] array_t&       AsArray() noexcept;
-    [[nodiscard]] const array_t& AsArray() const noexcept;
+    [[nodiscard]] array_t&       AsArray();
+    [[nodiscard]] const array_t& AsArray() const;
 
-    [[nodiscard]] binary_t&       AsBinary() noexcept;
-    [[nodiscard]] const binary_t& AsBinary() const noexcept;
+    [[nodiscard]] binary_t&       AsBinary();
+    [[nodiscard]] const binary_t& AsBinary() const;
 
-    [[nodiscard]] phi::boolean&       AsBoolean() noexcept;
-    [[nodiscard]] const phi::boolean& AsBoolean() const noexcept;
+    [[nodiscard]] phi::boolean&       AsBoolean();
+    [[nodiscard]] const phi::boolean& AsBoolean() const;
 
-    [[nodiscard]] phi::f64&       AsDouble() noexcept;
-    [[nodiscard]] const phi::f64& AsDouble() const noexcept;
+    [[nodiscard]] phi::f64&       AsDouble();
+    [[nodiscard]] const phi::f64& AsDouble() const;
 
-    [[nodiscard]] string_t&       AsFunction() noexcept;
-    [[nodiscard]] const string_t& AsFunction() const noexcept;
+    [[nodiscard]] string_t&       AsFunction();
+    [[nodiscard]] const string_t& AsFunction() const;
 
-    [[nodiscard]] phi::i64&       AsInt64() noexcept;
-    [[nodiscard]] const phi::i64& AsInt64() const noexcept;
+    [[nodiscard]] phi::i64&       AsInt64();
+    [[nodiscard]] const phi::i64& AsInt64() const;
 
-    [[nodiscard]] TokenKind&       AsKeyword() noexcept;
-    [[nodiscard]] const TokenKind& AsKeyword() const noexcept;
+    [[nodiscard]] TokenKind&       AsKeyword();
+    [[nodiscard]] const TokenKind& AsKeyword() const;
 
-    [[nodiscard]] ptr_t&       AsPointer() noexcept;
-    [[nodiscard]] const ptr_t& AsPointer() const noexcept;
+    [[nodiscard]] ptr_t&       AsPointer();
+    [[nodiscard]] const ptr_t& AsPointer() const;
 
-    [[nodiscard]] string_t&       AsString() noexcept;
-    [[nodiscard]] const string_t& AsString() const noexcept;
+    [[nodiscard]] string_t&       AsString();
+    [[nodiscard]] const string_t& AsString() const;
 
     // Casting
     // NOTE: You cannot cast to Array, Function or Keyword
-    [[nodiscard]] Variant CastToBinary() const noexcept;
-    [[nodiscard]] Variant CastToBoolean() const noexcept;
-    [[nodiscard]] Variant CastToDouble() const noexcept;
-    [[nodiscard]] Variant CastToInt64() const noexcept;
-    [[nodiscard]] Variant CastToPointer() const noexcept;
-    [[nodiscard]] Variant CastToString() const noexcept;
+    [[nodiscard]] Variant CastToBinary() const;
+    [[nodiscard]] Variant CastToBoolean() const;
+    [[nodiscard]] Variant CastToDouble() const;
+    [[nodiscard]] Variant CastToInt64() const;
+    [[nodiscard]] Variant CastToPointer() const;
+    [[nodiscard]] Variant CastToString() const;
 
     // Factory functions
 
     // Undefined
-    [[nodiscard]] static Variant MakeUndefined() noexcept;
+    [[nodiscard]] static Variant MakeUndefined();
 
     // Boolean
-    [[nodiscard]] static Variant MakeBoolean(phi::boolean value) noexcept;
+    [[nodiscard]] static Variant MakeBoolean(phi::boolean value);
 
     // Double
-    [[nodiscard]] static Variant MakeDouble(phi::f64 value) noexcept;
+    [[nodiscard]] static Variant MakeDouble(phi::f64 value);
 
     // Int
-    [[nodiscard]] static Variant MakeInt(phi::i64 value) noexcept;
+    [[nodiscard]] static Variant MakeInt(phi::i64 value);
 
     // Keyword
-    [[nodiscard]] static Variant MakeKeyword(TokenKind value) noexcept;
+    [[nodiscard]] static Variant MakeKeyword(TokenKind value);
 
     // Pointer
-    [[nodiscard]] static Variant MakePointer(ptr_t value) noexcept;
+    [[nodiscard]] static Variant MakePointer(ptr_t value);
 
     // String
-    [[nodiscard]] static Variant MakeString(const char* value) noexcept;
-    [[nodiscard]] static Variant MakeString(phi::string_view value) noexcept;
-    [[nodiscard]] static Variant MakeString(const string_t& value) noexcept;
-    [[nodiscard]] static Variant MakeString(string_t&& value) noexcept;
+    [[nodiscard]] static Variant MakeString(const char* value);
+    [[nodiscard]] static Variant MakeString(phi::string_view value);
+    [[nodiscard]] static Variant MakeString(const string_t& value);
+    [[nodiscard]] static Variant MakeString(string_t&& value);
 
 private:
-    void copy_from(const Variant& other) noexcept;
+    void copy_from(const Variant& other);
 
-    void move_from(Variant&& other) noexcept;
+    void move_from(Variant&& other);
 
     Type m_Type;
 

@@ -12,13 +12,13 @@ namespace OpenAutoIt
 class ASTBooleanLiteral final : public ASTExpression
 {
 public:
-    ASTBooleanLiteral(phi::boolean value) noexcept
+    ASTBooleanLiteral(phi::boolean value)
         : m_Value{value}
     {
         m_NodeType = ASTNodeType::BooleanLiteral;
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         std::string ret;
 

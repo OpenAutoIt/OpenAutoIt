@@ -7,8 +7,7 @@ namespace OpenAutoIt
 {
 PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wsuggest-attribute=pure")
 
-PHI_ATTRIBUTE_CONST ParseWarning ParseWarning::EmbeddedNullCharacter(phi::u64 line,
-                                                                     phi::u64 column) noexcept
+PHI_ATTRIBUTE_CONST ParseWarning ParseWarning::EmbeddedNullCharacter(phi::u64 line, phi::u64 column)
 {
     ParseWarning warn;
 

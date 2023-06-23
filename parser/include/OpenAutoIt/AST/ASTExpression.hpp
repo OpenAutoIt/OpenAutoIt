@@ -8,7 +8,7 @@ namespace OpenAutoIt
 class ASTExpression : public ASTNode
 {
 public:
-    [[nodiscard]] constexpr phi::boolean IsValidAsStatement() noexcept
+    [[nodiscard]] constexpr phi::boolean IsValidAsStatement()
     {
         switch (m_NodeType)
         {

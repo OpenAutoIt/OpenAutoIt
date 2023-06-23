@@ -57,7 +57,7 @@ PHI_CLANG_SUPPRESS_WARNING_POP()
 
 // TODO: Print expected actual etc.
 PHI_ATTRIBUTE_PURE phi::boolean expects_matched(const ExpectedBlock& expected_block,
-                                                const OutputBuffer&  buffer) noexcept
+                                                const OutputBuffer&  buffer)
 {
     phi::boolean return_value{true};
 
@@ -88,7 +88,7 @@ PHI_ATTRIBUTE_PURE phi::boolean expects_matched(const ExpectedBlock& expected_bl
     return return_value;
 }
 
-ExpectedBlock extract_expected_block(const OpenAutoIt::TokenStream& tokens) noexcept
+ExpectedBlock extract_expected_block(const OpenAutoIt::TokenStream& tokens)
 {
     ExpectedBlock block;
 
@@ -138,7 +138,7 @@ ExpectedBlock extract_expected_block(const OpenAutoIt::TokenStream& tokens) noex
     return block;
 }
 
-[[nodiscard]] phi::boolean process_file(const std::filesystem::path& file_path) noexcept
+[[nodiscard]] phi::boolean process_file(const std::filesystem::path& file_path)
 {
     const std::string base_name = file_path.filename().replace_extension().string();
 

@@ -12,7 +12,7 @@ class ASTBinaryExpression final : public ASTExpression
 {
 public:
     ASTBinaryExpression(phi::not_null_scope_ptr<ASTExpression>&& lhs, const TokenKind op,
-                        phi::not_null_scope_ptr<ASTExpression>&& rhs) noexcept
+                        phi::not_null_scope_ptr<ASTExpression>&& rhs)
         : m_LHS{phi::move(lhs)}
         , m_Operator{op}
         , m_RHS{phi::move(rhs)}
@@ -20,7 +20,7 @@ public:
         m_NodeType = ASTNodeType::BinaryExpression;
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         std::string ret;
 

@@ -126,9 +126,9 @@ private:
 
 constexpr OperatorPrecedenceTable OperatorPrecedence;
 
-Parser::Parser() noexcept = default;
+Parser::Parser() = default;
 
-void Parser::ParseDocument(ParseResult& parse_result) noexcept
+void Parser::ParseDocument(ParseResult& parse_result)
 {
     m_ParseResult = &parse_result;
     m_TokenStream = &parse_result.m_TokenStream;
@@ -190,19 +190,19 @@ void Parser::ParseDocument(ParseResult& parse_result) noexcept
     }
 }
 
-const Token& Parser::CurrentToken() const noexcept
+const Token& Parser::CurrentToken() const
 {
     PHI_ASSERT(m_TokenStream->has_more());
 
     return m_TokenStream->look_ahead();
 }
 
-void Parser::ConsumeCurrent() noexcept
+void Parser::ConsumeCurrent()
 {
     m_TokenStream->consume();
 }
 
-void Parser::ConsumeComments() noexcept
+void Parser::ConsumeComments()
 {
     while (m_TokenStream->has_more())
     {
@@ -218,7 +218,7 @@ void Parser::ConsumeComments() noexcept
     }
 }
 
-void Parser::ConsumeNewLineAndComments() noexcept
+void Parser::ConsumeNewLineAndComments()
 {
     while (m_TokenStream->has_more())
     {
@@ -235,7 +235,7 @@ void Parser::ConsumeNewLineAndComments() noexcept
     }
 }
 
-phi::optional<const Token&> Parser::MustParse(TokenKind kind) noexcept
+phi::optional<const Token&> Parser::MustParse(TokenKind kind)
 {
     // Do we even have more tokens?
     if (!m_TokenStream->has_more())
@@ -255,7 +255,7 @@ phi::optional<const Token&> Parser::MustParse(TokenKind kind) noexcept
     return token;
 }
 
-phi::scope_ptr<ASTFunctionDefinition> Parser::ParseFunctionDefinition() noexcept
+phi::scope_ptr<ASTFunctionDefinition> Parser::ParseFunctionDefinition()
 {
     // Next we MUST parse the function name
     auto function_name_token = MustParse(TokenKind::FunctionIdentifier);
@@ -337,7 +337,7 @@ phi::scope_ptr<ASTFunctionDefinition> Parser::ParseFunctionDefinition() noexcept
     return phi::move(function_definition);
 }
 
-phi::optional<FunctionParameter> Parser::ParseFunctionParameterDefinition() noexcept
+phi::optional<FunctionParameter> Parser::ParseFunctionParameterDefinition()
 {
     // TODO: This entire function requres more error checks
     FunctionParameter parameter;
@@ -406,7 +406,7 @@ phi::optional<FunctionParameter> Parser::ParseFunctionParameterDefinition() noex
     return {};
 }
 
-phi::scope_ptr<ASTStatement> Parser::ParseStatement() noexcept
+phi::scope_ptr<ASTStatement> Parser::ParseStatement()
 {
     ConsumeNewLineAndComments();
 
@@ -494,7 +494,7 @@ phi::scope_ptr<ASTStatement> Parser::ParseStatement() noexcept
     return phi::move(ret_statement);
 }
 
-phi::scope_ptr<ASTWhileStatement> Parser::ParseWhileStatement() noexcept
+phi::scope_ptr<ASTWhileStatement> Parser::ParseWhileStatement()
 {
     const Token& token = CurrentToken();
     if (token.GetTokenKind() != TokenKind::KW_While)
@@ -555,7 +555,7 @@ phi::scope_ptr<ASTWhileStatement> Parser::ParseWhileStatement() noexcept
     return phi::move(while_statement);
 }
 
-phi::scope_ptr<ASTVariableAssignment> Parser::ParseVariableAssignment() noexcept
+phi::scope_ptr<ASTVariableAssignment> Parser::ParseVariableAssignment()
 {
     auto variable_declaration = phi::make_scope<ASTVariableAssignment>();
 
@@ -668,7 +668,7 @@ phi::scope_ptr<ASTVariableAssignment> Parser::ParseVariableAssignment() noexcept
     return variable_declaration;
 }
 
-phi::scope_ptr<ASTExpressionStatement> Parser::ParseExpressionStatement() noexcept
+phi::scope_ptr<ASTExpressionStatement> Parser::ParseExpressionStatement()
 {
     auto expression = ParseExpression();
     if (!expression)
@@ -689,7 +689,7 @@ phi::scope_ptr<ASTExpressionStatement> Parser::ParseExpressionStatement() noexce
     return phi::move(expression_statement);
 }
 
-phi::scope_ptr<ASTIfStatement> Parser::ParseIfStatement() noexcept
+phi::scope_ptr<ASTIfStatement> Parser::ParseIfStatement()
 {
     if (!MustParse(TokenKind::KW_If))
     {
@@ -748,7 +748,7 @@ phi::scope_ptr<ASTIfStatement> Parser::ParseIfStatement() noexcept
     return phi::move(if_statement);
 }
 
-phi::scope_ptr<ASTIntegerLiteral> Parser::ParseIntegerLiteral() noexcept
+phi::scope_ptr<ASTIntegerLiteral> Parser::ParseIntegerLiteral()
 {
     const Token& token = CurrentToken();
     if (token.GetTokenKind() != TokenKind::IntegerLiteral)
@@ -798,7 +798,7 @@ phi::scope_ptr<ASTIntegerLiteral> Parser::ParseIntegerLiteral() noexcept
     return phi::make_scope<ASTIntegerLiteral>(value);
 }
 
-phi::scope_ptr<ASTStringLiteral> Parser::ParseStringLiteral() noexcept
+phi::scope_ptr<ASTStringLiteral> Parser::ParseStringLiteral()
 {
     const Token& token = CurrentToken();
     if (token.GetTokenKind() != TokenKind::StringLiteral)
@@ -816,7 +816,7 @@ phi::scope_ptr<ASTStringLiteral> Parser::ParseStringLiteral() noexcept
     return phi::move(string_literal);
 }
 
-phi::scope_ptr<ASTExpression> Parser::ParseExpression() noexcept
+phi::scope_ptr<ASTExpression> Parser::ParseExpression()
 {
     phi::scope_ptr<ASTExpression> lhs_expression = ParseExpressionLhs();
     if (!lhs_expression)
@@ -827,7 +827,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpression() noexcept
     return ParseExpressionRhs(lhs_expression.release_not_null(), 0);
 }
 
-phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs() noexcept
+phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
 {
     if (!m_TokenStream->has_more())
     {
@@ -967,7 +967,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs() noexcept
 }
 
 phi::scope_ptr<ASTExpression> Parser::ParseExpressionRhs(phi::not_null_scope_ptr<ASTExpression> lhs,
-                                                         int precedence) noexcept
+                                                         int precedence)
 {
     while (true)
     {
@@ -1028,7 +1028,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionRhs(phi::not_null_scope_ptr
     }
 }
 
-phi::scope_ptr<ASTFunctionCallExpression> Parser::ParseFunctionCallExpression() noexcept
+phi::scope_ptr<ASTFunctionCallExpression> Parser::ParseFunctionCallExpression()
 {
     // Parse the function name
     const Token& function_identifier_token = CurrentToken();
@@ -1106,7 +1106,7 @@ phi::scope_ptr<ASTFunctionCallExpression> Parser::ParseFunctionCallExpression() 
     return function_call_expression;
 }
 
-std::vector<phi::not_null_scope_ptr<ASTExpression>> Parser::ParseFunctionCallArguments() noexcept
+std::vector<phi::not_null_scope_ptr<ASTExpression>> Parser::ParseFunctionCallArguments()
 {
     std::vector<phi::not_null_scope_ptr<ASTExpression>> arguments;
 
@@ -1135,7 +1135,7 @@ std::vector<phi::not_null_scope_ptr<ASTExpression>> Parser::ParseFunctionCallArg
     return arguments;
 }
 
-phi::scope_ptr<ASTVariableExpression> Parser::ParseVariableExpression() noexcept
+phi::scope_ptr<ASTVariableExpression> Parser::ParseVariableExpression()
 {
     if (!m_TokenStream->has_more())
     {
@@ -1161,7 +1161,7 @@ phi::scope_ptr<ASTVariableExpression> Parser::ParseVariableExpression() noexcept
 PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wsuggest-attribute=const")
 PHI_GCC_SUPPRESS_WARNING("-Wsuggest-attribute=pure")
 
-phi::scope_ptr<ASTArraySubscriptExpression> Parser::ParseArraySubscriptExpression() noexcept
+phi::scope_ptr<ASTArraySubscriptExpression> Parser::ParseArraySubscriptExpression()
 {
     if (!m_TokenStream->has_more())
     {
@@ -1189,7 +1189,7 @@ phi::scope_ptr<ASTArraySubscriptExpression> Parser::ParseArraySubscriptExpressio
 
 PHI_GCC_SUPPRESS_WARNING_POP()
 
-phi::scope_ptr<ASTExpression> Parser::ParseParenExpression() noexcept
+phi::scope_ptr<ASTExpression> Parser::ParseParenExpression()
 {
     // NOTE: Me MUST have consumed the LParen before this
 
@@ -1209,7 +1209,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseParenExpression() noexcept
     return phi::move(expression);
 }
 
-phi::scope_ptr<ASTExitStatement> Parser::ParseExitStatement() noexcept
+phi::scope_ptr<ASTExitStatement> Parser::ParseExitStatement()
 {
     if (!m_TokenStream->has_more())
     {
@@ -1227,7 +1227,7 @@ phi::scope_ptr<ASTExitStatement> Parser::ParseExitStatement() noexcept
     return phi::make_scope<ASTExitStatement>(phi::move(expression));
 }
 
-phi::scope_ptr<ASTBooleanLiteral> Parser::ParseBooleanLiteral() noexcept
+phi::scope_ptr<ASTBooleanLiteral> Parser::ParseBooleanLiteral()
 {
     if (!m_TokenStream->has_more())
     {
@@ -1253,7 +1253,7 @@ phi::scope_ptr<ASTBooleanLiteral> Parser::ParseBooleanLiteral() noexcept
     return {};
 }
 
-phi::scope_ptr<ASTKeywordLiteral> Parser::ParseKeywordLiteral() noexcept
+phi::scope_ptr<ASTKeywordLiteral> Parser::ParseKeywordLiteral()
 {
     if (!m_TokenStream->has_more())
     {
@@ -1272,7 +1272,7 @@ phi::scope_ptr<ASTKeywordLiteral> Parser::ParseKeywordLiteral() noexcept
     return {};
 }
 
-phi::scope_ptr<ASTFloatLiteral> Parser::ParseFloatLiteral() noexcept
+phi::scope_ptr<ASTFloatLiteral> Parser::ParseFloatLiteral()
 {
     if (!m_TokenStream->has_more())
     {

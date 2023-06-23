@@ -18,7 +18,7 @@ public:
         m_NodeType = ASTNodeType::ArraySubscriptExpression;
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         (void)indent;
 

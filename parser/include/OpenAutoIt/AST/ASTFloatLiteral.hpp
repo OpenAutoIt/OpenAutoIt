@@ -11,13 +11,13 @@ namespace OpenAutoIt
 class ASTFloatLiteral final : public ASTExpression
 {
 public:
-    ASTFloatLiteral(phi::f64 value) noexcept
+    ASTFloatLiteral(phi::f64 value)
         : m_Value{value}
     {
         m_NodeType = ASTNodeType::FloatLiteral;
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         return indent_times(indent) + "FloatLiteral [" + std::to_string(m_Value.unsafe()) + "]";
     }

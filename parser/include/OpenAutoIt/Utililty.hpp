@@ -10,7 +10,7 @@
 
 namespace OpenAutoIt
 {
-[[nodiscard]] inline std::string indent_times(phi::usize indent) noexcept
+[[nodiscard]] inline std::string indent_times(phi::usize indent)
 {
     std::string ret;
 
@@ -22,9 +22,9 @@ namespace OpenAutoIt
     return ret;
 }
 
-[[nodiscard]] phi::optional<std::string> read_file(const std::filesystem::path& file_path) noexcept;
+[[nodiscard]] phi::optional<std::string> read_file(const std::filesystem::path& file_path);
 
-phi::boolean write_file(const std::filesystem::path& file_path, std::string_view data) noexcept;
+phi::boolean write_file(const std::filesystem::path& file_path, std::string_view data);
 
 void out(std::string_view data);
 
@@ -33,5 +33,5 @@ void err(std::string_view data);
 void disable_output();
 
 [[nodiscard]] phi::boolean string_equals_ignore_case(const phi::string_view lhs,
-                                                     const phi::string_view rhs) noexcept;
+                                                     const phi::string_view rhs);
 } // namespace OpenAutoIt

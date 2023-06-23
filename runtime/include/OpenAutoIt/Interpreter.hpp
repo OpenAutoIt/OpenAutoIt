@@ -32,17 +32,17 @@ class Interpreter
 public:
     Interpreter() = default;
 
-    void SetDocument(phi::not_null_observer_ptr<ASTDocument> new_document) noexcept;
+    void SetDocument(phi::not_null_observer_ptr<ASTDocument> new_document);
 
     void Run();
 
     void Step();
 
-    [[nodiscard]] phi::not_null_observer_ptr<ASTStatement> GetCurrentStatement() const noexcept;
+    [[nodiscard]] phi::not_null_observer_ptr<ASTStatement> GetCurrentStatement() const;
 
-    [[nodiscard]] VirtualMachine& vm() noexcept;
+    [[nodiscard]] VirtualMachine& vm();
 
-    [[nodiscard]] const VirtualMachine& vm() const noexcept;
+    [[nodiscard]] const VirtualMachine& vm() const;
 
     enum class StatementFinished : bool
     {
@@ -65,10 +65,10 @@ public:
 
     Variant EvaluateBinaryExpression(const Variant& lhs, const Variant& rhs, const TokenKind op);
 
-    Variant EvaluateBinaryPlusExpression(const Variant& lhs, const Variant& rhs) noexcept;
-    Variant EvaluateBinaryMinusExpression(const Variant& lhs, const Variant& rhs) noexcept;
-    Variant EvaluateBinaryMultiplyExpression(const Variant& lhs, const Variant& rhs) noexcept;
-    Variant EvaluateBinaryDivideExpression(const Variant& lhs, const Variant& rhs) noexcept;
+    Variant EvaluateBinaryPlusExpression(const Variant& lhs, const Variant& rhs);
+    Variant EvaluateBinaryMinusExpression(const Variant& lhs, const Variant& rhs);
+    Variant EvaluateBinaryMultiplyExpression(const Variant& lhs, const Variant& rhs);
+    Variant EvaluateBinaryDivideExpression(const Variant& lhs, const Variant& rhs);
 
 private:
     phi::observer_ptr<ASTDocument> m_Document;

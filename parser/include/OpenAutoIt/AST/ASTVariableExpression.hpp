@@ -15,7 +15,7 @@ public:
         m_NodeType = ASTNodeType::VariableExpression;
     }
 
-    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const noexcept override
+    [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
     {
         std::string ret;
 
