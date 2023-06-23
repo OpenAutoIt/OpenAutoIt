@@ -97,6 +97,8 @@ private:
             case TokenKind::OP_GreaterThanEqual:
             case TokenKind::OP_LessThan:
             case TokenKind::OP_LessThanEqual:
+            case TokenKind::OP_Concatenate:
+            case TokenKind::OP_ConcatenateEquals:
                 return true;
 
             default:

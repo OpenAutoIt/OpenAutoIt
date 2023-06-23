@@ -497,6 +497,9 @@ Variant Interpreter::EvaluateBinaryExpression(const Variant& lhs, const Variant&
         case TokenKind::OP_Divide:
             return EvaluateBinaryDivideExpression(lhs, rhs);
 
+        case TokenKind::OP_Concatenate:
+            return lhs.Concatenate(rhs);
+
         default:
             return {};
     }

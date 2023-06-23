@@ -110,6 +110,7 @@ public:
     [[nodiscard]] Variant Subtract(const Variant& other) const;
     [[nodiscard]] Variant Multiply(const Variant& other) const;
     [[nodiscard]] Variant Divide(const Variant& other) const;
+    [[nodiscard]] Variant Concatenate(const Variant& other) const;
 
     [[nodiscard]] Variant UnaryMinus() const;
     [[nodiscard]] Variant UnaryNot() const;

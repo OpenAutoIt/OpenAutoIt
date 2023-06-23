@@ -513,6 +513,16 @@ Variant Variant::Divide(const Variant& other) const
     return {};
 }
 
+Variant Variant::Concatenate(const Variant& other) const
+{
+    const Variant this_string  = CastToString();
+    const Variant other_string = other.CastToString();
+
+    const string_t string = this_string.AsString() + other_string.AsString();
+
+    return Variant::MakeString(phi::move(string));
+}
+
 Variant Variant::UnaryMinus() const
 {
     switch (m_Type)
