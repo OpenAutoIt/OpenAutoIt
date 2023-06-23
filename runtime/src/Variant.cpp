@@ -485,6 +485,60 @@ Variant Variant::CastToString() const
     return {};
 }
 
+Variant Variant::Add(const Variant& other) const
+{
+    (void)other;
+    // TODO:
+    return {};
+}
+
+Variant Variant::Subtract(const Variant& other) const
+{
+    (void)other;
+    // TODO:
+    return {};
+}
+
+Variant Variant::Multiply(const Variant& other) const
+{
+    (void)other;
+    // TODO:
+    return {};
+}
+
+Variant Variant::Divide(const Variant& other) const
+{
+    (void)other;
+    // TODO:
+    return {};
+}
+
+Variant Variant::UnaryMinus() const
+{
+    switch (m_Type)
+    {
+        case Type::Double:
+            return MakeDouble(-AsDouble());
+
+        case Type::Int64:
+            return MakeInt(-AsInt64());
+
+        // TODO: I think this first needs a cast to int64 first
+        case Type::String:
+            return MakeInt(0);
+
+        default:
+            return {};
+    }
+}
+
+Variant Variant::UnaryNot() const
+{
+    // TODO: Implement me
+
+    return {};
+}
+
 PHI_ATTRIBUTE_CONST Variant Variant::MakeUndefined()
 {
     return Variant{};

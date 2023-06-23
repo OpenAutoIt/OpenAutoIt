@@ -16,6 +16,7 @@
 #include "OpenAutoIt/AST/ASTNode.hpp"
 #include "OpenAutoIt/AST/ASTStatement.hpp"
 #include "OpenAutoIt/AST/ASTStringLiteral.hpp"
+#include "OpenAutoIt/AST/ASTUnaryExpression.hpp"
 #include "OpenAutoIt/AST/ASTVariableAssignment.hpp"
 #include "OpenAutoIt/AST/ASTVariableExpression.hpp"
 #include "OpenAutoIt/AST/ASTWhileStatement.hpp"
@@ -151,6 +152,7 @@ private:
     phi::scope_ptr<ASTArraySubscriptExpression>         ParseArraySubscriptExpression();
     phi::scope_ptr<ASTExpression>                       ParseParenExpression();
     phi::scope_ptr<ASTExitStatement>                    ParseExitStatement();
+    phi::scope_ptr<ASTUnaryExpression> ParseUnaryExpression(const TokenKind operator_kind);
 
     // Literals
     phi::scope_ptr<ASTIntegerLiteral> ParseIntegerLiteral();

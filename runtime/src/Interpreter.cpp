@@ -8,6 +8,7 @@
 #include "OpenAutoIt/AST/ASTFunctionDefinition.hpp"
 #include "OpenAutoIt/AST/ASTKeywordLiteral.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
+#include "OpenAutoIt/AST/ASTUnaryExpression.hpp"
 #include "OpenAutoIt/AST/ASTWhileStatement.hpp"
 #include "OpenAutoIt/BuiltinFunctions.hpp"
 #include "OpenAutoIt/Token.hpp"
@@ -269,9 +270,14 @@ Variant Interpreter::InterpretExpression(phi::not_null_observer_ptr<ASTExpressio
             return Variant::MakeString(string_literal->m_Value);
         }
 
-        case ASTNodeType::UnaryExpression:
-            // TODO: UnaryExpression
-            return {};
+        case ASTNodeType::UnaryExpression: {
+            // TODO: add const
+            auto unary_expression = expression->as<ASTUnaryExpression>();
+
+            Variant expression_value = InterpretExpression(unary_expression->m_Expression);
+
+            return EvaluateUnaryExpression(expression_value, unary_expression->m_Operator);
+        }
 
         case ASTNodeType::VariableExpression: {
             const auto variable_expression = expression->as<ASTVariableExpression>();
@@ -437,6 +443,26 @@ Variant Interpreter::InterpretFunctionCall(const phi::string_view      function,
     }
 
     return {};
+}
+
+Variant Interpreter::EvaluateUnaryExpression(const Variant& value, const TokenKind operator_kind)
+{
+    switch (operator_kind)
+    {
+        case TokenKind::OP_Plus:
+            return value;
+
+        case TokenKind::OP_Minus:
+            return value.UnaryMinus();
+
+        case TokenKind::KW_Not:
+            return value.UnaryNot();
+
+        default:
+            PHI_ASSERT_NOT_REACHED();
+    }
+
+    PHI_ASSERT_NOT_REACHED();
 }
 
 Variant Interpreter::EvaluateBinaryExpression(const Variant& lhs, const Variant& rhs, TokenKind op)

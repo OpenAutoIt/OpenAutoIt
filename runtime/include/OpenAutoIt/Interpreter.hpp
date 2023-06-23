@@ -63,6 +63,8 @@ public:
     Variant InterpretFunctionCall(const phi::string_view      function,
                                   const std::vector<Variant>& arguments);
 
+    Variant EvaluateUnaryExpression(const Variant& value, const TokenKind operator_kind);
+
     Variant EvaluateBinaryExpression(const Variant& lhs, const Variant& rhs, const TokenKind op);
 
     Variant EvaluateBinaryPlusExpression(const Variant& lhs, const Variant& rhs);

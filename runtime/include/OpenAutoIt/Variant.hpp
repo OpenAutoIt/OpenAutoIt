@@ -105,6 +105,15 @@ public:
     [[nodiscard]] Variant CastToPointer() const;
     [[nodiscard]] Variant CastToString() const;
 
+    // Operations
+    [[nodiscard]] Variant Add(const Variant& other) const;
+    [[nodiscard]] Variant Subtract(const Variant& other) const;
+    [[nodiscard]] Variant Multiply(const Variant& other) const;
+    [[nodiscard]] Variant Divide(const Variant& other) const;
+
+    [[nodiscard]] Variant UnaryMinus() const;
+    [[nodiscard]] Variant UnaryNot() const;
+
     // Factory functions
 
     // Undefined

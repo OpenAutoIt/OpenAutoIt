@@ -1,9 +1,11 @@
 ; Integers
 ConsoleWrite(Abs(3)) ; expect-stdout: "3"
-; TODO: Actual tests with negative values once we support parsing them ;-)
+ConsoleWrite(Abs(-3)) ; expect-stdout: "3"
 
 ; Double
+; TODO: AutoIt formats doubles differently
 ConsoleWrite(Abs(3.14)) ; expect-stdout: "3.140000"
+ConsoleWrite(Abs(-3.14)) ; expect-stdout: "3.140000"
 
 ; Strings
 ConsoleWrite(Abs(""))       ; expect-stdout: "0"

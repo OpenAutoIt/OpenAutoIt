@@ -842,9 +842,16 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
         PHI_UNUSED_VARIABLE(op_precedence);
         ConsumeCurrent();
 
-        // TODO: Implement me
+        phi::scope_ptr<ASTExpression> unary_expression = ParseUnaryExpression(token.GetTokenKind());
+        if (!unary_expression)
+        {
+            // TODO: Proper error
+            return {};
+        }
+
+        return phi::move(unary_expression);
     }
-    else if (token.GetTokenKind() == TokenKind::LParen)
+    if (token.GetTokenKind() == TokenKind::LParen)
     {
         // Consume the LParen
         m_TokenStream->consume();
@@ -858,7 +865,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
 
         return phi::move(paren_expression);
     }
-    else if (token.GetTokenKind() == TokenKind::IntegerLiteral)
+    if (token.GetTokenKind() == TokenKind::IntegerLiteral)
     {
         phi::scope_ptr<ASTExpression> int_literal = ParseIntegerLiteral();
         if (!int_literal)
@@ -869,7 +876,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
 
         return phi::move(int_literal);
     }
-    else if (token.GetTokenKind() == TokenKind::StringLiteral)
+    if (token.GetTokenKind() == TokenKind::StringLiteral)
     {
         auto string_literal_expression = ParseStringLiteral();
         if (!string_literal_expression)
@@ -882,8 +889,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
     }
 
     // Boolean literal
-    else if (token.GetTokenKind() == TokenKind::KW_True ||
-             token.GetTokenKind() == TokenKind::KW_False)
+    if (token.GetTokenKind() == TokenKind::KW_True || token.GetTokenKind() == TokenKind::KW_False)
     {
         auto boolean_literal = ParseBooleanLiteral();
         if (!boolean_literal)
@@ -896,7 +902,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
     }
 
     // Function call expression
-    else if (token.GetTokenKind() == TokenKind::FunctionIdentifier || token.IsBuiltInFunction())
+    if (token.GetTokenKind() == TokenKind::FunctionIdentifier || token.IsBuiltInFunction())
     {
         auto function_call_expression = ParseFunctionCallExpression();
         if (!function_call_expression)
@@ -909,7 +915,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
         return phi::move(function_call_expression);
     }
     // Variable expression
-    else if (token.GetTokenKind() == TokenKind::VariableIdentifier)
+    if (token.GetTokenKind() == TokenKind::VariableIdentifier)
     {
         auto variable_expression = ParseVariableExpression();
         if (!variable_expression)
@@ -922,7 +928,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
         return phi::move(variable_expression);
     }
     // Keyword literal
-    else if (token.IsKeywordLiteral())
+    if (token.IsKeywordLiteral())
     {
         auto keyword_literal = ParseKeywordLiteral();
         if (!keyword_literal)
@@ -935,7 +941,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
         return phi::move(keyword_literal);
     }
     // Float literal
-    else if (token.GetTokenKind() == TokenKind::FloatLiteral)
+    if (token.GetTokenKind() == TokenKind::FloatLiteral)
     {
         auto float_literal = ParseFloatLiteral();
         if (!float_literal)
@@ -948,7 +954,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
         return phi::move(float_literal);
     }
     // ArraySubscript expression
-    else if (token.GetTokenKind() == TokenKind::LSquare)
+    if (token.GetTokenKind() == TokenKind::LSquare)
     {
         auto subscript_expression = ParseArraySubscriptExpression();
         if (!subscript_expression)
@@ -1225,6 +1231,27 @@ phi::scope_ptr<ASTExitStatement> Parser::ParseExitStatement()
     phi::scope_ptr<ASTExpression> expression = ParseExpression();
 
     return phi::make_scope<ASTExitStatement>(phi::move(expression));
+}
+
+phi::scope_ptr<ASTUnaryExpression> Parser::ParseUnaryExpression(const TokenKind operator_kind)
+{
+    PHI_ASSERT(IsUnaryOperator(operator_kind));
+
+    if (!m_TokenStream->has_more())
+    {
+        return {};
+    }
+
+    // Parse expression
+    phi::scope_ptr<ASTExpression> expression = ParseExpression();
+    if (!expression)
+    {
+        // TODO: Proper error
+        return {};
+    }
+
+    return phi::make_scope<ASTUnaryExpression>(operator_kind,
+                                               phi::move(expression.release_not_null()));
 }
 
 phi::scope_ptr<ASTBooleanLiteral> Parser::ParseBooleanLiteral()
