@@ -63,7 +63,7 @@ PHI_ATTRIBUTE_PURE const Scope& VirtualMachine::GetGlobalScope() const noexcept
     return m_Scopes.back();
 }
 
-StackTrace VirtualMachine::GetStrackTrace() const noexcept
+StackTrace VirtualMachine::GetStackTrace() const noexcept
 {
     // Count number of function elements
     phi::u64 count = 0u;

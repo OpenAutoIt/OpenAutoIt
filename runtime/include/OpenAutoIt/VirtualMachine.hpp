@@ -48,10 +48,10 @@ public:
         err("Stack trace:\n");
 
         // Print stack trace
-        StackTrace strack_trace = GetStrackTrace();
-        for (phi::u64 index{0u}; index < strack_trace.size(); ++index)
+        StackTrace stack_trace = GetStackTrace();
+        for (phi::u64 index{0u}; index < stack_trace.size(); ++index)
         {
-            const StackTraceEntry& entry = strack_trace.at(index.unsafe());
+            const StackTraceEntry& entry = stack_trace.at(index.unsafe());
 
             err(fmt::format("\t#{:d} {:s} {:s}:{:d}:{:d}\n", index.unsafe(), entry.function,
                             entry.file, entry.line.unsafe(), entry.column.unsafe()));
@@ -71,7 +71,7 @@ public:
     [[nodiscard]] Scope&       GetGlobalScope() noexcept;
     [[nodiscard]] const Scope& GetGlobalScope() const noexcept;
 
-    [[nodiscard]] StackTrace GetStrackTrace() const noexcept;
+    [[nodiscard]] StackTrace GetStackTrace() const noexcept;
 
     phi::boolean PushVariable(std::string_view name, Variant value) noexcept;
     phi::boolean PushVariableGlobal(std::string_view name, Variant value) noexcept;
