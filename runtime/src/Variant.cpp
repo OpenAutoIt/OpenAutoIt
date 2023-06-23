@@ -89,7 +89,7 @@ void Variant::Clear() noexcept
             return;
 
         default:
-            // The other types are trivially destructable
+            // The other types are trivially destructible
             return;
     }
 
