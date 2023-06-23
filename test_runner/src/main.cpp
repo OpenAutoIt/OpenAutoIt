@@ -41,13 +41,15 @@ struct ExpectedBlock
 
 struct OutputBuffer
 {
-    std::stringstream std_out;
-    std::stringstream std_err;
+    std::string std_out;
+    std::string std_err;
 };
 
 PHI_CLANG_SUPPRESS_WARNING_PUSH()
 PHI_CLANG_SUPPRESS_WARNING("-Wexit-time-destructors")
 PHI_CLANG_SUPPRESS_WARNING("-Wglobal-constructors")
+
+static OutputBuffer out_buffer;
 
 // Regexes
 static const std::regex expected_std_out_regex{R"regex(expect-stdout:\s*"(.*)")regex"};
@@ -55,32 +57,69 @@ static const std::regex expected_std_err_regex{R"regex(expect-stderr:\s*"(.*)")r
 
 PHI_CLANG_SUPPRESS_WARNING_POP()
 
-// TODO: Print expected actual etc.
+void standard_output_handler(const std::string& message)
+{
+    out_buffer.std_out += message + '\0';
+}
+
+void error_output_handler(const std::string& message)
+{
+    out_buffer.std_err += message + '\0';
+}
+
+void basic_trim(std::string& str)
+{
+    while (!str.empty())
+    {
+        const char character = str.back();
+
+        switch (character)
+        {
+            case '\0':
+            case '\n':
+            case '\t':
+            case '\v':
+            case '\b':
+            case '\f':
+            case ' ':
+                str.pop_back();
+                break;
+
+            default:
+                return;
+        }
+    }
+}
+
 PHI_ATTRIBUTE_PURE phi::boolean expects_matched(const ExpectedBlock& expected_block,
                                                 const OutputBuffer&  buffer)
 {
     phi::boolean return_value{true};
 
     // Check std-out
-    const std::string std_out_str = buffer.std_out.str();
+    std::string std_out_str = buffer.std_out;
+    basic_trim(std_out_str);
+
     if (expected_block.std_out != std_out_str)
     {
         std::cout << "Expected stdout mismatch!\n";
 
-        std::cout << "- Expected:\n" << expected_block.std_out;
-        std::cout << "- Actual  :\n" << std_out_str;
+        std::cout << "<Expected>\n" << expected_block.std_out << '\n';
+        std::cout << "<Actual>\n" << std_out_str << '\n';
 
         return_value = false;
     }
 
     // Check std-err
-    const std::string std_err_str = buffer.std_err.str();
+    std::string std_err_str = buffer.std_err;
+    basic_trim(std_err_str);
+
     if (expected_block.std_err != std_err_str)
     {
         std::cout << "Expected stderr mismatch!\n";
 
-        std::cout << "- Expected:\n" << expected_block.std_err;
-        std::cout << "- Actual  :\n" << std_err_str;
+        std::cout << "<Expected>\n" << expected_block.std_err << '\n';
+        std::cout << "<Actual>\n" << std_err_str << '\n';
 
         return_value = false;
     }
@@ -135,6 +174,10 @@ ExpectedBlock extract_expected_block(const OpenAutoIt::TokenStream& tokens)
         }
     }
 
+    // Trim output
+    basic_trim(block.std_out);
+    basic_trim(block.std_err);
+
     return block;
 }
 
@@ -166,18 +209,20 @@ ExpectedBlock extract_expected_block(const OpenAutoIt::TokenStream& tokens)
     OpenAutoIt::Interpreter interpreter;
     interpreter.SetDocument(parse_result.m_Document.not_null_observer());
 
-    OutputBuffer buffer;
+    // Clear buffers
+    out_buffer.std_err.clear();
+    out_buffer.std_out.clear();
 
     // Setup VM
     OpenAutoIt::VirtualMachine& vm = interpreter.vm();
 
-    vm.OverwriteIOSreams(&buffer.std_out, &buffer.std_err);
+    vm.SetupOutputHandler(standard_output_handler, error_output_handler);
 
     // Interpret the code
     interpreter.Run();
 
     // Check expected
-    return expects_matched(expected_block, buffer);
+    return expects_matched(expected_block, out_buffer);
 }
 
 int main(int argc, char* argv[])

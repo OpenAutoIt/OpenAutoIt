@@ -30,6 +30,8 @@ namespace OpenAutoIt
 {
 using StackTrace = std::vector<StackTraceEntry>;
 
+using OutputHandler = void (*)(const std::string&);
+
 // The abstract virtual machine running AutoIt
 class VirtualMachine
 {
@@ -91,18 +93,17 @@ public:
 
     [[nodiscard]] phi::u32 GetExitCode() const;
 
-    void OverwriteIOSreams(phi::observer_ptr<std::ostream> out,
-                           phi::observer_ptr<std::ostream> err);
+    void SetupOutputHandler(OutputHandler standard, OutputHandler error);
 
-    [[nodiscard]] phi::observer_ptr<std::ostream> GetStdout() const;
-    [[nodiscard]] phi::observer_ptr<std::ostream> GetStderr() const;
+    void Print(const std::string& message) const;
+    void PrintError(const std::string& message) const;
 
 private:
     std::list<Scope> m_Scopes;
 
-    phi::observer_ptr<std::ostream> m_Stdout{&std::cout};
-    phi::observer_ptr<std::ostream> m_Stderr{&std::cerr};
-    phi::boolean                    m_Aborting{false};
-    phi::u32                        m_ExitCode{0u};
+    OutputHandler m_StandardOutputHandler{nullptr};
+    OutputHandler m_ErrorOutputHandler{nullptr};
+    phi::boolean  m_Aborting{false};
+    phi::u32      m_ExitCode{0u};
 };
 } // namespace OpenAutoIt

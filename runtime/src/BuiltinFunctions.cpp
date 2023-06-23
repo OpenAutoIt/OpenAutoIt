@@ -32,11 +32,7 @@ Variant BuiltIn_ConsoleWrite(VirtualMachine& vm, const Variant& input)
     const std::string& output = value.AsString();
 
     // Output to VM
-    auto std_out = vm.GetStdout();
-    if (std_out != nullptr)
-    {
-        *std_out << output;
-    }
+    vm.Print(output);
 
     return Variant::MakeInt(static_cast<phi::int64_t>(output.size()));
 }
@@ -50,11 +46,7 @@ Variant BuiltIn_ConsoleWriteError(VirtualMachine& vm, const Variant& input)
     const std::string& output = value.AsString();
 
     // Output to VM
-    auto std_err = vm.GetStderr();
-    if (std_err != nullptr)
-    {
-        *std_err << output;
-    }
+    vm.PrintError(output);
 
     return Variant::MakeInt(static_cast<phi::int64_t>(output.size()));
 }
@@ -74,11 +66,7 @@ Variant BuiltIn_ConsoleWriteLine(VirtualMachine& vm, const Variant& input)
     const std::string& output = value.AsString();
 
     // Output to VM
-    auto std_out = vm.GetStdout();
-    if (std_out != nullptr)
-    {
-        *std_out << output << 'n';
-    }
+    vm.Print(output);
 
     return Variant::MakeInt(static_cast<phi::int64_t>(output.size()));
 }
@@ -92,11 +80,7 @@ Variant BuiltIn_ConsoleWriteErrorLine(VirtualMachine& vm, const Variant& input)
     const std::string& output = value.AsString();
 
     // Output to VM
-    auto std_err = vm.GetStderr();
-    if (std_err != nullptr)
-    {
-        *std_err << output << '\n';
-    }
+    vm.PrintError(output);
 
     return Variant::MakeInt(static_cast<phi::int64_t>(output.size()));
 }

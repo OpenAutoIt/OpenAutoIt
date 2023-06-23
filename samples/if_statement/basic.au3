@@ -2,6 +2,6 @@ If True Then
     ConsoleWrite("PASS") ; expect-stdout: "PASS"
 Endif
 
-If False then
+If False Then
     ConsoleWrite("FAIL")
 EndIf

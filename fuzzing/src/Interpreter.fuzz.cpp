@@ -42,9 +42,6 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
     OpenAutoIt::Interpreter interpreter;
     interpreter.SetDocument(parse_result.m_Document.not_null_observer());
 
-    // Prevent output
-    interpreter.vm().OverwriteIOSreams(nullptr, nullptr);
-
     // Limit number of executions because of the halting problem
     phi::u64 statements_ran = 0u;
     while (interpreter.vm().CanRun() && statements_ran < MaxNumberOfStatements)

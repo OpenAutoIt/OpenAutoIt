@@ -95,7 +95,7 @@ PHI_ATTRIBUTE_CONST const VirtualMachine& Interpreter::vm() const
 Interpreter::StatementFinished Interpreter::InterpretStatement(
         phi::not_null_observer_ptr<ASTStatement> statement)
 {
-    // NOTE: Generally we return Yes for finished statments and the ending of loops
+    // NOTE: Generally we return Yes for finished statements and the ending of loops
     //       While returning No for unfinished loops like While and For
 
     switch (statement->NodeType())

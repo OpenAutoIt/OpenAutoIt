@@ -217,20 +217,26 @@ phi::u32 VirtualMachine::GetExitCode() const
     return m_ExitCode;
 }
 
-void VirtualMachine::OverwriteIOSreams(phi::observer_ptr<std::ostream> out,
-                                       phi::observer_ptr<std::ostream> err)
+void VirtualMachine::SetupOutputHandler(OutputHandler standard, OutputHandler error)
 {
-    m_Stdout = out;
-    m_Stderr = err;
+    m_StandardOutputHandler = standard;
+    m_ErrorOutputHandler    = error;
 }
 
-PHI_ATTRIBUTE_CONST phi::observer_ptr<std::ostream> VirtualMachine::GetStdout() const
+void VirtualMachine::Print(const std::string& message) const
 {
-    return m_Stdout;
+    if (m_StandardOutputHandler != nullptr)
+    {
+        m_StandardOutputHandler(message);
+    }
 }
 
-PHI_ATTRIBUTE_CONST phi::observer_ptr<std::ostream> VirtualMachine::GetStderr() const
+void VirtualMachine::PrintError(const std::string& message) const
 {
-    return m_Stderr;
+    if (m_ErrorOutputHandler != nullptr)
+    {
+        m_ErrorOutputHandler(message);
+    }
 }
+
 } // namespace OpenAutoIt

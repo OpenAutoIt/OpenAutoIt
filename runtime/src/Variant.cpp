@@ -607,9 +607,6 @@ Variant Variant::MakeString(const char* value)
     variant.m_Type = Type::String;
     variant.string = value;
 
-    // Ensure the string is null terminated
-    variant.string.push_back('\0');
-
     return variant;
 }
 
@@ -617,14 +614,11 @@ Variant Variant::MakeString(phi::string_view value)
 {
     Variant variant;
 
-    // Reserve engough space for the string plus the null terminator
-    variant.string.reserve(value.length().unsafe() + 1u);
+    // Reserve enough space for the string plus the null terminator
+    variant.string.reserve(value.length().unsafe());
 
     variant.m_Type = Type::String;
     variant.string = string_t{value.data(), value.length().unsafe()};
-
-    // Ensure the string is null terminated
-    variant.string.push_back('\0');
 
     return variant;
 }
@@ -636,9 +630,6 @@ Variant Variant::MakeString(const string_t& value)
     variant.m_Type = Type::String;
     variant.string = value;
 
-    // Ensure the string is null terminated
-    variant.string.push_back('\0');
-
     return variant;
 }
 
@@ -648,9 +639,6 @@ Variant Variant::MakeString(string_t&& value)
 
     variant.m_Type = Type::String;
     variant.string = phi::move(value);
-
-    // Ensure the string is null terminated
-    variant.string.push_back('\0');
 
     return variant;
 }

@@ -6,6 +6,16 @@
 #include <OpenAutoIt/Parser.hpp>
 #include <iostream>
 
+void standard_output_handler(const std::string& message)
+{
+    std::cout << message;
+}
+
+void error_output_handler(const std::string& message)
+{
+    std::cerr << message;
+}
+
 int main(int argc, char* argv[])
 {
     if (argc < 2)
@@ -45,6 +55,7 @@ int main(int argc, char* argv[])
     }
 
     OpenAutoIt::Interpreter interpreter;
+    interpreter.vm().SetupOutputHandler(standard_output_handler, error_output_handler);
     interpreter.SetDocument(parse_result.m_Document.not_null_observer());
     interpreter.Run();
 
