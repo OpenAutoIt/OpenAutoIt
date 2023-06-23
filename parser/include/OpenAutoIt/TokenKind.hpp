@@ -220,26 +220,26 @@ namespace OpenAutoIt
     OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(KW_Not)                                                        \
     /* Operator */                                                                                 \
     /* https://www.autoitscript.com/autoit3/docs/intro/lang_operators.htm */                       \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Equals)                                                     \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_PlusEquals)                                                 \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_MinusEquals)                                                \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_MultiplyEquals)                                             \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_DivideEquals)                                               \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Concatenate)                                                \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_ConcatenateEquals)                                          \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Plus)                                                       \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Minus)                                                      \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Multiply)                                                   \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Divide)                                                     \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Raise)                                                      \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_EqualsEquals)                                               \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_NotEqual)                                                   \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_GreaterThan)                                                \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_GreaterThanEqual)                                           \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_LessThan)                                                   \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_LessThanEqual)                                              \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_TernaryIf)                                                  \
-    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_TernaryElse)                                                \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Equals)            /* = */                                  \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_PlusEquals)        /* += */                                 \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_MinusEquals)       /* -= */                                 \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_MultiplyEquals)    /* *= */                                 \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_DivideEquals)      /* /= */                                 \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Concatenate)       /* & */                                  \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_ConcatenateEquals) /* &= */                                 \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Plus)              /* + */                                  \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Minus)             /* - */                                  \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Multiply)          /* * */                                  \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Divide)            /* / */                                  \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_Raise)             /* ^ */                                  \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_EqualsEquals)      /* == */                                 \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_NotEqual)          /* <> */                                 \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_GreaterThan)       /* > */                                  \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_GreaterThanEqual)  /* >= */                                 \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_LessThan)          /* < */                                  \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_LessThanEqual)     /* <= */                                 \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_TernaryIf)         /* ? */                                  \
+    OPENAUTOIT_ENUM_TOKEN_KIND_IMPL(OP_TernaryElse)       /* : */                                  \
     /* Built-in Functions */                                                                       \
     /* https://www.autoitscript.com/autoit3/docs/functions.htm */                                  \
     /* https://www.autoitscript.com/autoit3/docs/function_notes.htm */                             \
