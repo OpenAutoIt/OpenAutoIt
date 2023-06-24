@@ -611,7 +611,7 @@ Variant Variant::UnaryMinus() const
             return MakeDouble(-AsDouble());
 
         case Type::Int64:
-            return MakeInt(-AsInt64().unsafe());
+            return MakeInt(UnsafeNegate(AsInt64()));
 
         case Type::String:
             return CastToNumeric().UnaryMinus();

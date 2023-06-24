@@ -33,4 +33,10 @@ ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeDivide(phi::i64 lhs, phi::i6
 {
     return lhs.unsafe() / rhs.unsafe();
 }
+
+ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeNegate(phi::i64 value)
+{
+    return -value.unsafe();
+}
+
 } // namespace OpenAutoIt
