@@ -7,20 +7,11 @@
 
 namespace OpenAutoIt
 {
+
 // https://www.autoitscript.com/autoit3/docs/functions/Abs.htm
 Variant BuiltIn_Abs(const VirtualMachine& /*vm*/, const Variant& input)
 {
-    switch (input.GetType())
-    {
-        case Variant::Type::Int64:
-            return Variant::MakeInt(static_cast<phi::int64_t>(phi::abs(input.AsInt64()).unsafe()));
-
-        case Variant::Type::Double:
-            return Variant::MakeDouble(phi::abs(input.AsDouble()));
-
-        default:
-            return Variant::MakeInt(0);
-    }
+    return input.Abs();
 }
 
 // https://www.autoitscript.com/autoit3/docs/functions/ConsoleWrite.htm
@@ -84,4 +75,5 @@ Variant BuiltIn_ConsoleWriteErrorLine(VirtualMachine& vm, const Variant& input)
 
     return Variant::MakeInt(static_cast<phi::int64_t>(output.size()));
 }
+
 } // namespace OpenAutoIt

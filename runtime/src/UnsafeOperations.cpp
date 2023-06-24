@@ -39,4 +39,14 @@ ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeNegate(phi::i64 value)
     return -value.unsafe();
 }
 
+ATTRIBUTE_NO_SAN PHI_ATTRIBUTE_CONST phi::i64 UnsafeAbs(phi::i64 value)
+{
+    if (value > 0)
+    {
+        return value;
+    }
+
+    return -value.unsafe();
+}
+
 } // namespace OpenAutoIt

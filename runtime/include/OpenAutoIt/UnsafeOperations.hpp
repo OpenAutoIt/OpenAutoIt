@@ -20,4 +20,7 @@ namespace OpenAutoIt
 // Negate
 [[nodiscard]] phi::i64 UnsafeNegate(phi::i64 value);
 
+// Abs
+[[nodiscard]] phi::i64 UnsafeAbs(phi::i64 value);
+
 } // namespace OpenAutoIt

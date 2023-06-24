@@ -1,11 +1,14 @@
 #include "OpenAutoIt/Variant.hpp"
 
+#include "OpenAutoIt/UnsafeOperations.hpp"
+#include <phi/compiler_support/extended_attributes.hpp>
 #include <phi/compiler_support/warning.hpp>
 #include <phi/container/string_view.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/move.hpp>
 #include <phi/core/types.hpp>
+#include <phi/math/abs.hpp>
 #include <functional>
 #include <string>
 
@@ -601,6 +604,34 @@ Variant Variant::Concatenate(const Variant& other) const
     const string_t string = this_string.AsString() + other_string.AsString();
 
     return Variant::MakeString(phi::move(string));
+}
+
+// https://www.autoitscript.com/autoit3/docs/functions/Abs.htm
+// NOTE: The documentation is actually wrong here. The String "1" returns 1 not 0
+//       as the string is first cast to an integer and then the abs function is called.
+//       The same goes for "2.0" which returns 2.0.
+Variant Variant::Abs() const
+{
+    switch (m_Type)
+    {
+        case Type::Double:
+            return MakeDouble(phi::abs(AsDouble()));
+
+        case Type::Int64:
+            return MakeInt(UnsafeAbs(AsInt64()));
+
+        case Type::String: {
+            // For a string we first convert to a numeric (double or int64)
+            const Variant numeric = CastToNumeric();
+            const Variant abs     = numeric.Abs();
+
+            return phi::move(abs);
+        }
+
+        // For all other types cast to int and the call abs
+        default:
+            return CastToInt64().Abs();
+    }
 }
 
 Variant Variant::UnaryMinus() const

@@ -116,6 +116,8 @@ public:
     [[nodiscard]] Variant Divide(const Variant& other) const;
     [[nodiscard]] Variant Concatenate(const Variant& other) const;
 
+    [[nodiscard]] Variant Abs() const;
+
     [[nodiscard]] Variant UnaryMinus() const;
     [[nodiscard]] Variant UnaryNot() const;
 
