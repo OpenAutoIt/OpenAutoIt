@@ -2,10 +2,10 @@
 #include "OpenAutoIt/Interpreter.hpp"
 #include "OpenAutoIt/Lexer.hpp"
 #include "OpenAutoIt/ParseError.hpp"
-#include "OpenAutoIt/ParseResult.hpp"
 #include "OpenAutoIt/ParseWarning.hpp"
 #include "OpenAutoIt/Parser.hpp"
 #include "OpenAutoIt/SourceLocation.hpp"
+#include "OpenAutoIt/SourceManager.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
 #include "OpenAutoIt/VirtualMachine.hpp"
@@ -19,6 +19,7 @@
 #include <phi/core/narrow_cast.hpp>
 #include <phi/core/optional.hpp>
 #include <phi/core/scope_guard.hpp>
+#include <phi/core/scope_ptr.hpp>
 #include <phi/core/types.hpp>
 
 // No idea why we get this warning here from gcc
@@ -27,11 +28,11 @@ PHI_GCC_SUPPRESS_WARNING("-Walloc-zero")
 #include <cstddef>
 #include <cstdio>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
 #include <regex>
-#include <sstream>
 #include <string>
+
+using namespace OpenAutoIt;
 
 struct ExpectedBlock
 {
@@ -127,13 +128,13 @@ PHI_ATTRIBUTE_PURE phi::boolean expects_matched(const ExpectedBlock& expected_bl
     return return_value;
 }
 
-ExpectedBlock extract_expected_block(const OpenAutoIt::TokenStream& tokens)
+ExpectedBlock extract_expected_block(const TokenStream& tokens)
 {
     ExpectedBlock block;
 
-    for (const OpenAutoIt::Token& token : tokens)
+    for (const Token& token : tokens)
     {
-        if (token.GetTokenKind() != OpenAutoIt::TokenKind::Comment)
+        if (token.GetTokenKind() != TokenKind::Comment)
         {
             continue;
         }
@@ -185,36 +186,38 @@ ExpectedBlock extract_expected_block(const OpenAutoIt::TokenStream& tokens)
 {
     const std::string base_name = file_path.filename().replace_extension().string();
 
-    const phi::optional<std::string> file_content_opt = OpenAutoIt::read_file(file_path);
-    if (!file_content_opt)
+    // Load file
+    SourceManager                       source_manager;
+    phi::observer_ptr<const SourceFile> source_file = source_manager.LoadFile(file_path);
+    if (!source_file)
     {
+        std::cerr << "Failed to load file: " << file_path << '\n';
         return false;
     }
-    const std::string& file_content = file_content_opt.value();
 
-    OpenAutoIt::ParseResult parse_result;
+    auto document = phi::make_not_null_scope<ASTDocument>();
 
     // Lex the source file
-    OpenAutoIt::Lexer lexer{parse_result};
-    lexer.ProcessString(phi::string_view{file_content.data(), file_content.length()});
+    OpenAutoIt::Lexer lexer;
+    TokenStream       stream = lexer.ProcessFile(source_file);
 
     // Parse the source file
-    OpenAutoIt::Parser parser;
-    parser.ParseDocument(parse_result);
+    Parser parser{source_manager};
+    parser.ParseTokenStream(document, stream);
 
     // Extract expected block
-    const ExpectedBlock expected_block = extract_expected_block(parse_result.m_TokenStream);
+    const ExpectedBlock expected_block = extract_expected_block(stream);
 
     // Setup interpreter
-    OpenAutoIt::Interpreter interpreter;
-    interpreter.SetDocument(parse_result.m_Document.not_null_observer());
+    Interpreter interpreter;
+    interpreter.SetDocument(document);
 
     // Clear buffers
     out_buffer.std_err.clear();
     out_buffer.std_out.clear();
 
     // Setup VM
-    OpenAutoIt::VirtualMachine& vm = interpreter.vm();
+    VirtualMachine& vm = interpreter.vm();
 
     vm.SetupOutputHandler(standard_output_handler, error_output_handler);
 

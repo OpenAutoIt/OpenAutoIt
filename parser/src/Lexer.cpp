@@ -1,6 +1,6 @@
 #include "OpenAutoIt/Lexer.hpp"
 
-#include "OpenAutoIt/ParseResult.hpp"
+#include "OpenAutoIt/SourceFile.hpp"
 #include "OpenAutoIt/Token.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
@@ -769,23 +769,9 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
 
 namespace OpenAutoIt
 {
-Lexer::Lexer(ParseResult& parse_result)
-    : m_ParseResult{parse_result}
-    , m_Iterator{m_Source.begin()}
+
+Lexer::Lexer()
 {}
-
-Lexer::Lexer(ParseResult& parse_result, phi::string_view source)
-    : m_ParseResult{parse_result}
-    , m_Source{source}
-    , m_Iterator{source.begin()}
-{}
-
-void Lexer::SetInputSource(phi::string_view source)
-{
-    m_Source = source;
-
-    Reset();
-}
 
 void Lexer::Reset()
 {
@@ -802,11 +788,6 @@ PHI_ATTRIBUTE_PURE phi::boolean Lexer::IsFinished() const
     return m_Iterator == m_Source.end();
 }
 
-PHI_ATTRIBUTE_PURE phi::boolean Lexer::HasInput() const
-{
-    return !m_Source.is_empty();
-}
-
 phi::optional<Token> Lexer::GetNextToken()
 {
     while (!IsFinished())
@@ -817,8 +798,7 @@ phi::optional<Token> Lexer::GetNextToken()
 
         if (current_character == '\0')
         {
-            m_ParseResult.m_Warnings.emplace_back(
-                    ParseWarning::EmbeddedNullCharacter(m_LineNumber, m_Column));
+            // TODO: Embedded null character warning
 
             SkipCurrentCharacter();
         }
@@ -865,8 +845,8 @@ phi::optional<Token> Lexer::GetNextToken()
                         m_Iterator -= TokenText(begin_of_token).length().unsafe();
 
                         Token token{TokenKind::Comment, TokenText(begin_of_multiline_comment),
-                                    beginning_line_of_multiline_comment,
-                                    beginning_column_of_multiline_comment};
+                                    BuildSourceLocation(beginning_line_of_multiline_comment,
+                                                        beginning_column_of_multiline_comment)};
 
                         return token;
                     }
@@ -1268,9 +1248,20 @@ phi::optional<Token> Lexer::GetNextToken()
     return {};
 }
 
-void Lexer::ProcessAll()
+TokenStream Lexer::ProcessString(phi::string_view file_name, phi::string_view source)
 {
-    TokenStream& stream = m_ParseResult.m_TokenStream;
+    SourceFile fake_source{SourceFile::Type::Basic, file_name.data(), source};
+
+    return ProcessFile(&fake_source);
+}
+
+TokenStream Lexer::ProcessFile(phi::observer_ptr<const SourceFile> source_file)
+{
+    TokenStream stream;
+
+    m_SourceFile = source_file;
+    m_Source     = m_SourceFile->m_Content;
+    Reset();
 
     while (!IsFinished())
     {
@@ -1283,13 +1274,7 @@ void Lexer::ProcessAll()
     }
 
     stream.finalize();
-}
-
-void Lexer::ProcessString(phi::string_view source)
-{
-    SetInputSource(source);
-
-    ProcessAll();
+    return stream;
 }
 
 void Lexer::ConsumeCurrentCharacter()

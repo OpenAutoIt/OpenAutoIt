@@ -1,53 +1,46 @@
-#include "OpenAutoIt/ParseResult.hpp"
-#include <OpenAutoIt/Lexer.hpp>
-#include <OpenAutoIt/Parser.hpp>
+#include "OpenAutoIt/AST/ASTDocument.hpp"
+
+#include "OpenAutoIt/Lexer.hpp"
+#include "OpenAutoIt/Parser.hpp"
+#include "OpenAutoIt/SourceManager.hpp"
 #include <phi/compiler_support/warning.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/scope_guard.hpp>
+#include <phi/core/scope_ptr.hpp>
 #include <cstdio>
 #include <filesystem>
 #include <iostream>
+
+using namespace OpenAutoIt;
 
 PHI_CLANG_SUPPRESS_WARNING_PUSH()
 PHI_CLANG_SUPPRESS_WARNING("-Wglobal-constructors")
 PHI_CLANG_SUPPRESS_WARNING("-Wexit-time-destructors")
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-OpenAutoIt::ParseResult parse_result;
+SourceManager source_manager;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-OpenAutoIt::Lexer lexer{parse_result};
+Lexer lexer;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-OpenAutoIt::Parser parser;
+Parser parser{source_manager};
 
 PHI_CLANG_SUPPRESS_WARNING_POP()
 
 phi::boolean process_file(const std::filesystem::path& file_path)
 {
     const std::string base_name = file_path.filename().replace_extension().string();
+    auto              document  = phi::make_not_null_scope<ASTDocument>();
 
-    const phi::optional<std::string> file_content_opt = OpenAutoIt::read_file(file_path);
-    if (!file_content_opt)
-    {
-        std::cout << "Failed to read file " << file_path << "\n";
-        return false;
-    }
-    const std::string& file_content = file_content_opt.value();
-
-    // Lex the source file
-    lexer.Reset();
-    lexer.ProcessString(phi::string_view{file_content.data(), file_content.length()});
-
-    // Parse the source file
-    parser.ParseDocument(parse_result);
+    parser.ParseFile(document, file_path);
 
     // Generate AST Dump
-    const std::string ast_dump = parse_result.m_Document->DumpAST();
+    const std::string ast_dump = document->DumpAST();
 
     // Generate AST Dump file
     std::filesystem::path ast_file_path = file_path;
     ast_file_path.replace_extension(".ast");
 
-    OpenAutoIt::write_file(ast_file_path, ast_dump);
+    write_file(ast_file_path, ast_dump);
 
     std::cout << "AST Dumped to \"" << ast_file_path.string() << "\"\n";
 

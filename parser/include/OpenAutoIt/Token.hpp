@@ -1,34 +1,37 @@
 #pragma once
 
-#include "TokenKind.hpp"
+#include "OpenAutoIt/SourceFile.hpp"
+#include "OpenAutoIt/SourceLocation.hpp"
+#include "OpenAutoIt/TokenKind.hpp"
 #include <phi/compiler_support/extended_attributes.hpp>
 #include <phi/container/string_view.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/boolean.hpp>
+#include <phi/core/move.hpp>
+#include <phi/core/observer_ptr.hpp>
 #include <phi/core/optional.hpp>
 #include <phi/core/size_t.hpp>
 #include <phi/core/types.hpp>
 
 namespace OpenAutoIt
 {
+
 class Token
 {
 public:
-    constexpr Token(TokenKind kind, phi::string_view text, phi::u64 line_number, phi::u64 column)
+    constexpr Token(TokenKind kind, phi::string_view text, SourceLocation location)
         : m_Kind{kind}
         , m_Text{text}
-        , m_LineNumber{line_number}
-        , m_Column{column}
+        , m_SourceLocation{phi::move(location)}
         , m_Hint{}
     {}
 
     template <typename HintT>
-    constexpr Token(TokenKind kind, phi::string_view text, phi::u64 line_number, phi::u64 column,
+    constexpr Token(TokenKind kind, phi::string_view text, SourceLocation location,
                     const HintT hint)
         : m_Kind{kind}
         , m_Text{text}
-        , m_LineNumber{line_number}
-        , m_Column{column}
+        , m_SourceLocation{phi::move(location)}
         , m_Hint{static_cast<phi::uint32_t>(hint)}
     {}
 
@@ -44,12 +47,29 @@ public:
 
     [[nodiscard]] constexpr phi::u64 GetLineNumber() const
     {
-        return m_LineNumber;
+        return m_SourceLocation.line_number;
     }
 
     [[nodiscard]] constexpr phi::u64 GetColumn() const
     {
-        return m_Column;
+        return m_SourceLocation.column;
+    }
+
+    [[nodiscard]] constexpr phi::observer_ptr<const SourceFile> GetSourceFile() const
+    {
+        return m_SourceLocation.source_file;
+    }
+
+    [[nodiscard]] constexpr SourceLocation GetBeginLocation() const
+    {
+        return m_SourceLocation;
+    }
+
+    [[nodiscard]] constexpr SourceLocation GetEndLocation() const
+    {
+        return {.source_file = m_SourceLocation.source_file,
+                .line_number = m_SourceLocation.line_number,
+                .column      = m_SourceLocation.column + m_Text.length()};
     }
 
     [[nodiscard]] constexpr phi::boolean HasHint() const
@@ -149,8 +169,8 @@ public:
 private:
     TokenKind               m_Kind;
     phi::string_view        m_Text;
-    phi::u64                m_LineNumber;
-    phi::u64                m_Column;
+    SourceLocation          m_SourceLocation;
     phi::optional<phi::u32> m_Hint;
 };
+
 } // namespace OpenAutoIt

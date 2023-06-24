@@ -21,7 +21,6 @@
 #include "OpenAutoIt/AST/ASTVariableExpression.hpp"
 #include "OpenAutoIt/AST/ASTWhileStatement.hpp"
 #include "OpenAutoIt/Associativity.hpp"
-#include "OpenAutoIt/ParseResult.hpp"
 #include "OpenAutoIt/Token.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
@@ -56,6 +55,7 @@ PHI_GCC_SUPPRESS_WARNING_POP()
 
 namespace OpenAutoIt
 {
+
 class OperatorPrecedenceTable
 {
 public:
@@ -127,14 +127,43 @@ private:
 
 constexpr OperatorPrecedenceTable OperatorPrecedence;
 
-Parser::Parser() = default;
+Parser::Parser(SourceManager& source_manager)
+    : m_SourceManager{source_manager}
+{}
 
-void Parser::ParseDocument(ParseResult& parse_result)
+void Parser::ParseTokenStream(phi::not_null_observer_ptr<ASTDocument> document, TokenStream& stream)
 {
-    m_ParseResult = &parse_result;
-    m_TokenStream = &parse_result.m_TokenStream;
+    m_TokenStream = &stream;
 
-    m_ParseResult->m_Document = phi::make_not_null_scope<ASTDocument>();
+    ParseDocument(phi::move(document));
+}
+
+void Parser::ParseString(phi::not_null_observer_ptr<ASTDocument> document,
+                         phi::string_view file_name, phi::string_view source)
+{
+    TokenStream stream = m_Lexer.ProcessString(file_name, source);
+
+    ParseTokenStream(phi::move(document), stream);
+}
+
+void Parser::ParseFile(phi::not_null_observer_ptr<ASTDocument> document,
+                       const std::filesystem::path&            path)
+{
+    auto source_file = m_SourceManager.LoadFile(path);
+    if (!source_file)
+    {
+        err(fmt::format("Failed to load file {:s}", path.string()));
+        return;
+    }
+
+    TokenStream stream = m_Lexer.ProcessFile(source_file);
+
+    ParseTokenStream(phi::move(document), stream);
+}
+
+void Parser::ParseDocument(phi::not_null_observer_ptr<ASTDocument> document)
+{
+    m_Document = document;
 
     while (m_TokenStream->has_more())
     {

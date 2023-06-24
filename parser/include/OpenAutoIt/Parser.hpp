@@ -23,25 +23,34 @@
 #include "OpenAutoIt/AST/ASTVariableExpression.hpp"
 #include "OpenAutoIt/AST/ASTWhileStatement.hpp"
 #include "OpenAutoIt/Associativity.hpp"
-#include "OpenAutoIt/ParseResult.hpp"
+#include "OpenAutoIt/Lexer.hpp"
+#include "OpenAutoIt/SourceManager.hpp"
 #include "OpenAutoIt/Token.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
 #include <phi/compiler_support/extended_attributes.hpp>
 #include <phi/core/boolean.hpp>
+#include <phi/core/observer_ptr.hpp>
 #include <phi/core/optional.hpp>
 #include <phi/core/scope_ptr.hpp>
+#include <filesystem>
 
 namespace OpenAutoIt
 {
 class Parser
 {
 public:
-    Parser();
+    Parser(SourceManager& source_manager);
 
-    void ParseDocument(ParseResult& parse_result);
+    void ParseTokenStream(phi::not_null_observer_ptr<ASTDocument> document, TokenStream& stream);
+    void ParseString(phi::not_null_observer_ptr<ASTDocument> document, phi::string_view file_name,
+                     phi::string_view source);
+    void ParseFile(phi::not_null_observer_ptr<ASTDocument> document,
+                   const std::filesystem::path&            path);
 
 private:
+    void ParseDocument(phi::not_null_observer_ptr<ASTDocument> document);
+
     [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static Associativity GetOperatorAssociativity(
             const TokenKind token_kind)
     {
@@ -120,13 +129,13 @@ private:
     template <typename TypeT>
     void AppendStatementToDocument(phi::not_null_scope_ptr<TypeT> statement)
     {
-        m_ParseResult->m_Document->AppendStatement(phi::move(statement));
+        m_Document->AppendStatement(phi::move(statement));
     }
 
     // TODO: Move to .cpp
     void AppendFunctionToDocument(phi::not_null_scope_ptr<ASTFunctionDefinition> function)
     {
-        m_ParseResult->m_Document->AppendFunction(phi::move(function));
+        m_Document->AppendFunction(phi::move(function));
     }
 
     // Main nodes
@@ -169,7 +178,10 @@ private:
     phi::scope_ptr<ASTKeywordLiteral> ParseKeywordLiteral();
     phi::scope_ptr<ASTFloatLiteral>   ParseFloatLiteral();
 
-    ParseResult* m_ParseResult;
+    SourceManager&                 m_SourceManager;
+    Lexer                          m_Lexer;
+    phi::observer_ptr<ASTDocument> m_Document;
+
     TokenStream* m_TokenStream;
 };
 } // namespace OpenAutoIt
