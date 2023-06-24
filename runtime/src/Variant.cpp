@@ -155,6 +155,19 @@ PHI_ATTRIBUTE_CONST phi::boolean Variant::IsString() const
     return m_Type == Type::String;
 }
 
+PHI_ATTRIBUTE_CONST phi::boolean Variant::IsNumeric() const
+{
+    switch (m_Type)
+    {
+        case Type::Double:
+        case Type::Int64:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 PHI_ATTRIBUTE_CONST phi::boolean Variant::IsBinary() const
 {
     return m_Type == Type::Binary;
@@ -396,8 +409,40 @@ PHI_ATTRIBUTE_CONST Variant Variant::CastToDouble() const
 
 PHI_ATTRIBUTE_CONST Variant Variant::CastToInt64() const
 {
-    // TODO
-    return {};
+    switch (m_Type)
+    {
+        case Type::Boolean: {
+            return MakeInt(AsBoolean() ? 1 : 0);
+        }
+
+        case Type::Double:
+            // TODO: Documentation talks about "correcting" floating point errors when converting
+            return MakeInt(static_cast<phi::int64_t>(AsDouble().unsafe()));
+
+        // Nothing todo here since we're already an int
+        case Type::Int64:
+            return *this;
+
+        // Keywords are always 0
+        case Type::Keyword: {
+            return MakeInt(0);
+        }
+
+        case Type::Pointer: {
+            return MakeInt(static_cast<phi::int64_t>(AsPointer()));
+        }
+
+        case Type::String: {
+            const string_t value = AsString();
+
+            const phi::int64_t int64_value = std::strtol(value.c_str(), nullptr, 10);
+
+            return MakeInt(int64_value);
+        }
+
+        default:
+            return Variant::MakeInt(0);
+    }
 }
 
 PHI_ATTRIBUTE_CONST Variant Variant::CastToPointer() const
@@ -453,15 +498,15 @@ Variant Variant::CastToString() const
             const OpenAutoIt::TokenKind value = AsKeyword();
 
             static const constexpr phi::string_view string_default{"Default"};
-            static const constexpr phi::string_view string_null{"Null"};
 
             switch (value)
             {
                 case OpenAutoIt::TokenKind::KW_Default:
                     return MakeString(string_default);
 
+                // NOTE: Null actually returns an empty string
                 case OpenAutoIt::TokenKind::KW_Null:
-                    return MakeString(string_null);
+                    return {};
 
                 default:
                     PHI_ASSERT_NOT_REACHED();
@@ -483,6 +528,41 @@ Variant Variant::CastToString() const
 
     PHI_ASSERT_NOT_REACHED();
     return {};
+}
+
+Variant Variant::CastToNumeric() const
+{
+    switch (m_Type)
+    {
+        // Nothing todo here
+        case Type::Int64:
+        case Type::Double:
+            return *this;
+
+        case Type::String: {
+            // TODO: Instead of converting the same string twice, we could write our own function to do this
+            string_t value = AsString();
+
+            // First attempt to convert to a double
+            char*        double_end_ptr = value.end().base();
+            const double double_value   = strtod(value.c_str(), &double_end_ptr);
+
+            char*              int64_end_ptr = value.end().base();
+            const phi::int64_t int64_value   = std::strtol(value.c_str(), &int64_end_ptr, 10);
+
+            // Use the double value if that parsed more otherwise use the int64
+            if (double_end_ptr > int64_end_ptr)
+            {
+                return MakeDouble(double_value);
+            }
+
+            return MakeInt(int64_value);
+        }
+
+        // All other types are simply cast to int64
+        default:
+            return CastToInt64();
+    }
 }
 
 Variant Variant::Add(const Variant& other) const
@@ -533,9 +613,8 @@ Variant Variant::UnaryMinus() const
         case Type::Int64:
             return MakeInt(-AsInt64().unsafe());
 
-        // TODO: I think this first needs a cast to int64 first
         case Type::String:
-            return MakeInt(0);
+            return CastToNumeric().UnaryMinus();
 
         default:
             return {};

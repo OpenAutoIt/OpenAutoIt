@@ -1831,7 +1831,7 @@ TEST_CASE("Variant - CastToString")
         casted = base.CastToString();
 
         CHECK(casted.IsString());
-        CHECK(phi::string_equals(casted.AsString().c_str(), "Null"));
+        CHECK(casted.AsString().empty());
     }
     {
             // TODO: Pointer

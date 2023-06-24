@@ -64,6 +64,8 @@ public:
     [[nodiscard]] phi::boolean IsPointer() const;
     [[nodiscard]] phi::boolean IsString() const;
 
+    [[nodiscard]] phi::boolean IsNumeric() const;
+
     // Specific tests
     [[nodiscard]] phi::boolean IsDefault() const;
     [[nodiscard]] phi::boolean IsNull() const;
@@ -104,6 +106,8 @@ public:
     [[nodiscard]] Variant CastToInt64() const;
     [[nodiscard]] Variant CastToPointer() const;
     [[nodiscard]] Variant CastToString() const;
+    // This function attempts to cast to a double and if thats not possible to an int64, otherwise its int64 with 0
+    [[nodiscard]] Variant CastToNumeric() const;
 
     // Operations
     [[nodiscard]] Variant Add(const Variant& other) const;
