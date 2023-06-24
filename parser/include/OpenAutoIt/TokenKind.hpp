@@ -669,6 +669,9 @@ static constexpr const phi::size_t NumberOfTokens = static_cast<phi::size_t>(Tok
 static constexpr const phi::size_t BuiltInFirst   = static_cast<phi::size_t>(TokenKind::BI_Abs);
 static constexpr const phi::size_t BuiltInLast =
         static_cast<phi::size_t>(TokenKind::BI_ConsoleWriteErrorLine);
+static constexpr const phi::size_t MacroFirst =
+        static_cast<phi::size_t>(TokenKind::MK_AppDataCommonDir);
+static constexpr const phi::size_t MacroLast = static_cast<phi::size_t>(TokenKind::MK_YEAR);
 
 PHI_GCC_SUPPRESS_WARNING_POP()
 

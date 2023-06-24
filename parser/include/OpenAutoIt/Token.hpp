@@ -6,6 +6,7 @@
 #include <phi/core/assert.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/optional.hpp>
+#include <phi/core/size_t.hpp>
 #include <phi/core/types.hpp>
 
 namespace OpenAutoIt
@@ -131,6 +132,18 @@ public:
             default:
                 return false;
         }
+    }
+
+    [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr phi::boolean IsMacro() const
+    {
+        const phi::size_t underlying_value = static_cast<phi::size_t>(m_Kind);
+
+        if (underlying_value >= MacroFirst && underlying_value <= MacroLast)
+        {
+            return true;
+        }
+
+        return false;
     }
 
 private:
