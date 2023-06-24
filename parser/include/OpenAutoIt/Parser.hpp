@@ -13,6 +13,7 @@
 #include "OpenAutoIt/AST/ASTIfStatement.hpp"
 #include "OpenAutoIt/AST/ASTIntegerLiteral.hpp"
 #include "OpenAutoIt/AST/ASTKeywordLiteral.hpp"
+#include "OpenAutoIt/AST/ASTMacroExpression.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
 #include "OpenAutoIt/AST/ASTStatement.hpp"
 #include "OpenAutoIt/AST/ASTStringLiteral.hpp"
@@ -159,6 +160,7 @@ private:
     phi::scope_ptr<ASTUnaryExpression>     ParseUnaryExpression(const TokenKind operator_kind);
     phi::scope_ptr<ASTTernaryIfExpression> ParseTernaryIfExpression(
             phi::not_null_scope_ptr<ASTExpression>&& condition);
+    phi::scope_ptr<ASTMacroExpression> ParseMacroExpression(const TokenKind macro_kind);
 
     // Literals
     phi::scope_ptr<ASTIntegerLiteral> ParseIntegerLiteral();

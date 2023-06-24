@@ -7,6 +7,7 @@
 #include "OpenAutoIt/AST/ASTFunctionCallExpression.hpp"
 #include "OpenAutoIt/AST/ASTFunctionDefinition.hpp"
 #include "OpenAutoIt/AST/ASTKeywordLiteral.hpp"
+#include "OpenAutoIt/AST/ASTMacroExpression.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
 #include "OpenAutoIt/AST/ASTTernaryIfExpression.hpp"
 #include "OpenAutoIt/AST/ASTUnaryExpression.hpp"
@@ -285,6 +286,14 @@ Variant Interpreter::InterpretExpression(phi::not_null_observer_ptr<ASTExpressio
             return InterpretExpression(ternary_expression->m_FalseExpression);
         }
 
+        case ASTNodeType::MacroExpression: {
+            auto macro_expression = expression->as<ASTMacroExpression>();
+
+            const TokenKind macro = macro_expression->m_Macro;
+
+            return EvaluateMacroExpression(macro);
+        }
+
         case ASTNodeType::UnaryExpression: {
             // TODO: add const
             auto unary_expression = expression->as<ASTUnaryExpression>();
@@ -475,6 +484,28 @@ Variant Interpreter::EvaluateUnaryExpression(const Variant& value, const TokenKi
 
         default:
             PHI_ASSERT_NOT_REACHED();
+    }
+
+    PHI_ASSERT_NOT_REACHED();
+}
+
+Variant Interpreter::EvaluateMacroExpression(const TokenKind macro)
+{
+    PHI_ASSERT(static_cast<phi::size_t>(macro) >= MacroFirst &&
+               static_cast<phi::size_t>(macro) <= MacroLast);
+
+    switch (macro)
+    {
+        case TokenKind::MK_CR:
+            return Variant::MakeString("\r");
+        case TokenKind::MK_CRLF:
+            return Variant::MakeString("\r\n");
+        case TokenKind::MK_LF:
+            return Variant::MakeString("\n");
+
+        default:
+            vm().RuntimeError("Unimplemented macro '{:s}'", enum_name(macro));
+            return {};
     }
 
     PHI_ASSERT_NOT_REACHED();

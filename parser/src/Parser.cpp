@@ -1028,6 +1028,19 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
 
         return phi::move(subscript_expression);
     }
+    if (token.IsMacro())
+    {
+        ConsumeCurrent();
+
+        phi::scope_ptr<ASTExpression> macro_expression = ParseMacroExpression(token.GetTokenKind());
+        if (!macro_expression)
+        {
+            // TODO: Proper error
+            return {};
+        }
+
+        return macro_expression;
+    }
 
     // TODO: Error Unexpected token
     err(fmt::format("Unexpected token '{:s}' while parsing expression\n",
@@ -1361,6 +1374,14 @@ phi::scope_ptr<ASTTernaryIfExpression> Parser::ParseTernaryIfExpression(
     return phi::make_scope<ASTTernaryIfExpression>(phi::move(condition),
                                                    phi::move(true_expression.release_not_null()),
                                                    phi::move(false_expression.release_not_null()));
+}
+
+phi::scope_ptr<ASTMacroExpression> Parser::ParseMacroExpression(const TokenKind macro_kind)
+{
+    const auto macro = static_cast<phi::size_t>(macro_kind);
+    PHI_ASSERT(macro >= MacroFirst && macro <= MacroLast);
+
+    return phi::make_scope<ASTMacroExpression>(macro_kind);
 }
 
 phi::scope_ptr<ASTBooleanLiteral> Parser::ParseBooleanLiteral()

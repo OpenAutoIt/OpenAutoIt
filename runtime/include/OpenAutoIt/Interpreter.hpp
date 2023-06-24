@@ -5,6 +5,7 @@
 #include "OpenAutoIt/AST/ASTExpressionStatement.hpp"
 #include "OpenAutoIt/AST/ASTIfStatement.hpp"
 #include "OpenAutoIt/AST/ASTIntegerLiteral.hpp"
+#include "OpenAutoIt/AST/ASTMacroExpression.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
 #include "OpenAutoIt/AST/ASTStringLiteral.hpp"
 #include "OpenAutoIt/AST/ASTVariableAssignment.hpp"
@@ -62,6 +63,8 @@ public:
 
     Variant InterpretFunctionCall(const phi::string_view      function,
                                   const std::vector<Variant>& arguments);
+
+    Variant EvaluateMacroExpression(const TokenKind macro);
 
     Variant EvaluateUnaryExpression(const Variant& value, const TokenKind operator_kind);
 
