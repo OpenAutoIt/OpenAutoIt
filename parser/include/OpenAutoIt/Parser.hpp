@@ -23,6 +23,8 @@
 #include "OpenAutoIt/AST/ASTVariableExpression.hpp"
 #include "OpenAutoIt/AST/ASTWhileStatement.hpp"
 #include "OpenAutoIt/Associativity.hpp"
+#include "OpenAutoIt/DiagnosticBuilder.hpp"
+#include "OpenAutoIt/DiagnosticEngine.hpp"
 #include "OpenAutoIt/Lexer.hpp"
 #include "OpenAutoIt/SourceManager.hpp"
 #include "OpenAutoIt/Token.hpp"
@@ -40,7 +42,8 @@ namespace OpenAutoIt
 class Parser
 {
 public:
-    Parser(SourceManager& source_manager);
+    Parser(SourceManager&                               source_manager,
+           phi::not_null_observer_ptr<DiagnosticEngine> diagnostic_engine);
 
     void ParseTokenStream(phi::not_null_observer_ptr<ASTDocument> document, TokenStream& stream);
     void ParseString(phi::not_null_observer_ptr<ASTDocument> document, phi::string_view file_name,
@@ -138,6 +141,8 @@ private:
         m_Document->AppendFunction(phi::move(function));
     }
 
+    DiagnosticBuilder Diag();
+
     // Main nodes
 
     phi::scope_ptr<ASTFunctionDefinition> ParseFunctionDefinition();
@@ -178,9 +183,10 @@ private:
     phi::scope_ptr<ASTKeywordLiteral> ParseKeywordLiteral();
     phi::scope_ptr<ASTFloatLiteral>   ParseFloatLiteral();
 
-    SourceManager&                 m_SourceManager;
-    Lexer                          m_Lexer;
-    phi::observer_ptr<ASTDocument> m_Document;
+    SourceManager&                               m_SourceManager;
+    phi::not_null_observer_ptr<DiagnosticEngine> m_DiagnosticEngine;
+    Lexer                                        m_Lexer;
+    phi::observer_ptr<ASTDocument>               m_Document;
 
     TokenStream* m_TokenStream;
 };

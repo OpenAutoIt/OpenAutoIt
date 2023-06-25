@@ -1,5 +1,7 @@
 #pragma once
 
+#include "OpenAutoIt/DiagnosticBuilder.hpp"
+#include "OpenAutoIt/DiagnosticEngine.hpp"
 #include "OpenAutoIt/SourceFile.hpp"
 #include "OpenAutoIt/SourceLocation.hpp"
 #include "OpenAutoIt/SourceManager.hpp"
@@ -8,6 +10,7 @@
 #include "OpenAutoIt/TokenStream.hpp"
 #include <phi/container/string_view.hpp>
 #include <phi/core/boolean.hpp>
+#include <phi/core/observer_ptr.hpp>
 #include <phi/core/sized_types.hpp>
 #include <phi/core/types.hpp>
 
@@ -19,7 +22,7 @@ class Lexer
 public:
     using iterator = typename phi::string_view::const_iterator;
 
-    Lexer();
+    Lexer(phi::not_null_observer_ptr<DiagnosticEngine> diagnostic_engine);
 
     TokenStream ProcessString(phi::string_view file_name, phi::string_view source);
 
@@ -45,7 +48,7 @@ private:
                             static_cast<typename phi::string_view::size_type::value_type>(
                                     m_Iterator - m_Source.cbegin()),
                             1u),
-                    BuildSourceLocation(m_LineNumber, m_Column)};
+                    CurrentSourceLocation()};
 
         // 1 character sized token
         ++m_Column;
@@ -55,7 +58,7 @@ private:
 
     [[nodiscard]] constexpr Token ConstructToken(TokenKind kind, iterator token_begin)
     {
-        Token token{kind, TokenText(token_begin), BuildSourceLocation(m_LineNumber, m_Column)};
+        Token token{kind, TokenText(token_begin), CurrentSourceLocation()};
 
         // Consume the amount of characters that make up our new token
         m_Column += static_cast<typename phi::usize::value_type>(m_Iterator - token_begin);
@@ -68,14 +71,22 @@ private:
         return m_Source.substring_view(token_begin, m_Iterator);
     }
 
+    [[nodiscard]] constexpr SourceLocation CurrentSourceLocation() const
+    {
+        return BuildSourceLocation(m_LineNumber, m_Column);
+    }
+
     [[nodiscard]] constexpr SourceLocation BuildSourceLocation(phi::u64 line_number,
                                                                phi::u64 column) const
     {
         return {m_SourceFile, line_number, column};
     }
 
-    phi::observer_ptr<const SourceFile> m_SourceFile;
-    phi::string_view                    m_Source;
+    DiagnosticBuilder Diag();
+
+    phi::observer_ptr<const SourceFile>          m_SourceFile;
+    phi::not_null_observer_ptr<DiagnosticEngine> m_DiagnosticEngine;
+    phi::string_view                             m_Source;
 
     // Lexer state
     iterator m_Iterator;

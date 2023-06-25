@@ -21,6 +21,8 @@
 #include "OpenAutoIt/AST/ASTVariableExpression.hpp"
 #include "OpenAutoIt/AST/ASTWhileStatement.hpp"
 #include "OpenAutoIt/Associativity.hpp"
+#include "OpenAutoIt/DiagnosticBuilder.hpp"
+#include "OpenAutoIt/DiagnosticEngine.hpp"
 #include "OpenAutoIt/Token.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
@@ -32,6 +34,7 @@
 #include <phi/core/assert.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/move.hpp>
+#include <phi/core/observer_ptr.hpp>
 #include <phi/core/optional.hpp>
 #include <phi/core/scope_ptr.hpp>
 #include <phi/core/size_t.hpp>
@@ -127,8 +130,11 @@ private:
 
 constexpr OperatorPrecedenceTable OperatorPrecedence;
 
-Parser::Parser(SourceManager& source_manager)
+Parser::Parser(SourceManager&                               source_manager,
+               phi::not_null_observer_ptr<DiagnosticEngine> diagnostic_engine)
     : m_SourceManager{source_manager}
+    , m_DiagnosticEngine{diagnostic_engine}
+    , m_Lexer{diagnostic_engine}
 {}
 
 void Parser::ParseTokenStream(phi::not_null_observer_ptr<ASTDocument> document, TokenStream& stream)
@@ -283,6 +289,11 @@ phi::optional<const Token&> Parser::MustParse(TokenKind kind)
 
     ConsumeCurrent();
     return token;
+}
+
+DiagnosticBuilder Parser::Diag()
+{
+    return {m_DiagnosticEngine};
 }
 
 phi::scope_ptr<ASTFunctionDefinition> Parser::ParseFunctionDefinition()

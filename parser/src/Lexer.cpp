@@ -1,5 +1,7 @@
 #include "OpenAutoIt/Lexer.hpp"
 
+#include "OpenAutoIt/Diagnostic.hpp"
+#include "OpenAutoIt/DiagnosticIds.hpp"
 #include "OpenAutoIt/SourceFile.hpp"
 #include "OpenAutoIt/Token.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
@@ -9,6 +11,7 @@
 #include <phi/container/string_view.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/boolean.hpp>
+#include <phi/core/observer_ptr.hpp>
 #include <phi/core/optional.hpp>
 #include <phi/core/types.hpp>
 #include <phi/text/is_alpha_numeric.hpp>
@@ -770,7 +773,8 @@ static constexpr std::array<std::pair<phi::string_view, OpenAutoIt::TokenKind>, 
 namespace OpenAutoIt
 {
 
-Lexer::Lexer()
+Lexer::Lexer(phi::not_null_observer_ptr<DiagnosticEngine> diagnostic_engine)
+    : m_DiagnosticEngine{phi::move(diagnostic_engine)}
 {}
 
 void Lexer::Reset()
@@ -794,11 +798,11 @@ phi::optional<Token> Lexer::GetNextToken()
     {
         char current_character = *m_Iterator;
 
-        /* Embedded null character */
+        /* null character */
 
         if (current_character == '\0')
         {
-            // TODO: Embedded null character warning
+            Diag().Warning(DiagnosticId::NullCharacter, CurrentSourceLocation());
 
             SkipCurrentCharacter();
         }
@@ -1293,4 +1297,10 @@ void Lexer::SkipCurrentCharacter()
     ConsumeCurrentCharacter();
     ++m_Column;
 }
+
+DiagnosticBuilder Lexer::Diag()
+{
+    return DiagnosticBuilder{m_DiagnosticEngine};
+}
+
 } // namespace OpenAutoIt

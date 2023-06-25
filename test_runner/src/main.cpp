@@ -1,8 +1,8 @@
 #include "OpenAutoIt/AST/ASTDocument.hpp"
+#include "OpenAutoIt/DiagnosticConsumer.hpp"
+#include "OpenAutoIt/DiagnosticEngine.hpp"
 #include "OpenAutoIt/Interpreter.hpp"
 #include "OpenAutoIt/Lexer.hpp"
-#include "OpenAutoIt/ParseError.hpp"
-#include "OpenAutoIt/ParseWarning.hpp"
 #include "OpenAutoIt/Parser.hpp"
 #include "OpenAutoIt/SourceLocation.hpp"
 #include "OpenAutoIt/SourceManager.hpp"
@@ -33,6 +33,21 @@ PHI_GCC_SUPPRESS_WARNING("-Walloc-zero")
 #include <string>
 
 using namespace OpenAutoIt;
+
+// TODO: Actually test with the saved diagnostics here
+class TestRunnerDiagnosticConsumer final : public DiagnosticConsumer
+{
+public:
+    void Report(const Diagnostic& diagnostic) override
+    {
+        if (!diagnostic.IsIgnored())
+        {
+            diagnostics.push_back(diagnostic);
+        }
+    }
+
+    std::vector<Diagnostic> diagnostics;
+};
 
 struct ExpectedBlock
 {
@@ -195,14 +210,16 @@ ExpectedBlock extract_expected_block(const TokenStream& tokens)
         return false;
     }
 
-    auto document = phi::make_not_null_scope<ASTDocument>();
+    TestRunnerDiagnosticConsumer diagnostic_consumer;
+    DiagnosticEngine             diagnostic_engine{&diagnostic_consumer};
+    auto                         document = phi::make_not_null_scope<ASTDocument>();
 
     // Lex the source file
-    OpenAutoIt::Lexer lexer;
+    OpenAutoIt::Lexer lexer{&diagnostic_engine};
     TokenStream       stream = lexer.ProcessFile(source_file);
 
     // Parse the source file
-    Parser parser{source_manager};
+    Parser parser{source_manager, &diagnostic_engine};
     parser.ParseTokenStream(document, stream);
 
     // Extract expected block

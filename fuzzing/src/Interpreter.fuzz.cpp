@@ -1,5 +1,6 @@
 #include "OpenAutoIt/Interpreter.hpp"
 #include "OpenAutoIt/AST/ASTDocument.hpp"
+#include "OpenAutoIt/DiagnosticEngine.hpp"
 #include "OpenAutoIt/Lexer.hpp"
 #include "OpenAutoIt/Parser.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
@@ -9,25 +10,24 @@
 #include <phi/core/observer_ptr.hpp>
 #include <phi/core/scope_ptr.hpp>
 #include <phi/core/types.hpp>
-#include <cstddef>
-#include <cstdint>
 
 using namespace OpenAutoIt;
 
 static const constexpr phi::usize MaxNumberOfStatements{1'000u};
 
 // cppcheck-suppress unusedFunction symbolName=LLVMFuzzerTestOneInput
-extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size)
+extern "C" int LLVMFuzzerTestOneInput(const phi::uint8_t* data, phi::size_t size)
 {
     disable_output();
 
     phi::string_view source = phi::string_view(reinterpret_cast<const char*>(data), size);
 
-    SourceManager source_manager;
-    auto          document = phi::make_not_null_scope<ASTDocument>();
+    SourceManager    source_manager;
+    DiagnosticEngine diagnostic_engine;
+    auto             document = phi::make_not_null_scope<ASTDocument>();
 
     // Parsing
-    Parser parser{source_manager};
+    Parser parser{source_manager, &diagnostic_engine};
     parser.ParseString(document, "Fuzz.au3", source);
 
     // Interpreting

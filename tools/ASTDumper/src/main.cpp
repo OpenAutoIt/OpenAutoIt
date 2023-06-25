@@ -1,5 +1,6 @@
 #include "OpenAutoIt/AST/ASTDocument.hpp"
-
+#include "OpenAutoIt/DiagnosticConsumer.hpp"
+#include "OpenAutoIt/DiagnosticEngine.hpp"
 #include "OpenAutoIt/Lexer.hpp"
 #include "OpenAutoIt/Parser.hpp"
 #include "OpenAutoIt/SourceManager.hpp"
@@ -7,7 +8,6 @@
 #include <phi/core/boolean.hpp>
 #include <phi/core/scope_guard.hpp>
 #include <phi/core/scope_ptr.hpp>
-#include <cstdio>
 #include <filesystem>
 #include <iostream>
 
@@ -18,11 +18,15 @@ PHI_CLANG_SUPPRESS_WARNING("-Wglobal-constructors")
 PHI_CLANG_SUPPRESS_WARNING("-Wexit-time-destructors")
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+DefaultDiagnosticConsumer diagnostic_consumer;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+DiagnosticEngine diagnostic_engine{&diagnostic_consumer};
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 SourceManager source_manager;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-Lexer lexer;
+Lexer lexer{&diagnostic_engine};
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-Parser parser{source_manager};
+Parser parser{source_manager, &diagnostic_engine};
 
 PHI_CLANG_SUPPRESS_WARNING_POP()
 
@@ -32,6 +36,12 @@ phi::boolean process_file(const std::filesystem::path& file_path)
     auto              document  = phi::make_not_null_scope<ASTDocument>();
 
     parser.ParseFile(document, file_path);
+
+    if (diagnostic_engine.HasErrorOccurred())
+    {
+        std::cout << "Cannot dump file '" << file_path.string() << "' which contains errors!\n";
+        return false;
+    }
 
     // Generate AST Dump
     const std::string ast_dump = document->DumpAST();

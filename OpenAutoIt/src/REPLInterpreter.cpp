@@ -1,5 +1,7 @@
 #include "REPLInterpreter.hpp"
 
+#include "OpenAutoIt/DiagnosticConsumer.hpp"
+#include "OpenAutoIt/DiagnosticEngine.hpp"
 #include "OpenAutoIt/Lexer.hpp"
 #include "OpenAutoIt/Parser.hpp"
 #include "OpenAutoIt/SourceManager.hpp"
@@ -36,11 +38,13 @@ void REPLInterpreter::Loop()
     // FIXME: This is a very hackish way to do this
     input = "ConsoleWrite(" + input + ")";
 
-    SourceManager source_manager;
-    auto          document = phi::make_not_null_scope<ASTDocument>();
+    SourceManager             source_manager;
+    DefaultDiagnosticConsumer diagnostic_consumer;
+    DiagnosticEngine          diagnostic_engine{&diagnostic_consumer};
+    auto                      document = phi::make_not_null_scope<ASTDocument>();
 
     // Parse the source file
-    Parser parser{source_manager};
+    Parser parser{source_manager, &diagnostic_engine};
     parser.ParseString(document, "<repl>", input);
 
     m_Interpreter.SetDocument(document);

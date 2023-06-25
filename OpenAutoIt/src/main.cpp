@@ -1,10 +1,13 @@
 #include "OpenAutoIt/AST/ASTDocument.hpp"
+#include "OpenAutoIt/DiagnosticConsumer.hpp"
+#include "OpenAutoIt/DiagnosticEngine.hpp"
 #include "OpenAutoIt/Interpreter.hpp"
 #include "OpenAutoIt/Lexer.hpp"
 #include "OpenAutoIt/Parser.hpp"
 #include "OpenAutoIt/SourceFile.hpp"
 #include "OpenAutoIt/SourceManager.hpp"
 #include "REPLInterpreter.hpp"
+#include <phi/core/boolean.hpp>
 #include <phi/core/scope_ptr.hpp>
 #include <iostream>
 
@@ -34,14 +37,33 @@ int main(int argc, char* argv[])
 
     std::filesystem::path file_path = argv[1];
 
-    SourceManager source_manager;
-    auto          document = phi::make_not_null_scope<ASTDocument>();
+    SourceManager             source_manager;
+    DefaultDiagnosticConsumer diagnostic_consumer;
+    DiagnosticEngine          diagnostic_engine{&diagnostic_consumer};
+    auto                      document = phi::make_not_null_scope<ASTDocument>();
 
     // Parse the source file
-    OpenAutoIt::Parser parser{source_manager};
+    OpenAutoIt::Parser parser{source_manager, &diagnostic_engine};
     parser.ParseFile(document, file_path);
 
-    // TODO: Check if parsed successfully
+    // Print info about diagnostics
+    if (diagnostic_engine.GetNumberOfWarnings() > 0u)
+    {
+        const phi::boolean multiple_warnings = diagnostic_engine.GetNumberOfWarnings() > 1u;
+
+        std::cout << diagnostic_engine.GetNumberOfWarnings().unsafe() << " warning"
+                  << (multiple_warnings ? "s" : "") << " generated.\n";
+        return 1;
+    }
+
+    if (diagnostic_engine.HasErrorOccurred())
+    {
+        const phi::boolean multiple_errors = diagnostic_engine.GetNumberOfError() > 1u;
+
+        std::cout << diagnostic_engine.GetNumberOfError().unsafe() << " error"
+                  << (multiple_errors ? "s" : "") << " generated.\n";
+        return 1;
+    }
 
     OpenAutoIt::Interpreter interpreter;
     interpreter.vm().SetupOutputHandler(standard_output_handler, error_output_handler);
