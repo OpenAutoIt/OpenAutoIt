@@ -38,13 +38,14 @@ void REPLInterpreter::Loop()
     // FIXME: This is a very hackish way to do this
     input = "ConsoleWrite(" + input + ")";
 
-    SourceManager             source_manager;
+    RealFSSourceManager       source_manager;
     DefaultDiagnosticConsumer diagnostic_consumer;
     DiagnosticEngine          diagnostic_engine{&diagnostic_consumer};
+    Lexer                     lexer{&diagnostic_engine};
     auto                      document = phi::make_not_null_scope<ASTDocument>();
 
     // Parse the source file
-    Parser parser{source_manager, &diagnostic_engine};
+    Parser parser{&source_manager, &diagnostic_engine, &lexer};
     parser.ParseString(document, "<repl>", input);
 
     m_Interpreter.SetDocument(document);

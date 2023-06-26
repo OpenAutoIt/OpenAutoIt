@@ -14,3 +14,5 @@ func_ret_1="Func _func_ret_1() return 1 EndFunc"
 call_ret_1="_func_ret_1()"
 func_ret_string="Func _func_ret_string() return "String" EndFunc"
 call_ret_string="_func_ret_string()"
+
+include_foo="#include "foo""

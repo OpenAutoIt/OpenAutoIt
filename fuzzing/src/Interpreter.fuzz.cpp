@@ -22,12 +22,13 @@ extern "C" int LLVMFuzzerTestOneInput(const phi::uint8_t* data, phi::size_t size
 
     phi::string_view source = phi::string_view(reinterpret_cast<const char*>(data), size);
 
-    SourceManager    source_manager;
-    DiagnosticEngine diagnostic_engine;
-    auto             document = phi::make_not_null_scope<ASTDocument>();
+    EmptySourceManager source_manager;
+    DiagnosticEngine   diagnostic_engine;
+    Lexer              lexer{&diagnostic_engine};
+    auto               document = phi::make_not_null_scope<ASTDocument>();
 
     // Parsing
-    Parser parser{source_manager, &diagnostic_engine};
+    Parser parser{&source_manager, &diagnostic_engine, &lexer};
     parser.ParseString(document, "Fuzz.au3", source);
 
     // Interpreting

@@ -1259,7 +1259,7 @@ TokenStream Lexer::ProcessString(phi::string_view file_name, phi::string_view so
     return ProcessFile(&fake_source);
 }
 
-TokenStream Lexer::ProcessFile(phi::observer_ptr<const SourceFile> source_file)
+TokenStream Lexer::ProcessFile(phi::not_null_observer_ptr<const SourceFile> source_file)
 {
     TokenStream stream;
 

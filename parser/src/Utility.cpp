@@ -26,13 +26,13 @@ phi::optional<std::string> read_file(const std::filesystem::path& file_path)
 #else
             std::fopen(file_path.c_str(), "r");
 #endif
-    auto scope_guard = phi::make_scope_guard([&file]() { (void)std::fclose(file); });
-
     if (file == nullptr)
     {
         // Failed to open file
         return {};
     }
+
+    auto scope_guard = phi::make_scope_guard([&file]() { (void)std::fclose(file); });
 
     (void)std::fseek(file, 0, SEEK_END);
 

@@ -25,6 +25,7 @@ public:
     void                   SetErrorLimit(phi::u64 limit);
 
     [[nodiscard]] phi::boolean HasErrorOccurred() const;
+    [[nodiscard]] phi::boolean HasFatalErrorOccurred() const;
 
     [[nodiscard]] phi::boolean GetIgnoreAllWarnings() const;
     void                       SetIgnoreAllWarnings(phi::boolean ignore);
@@ -49,6 +50,9 @@ private:
 
     /// Sticky flag for whether an error or fatal error has occurred
     bool m_ErrorOccurred : 1 {false};
+
+    /// Sticky flag for whether a fatal error has occurred
+    bool m_FatalErrorOccurred : 1 {false};
 
     /// Ignore all warnings: -w
     bool m_IgnoreAllWarnings : 1 {false};

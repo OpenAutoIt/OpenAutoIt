@@ -35,15 +35,16 @@ int main(int argc, char* argv[])
 
     // TODO: Move to separate function
 
-    std::filesystem::path file_path = argv[1];
+    phi::string_view file_path = argv[1];
 
-    SourceManager             source_manager;
+    RealFSSourceManager       source_manager;
     DefaultDiagnosticConsumer diagnostic_consumer;
     DiagnosticEngine          diagnostic_engine{&diagnostic_consumer};
+    Lexer                     lexer{&diagnostic_engine};
     auto                      document = phi::make_not_null_scope<ASTDocument>();
 
     // Parse the source file
-    OpenAutoIt::Parser parser{source_manager, &diagnostic_engine};
+    OpenAutoIt::Parser parser{&source_manager, &diagnostic_engine, &lexer};
     parser.ParseFile(document, file_path);
 
     // Print info about diagnostics

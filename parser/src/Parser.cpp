@@ -1,28 +1,14 @@
 #include "OpenAutoIt/Parser.hpp"
 
-#include "OpenAutoIt/AST/ASTArraySubscriptExpression.hpp"
-#include "OpenAutoIt/AST/ASTBinaryExpression.hpp"
-#include "OpenAutoIt/AST/ASTBooleanLiteral.hpp"
-#include "OpenAutoIt/AST/ASTDocument.hpp"
-#include "OpenAutoIt/AST/ASTExitStatement.hpp"
-#include "OpenAutoIt/AST/ASTExpression.hpp"
-#include "OpenAutoIt/AST/ASTExpressionStatement.hpp"
-#include "OpenAutoIt/AST/ASTFloatLiteral.hpp"
-#include "OpenAutoIt/AST/ASTFunctionCallExpression.hpp"
-#include "OpenAutoIt/AST/ASTFunctionDefinition.hpp"
-#include "OpenAutoIt/AST/ASTIfStatement.hpp"
-#include "OpenAutoIt/AST/ASTIntegerLiteral.hpp"
-#include "OpenAutoIt/AST/ASTKeywordLiteral.hpp"
-#include "OpenAutoIt/AST/ASTNode.hpp"
-#include "OpenAutoIt/AST/ASTStatement.hpp"
-#include "OpenAutoIt/AST/ASTStringLiteral.hpp"
-#include "OpenAutoIt/AST/ASTTernaryIfExpression.hpp"
-#include "OpenAutoIt/AST/ASTVariableAssignment.hpp"
-#include "OpenAutoIt/AST/ASTVariableExpression.hpp"
-#include "OpenAutoIt/AST/ASTWhileStatement.hpp"
+#include "OpenAutoIt/AST.hpp"
 #include "OpenAutoIt/Associativity.hpp"
 #include "OpenAutoIt/DiagnosticBuilder.hpp"
 #include "OpenAutoIt/DiagnosticEngine.hpp"
+#include "OpenAutoIt/DiagnosticIds.hpp"
+#include "OpenAutoIt/IncludeType.hpp"
+#include "OpenAutoIt/SourceFile.hpp"
+#include "OpenAutoIt/SourceLocation.hpp"
+#include "OpenAutoIt/SourceManager.hpp"
 #include "OpenAutoIt/Token.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/TokenStream.hpp"
@@ -34,6 +20,7 @@
 #include <phi/core/assert.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/move.hpp>
+#include <phi/core/narrow_cast.hpp>
 #include <phi/core/observer_ptr.hpp>
 #include <phi/core/optional.hpp>
 #include <phi/core/scope_ptr.hpp>
@@ -58,6 +45,11 @@ PHI_GCC_SUPPRESS_WARNING_POP()
 
 namespace OpenAutoIt
 {
+
+namespace
+{
+    constexpr const phi::usize MaxNumberOfIncludeNesting = 256u;
+}
 
 class OperatorPrecedenceTable
 {
@@ -130,16 +122,19 @@ private:
 
 constexpr OperatorPrecedenceTable OperatorPrecedence;
 
-Parser::Parser(SourceManager&                               source_manager,
-               phi::not_null_observer_ptr<DiagnosticEngine> diagnostic_engine)
-    : m_SourceManager{source_manager}
-    , m_DiagnosticEngine{diagnostic_engine}
-    , m_Lexer{diagnostic_engine}
+Parser::Parser(phi::not_null_observer_ptr<SourceManager>    source_manager,
+               phi::not_null_observer_ptr<DiagnosticEngine> diagnostic_engine,
+               phi::not_null_observer_ptr<Lexer>            lexer)
+    : m_SourceManager{phi::move(source_manager)}
+    , m_DiagnosticEngine{phi::move(diagnostic_engine)}
+    , m_Lexer{phi::move(lexer)}
 {}
 
-void Parser::ParseTokenStream(phi::not_null_observer_ptr<ASTDocument> document, TokenStream& stream)
+void Parser::ParseTokenStream(phi::not_null_observer_ptr<ASTDocument>      document,
+                              TokenStream&&                                stream,
+                              phi::not_null_observer_ptr<const SourceFile> source_file)
 {
-    m_TokenStream = &stream;
+    PushParsingContext(phi::move(source_file), phi::move(stream));
 
     ParseDocument(phi::move(document));
 }
@@ -147,32 +142,45 @@ void Parser::ParseTokenStream(phi::not_null_observer_ptr<ASTDocument> document, 
 void Parser::ParseString(phi::not_null_observer_ptr<ASTDocument> document,
                          phi::string_view file_name, phi::string_view source)
 {
-    TokenStream stream = m_Lexer.ProcessString(file_name, source);
+    TokenStream stream = m_Lexer->ProcessString(file_name, source);
 
-    ParseTokenStream(phi::move(document), stream);
+    SourceFile fake_source_file{SourceFile::Type::Basic, std::string_view(file_name),
+                                phi::move(source)};
+    ParseTokenStream(phi::move(document), phi::move(stream), &fake_source_file);
 }
 
 void Parser::ParseFile(phi::not_null_observer_ptr<ASTDocument> document,
-                       const std::filesystem::path&            path)
+                       const phi::string_view                  path)
 {
-    auto source_file = m_SourceManager.LoadFile(path);
+    phi::observer_ptr<const SourceFile> source_file =
+            m_SourceManager->LoadFile(path, IncludeType::Local);
     if (!source_file)
     {
-        err(fmt::format("Failed to load file {:s}", path.string()));
+        Diag().FatalError(DiagnosticId::FileNotFound, SourceLocation::Invalid(),
+                          std::string_view(path));
         return;
     }
 
-    TokenStream stream = m_Lexer.ProcessFile(source_file);
+    phi::not_null_observer_ptr<const SourceFile> not_null_source_file =
+            source_file.release_not_null();
 
-    ParseTokenStream(phi::move(document), stream);
+    TokenStream stream = m_Lexer->ProcessFile(not_null_source_file);
+
+    ParseTokenStream(phi::move(document), phi::move(stream), not_null_source_file);
 }
 
 void Parser::ParseDocument(phi::not_null_observer_ptr<ASTDocument> document)
 {
-    m_Document = document;
+    m_Document = phi::move(document);
 
-    while (m_TokenStream->has_more())
+    while (ShouldContinueParsing())
     {
+        if (!CurrentTokenStream().has_more())
+        {
+            m_ParsingContextStack.pop();
+            continue;
+        }
+
         const Token& token = CurrentToken();
 
         // Parse global function definition
@@ -205,6 +213,14 @@ void Parser::ParseDocument(phi::not_null_observer_ptr<ASTDocument> document)
                 break;
             }
 
+            case TokenKind::PP_Include: {
+                ConsumeCurrent();
+
+                ParseIncludeDirective();
+
+                break;
+            }
+
             default: {
                 auto statement = ParseStatement();
                 if (!statement)
@@ -212,7 +228,7 @@ void Parser::ParseDocument(phi::not_null_observer_ptr<ASTDocument> document)
                     // TODO: Proper error reporting
                     err("ERR: Failed to parse statement!\n");
 
-                    if (m_TokenStream->has_more())
+                    if (HasMoreTokens())
                     {
                         // Swallow the bad token
                         ConsumeCurrent();
@@ -221,26 +237,94 @@ void Parser::ParseDocument(phi::not_null_observer_ptr<ASTDocument> document)
                 }
 
                 AppendStatementToDocument(statement.release_not_null());
+                break;
             }
         }
     }
 }
 
+void Parser::PushParsingContext(phi::not_null_observer_ptr<const SourceFile> source_file,
+                                TokenStream&&                                token_stream)
+{
+    PushParsingContext(phi::move(source_file), phi::move(token_stream), SourceLocation::Invalid());
+}
+
+void Parser::PushParsingContext(phi::not_null_observer_ptr<const SourceFile> source_file,
+                                TokenStream&& token_stream, SourceLocation included_from)
+{
+    ParsingContext context{.source_file   = phi::move(source_file),
+                           .token_stream  = phi::move(token_stream),
+                           .included_from = phi::move(included_from)};
+
+    m_ParsingContextStack.emplace(phi::move(context));
+    m_SourceManager->SetLocalSearchPath(source_file->m_FilePath.parent_path());
+}
+
+void Parser::PopParsingContext()
+{
+    m_ParsingContextStack.pop();
+    if (!m_ParsingContextStack.empty())
+    {
+        m_SourceManager->SetLocalSearchPath(
+                m_ParsingContextStack.top().source_file->m_FilePath.parent_path());
+    }
+    else
+    {
+        m_SourceManager->SetLocalSearchPath("");
+    }
+}
+
+TokenStream& Parser::CurrentTokenStream()
+{
+    PHI_ASSERT(!m_ParsingContextStack.empty());
+
+    return m_ParsingContextStack.top().token_stream;
+}
+
+const TokenStream& Parser::CurrentTokenStream() const
+{
+    PHI_ASSERT(!m_ParsingContextStack.empty());
+
+    return m_ParsingContextStack.top().token_stream;
+}
+
+phi::boolean Parser::HasMoreTokens() const
+{
+    return CurrentTokenStream().has_more();
+}
+
 const Token& Parser::CurrentToken() const
 {
-    PHI_ASSERT(m_TokenStream->has_more());
+    PHI_ASSERT(CurrentTokenStream().has_more());
 
-    return m_TokenStream->look_ahead();
+    return CurrentTokenStream().look_ahead();
+}
+
+const Token& Parser::PreviousToken() const
+{
+    return CurrentTokenStream().look_behind();
+}
+
+phi::boolean Parser::ShouldContinueParsing() const
+{
+    const phi::boolean stack_empty          = m_ParsingContextStack.empty();
+    const phi::boolean fatal_error_occurred = m_DiagnosticEngine->HasFatalErrorOccurred();
+    const phi::boolean error_limit_reached =
+            (m_DiagnosticEngine->GetErrorLimit() == 0u ?
+                     false :
+                     m_DiagnosticEngine->GetNumberOfError() >= m_DiagnosticEngine->GetErrorLimit());
+
+    return !stack_empty && !fatal_error_occurred && !error_limit_reached;
 }
 
 void Parser::ConsumeCurrent()
 {
-    m_TokenStream->consume();
+    CurrentTokenStream().consume();
 }
 
 void Parser::ConsumeComments()
 {
-    while (m_TokenStream->has_more())
+    while (HasMoreTokens())
     {
         switch (CurrentToken().GetTokenKind())
         {
@@ -256,7 +340,7 @@ void Parser::ConsumeComments()
 
 void Parser::ConsumeNewLineAndComments()
 {
-    while (m_TokenStream->has_more())
+    while (HasMoreTokens())
     {
         switch (CurrentToken().GetTokenKind())
         {
@@ -274,7 +358,7 @@ void Parser::ConsumeNewLineAndComments()
 phi::optional<const Token&> Parser::MustParse(TokenKind kind)
 {
     // Do we even have more tokens?
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         return {};
     }
@@ -289,6 +373,12 @@ phi::optional<const Token&> Parser::MustParse(TokenKind kind)
 
     ConsumeCurrent();
     return token;
+}
+
+void Parser::AppendSourceFileToDocument(phi::not_null_observer_ptr<const SourceFile> source_file,
+                                        SourceLocation                               included_from)
+{
+    PushParsingContext(source_file, m_Lexer->ProcessFile(source_file), included_from);
 }
 
 DiagnosticBuilder Parser::Diag()
@@ -317,21 +407,21 @@ phi::scope_ptr<ASTFunctionDefinition> Parser::ParseFunctionDefinition()
     }
 
     // Next we parse the function parameter declarations until right parenthesis (RParen)
-    while (m_TokenStream->has_more() && CurrentToken().GetTokenKind() != TokenKind::RParen)
+    while (HasMoreTokens() && CurrentToken().GetTokenKind() != TokenKind::RParen)
     {
-        phi::optional<FunctionParameter> function_paremeter_optional =
+        phi::optional<FunctionParameter> function_parameter_optional =
                 ParseFunctionParameterDefinition();
-        if (!function_paremeter_optional)
+        if (!function_parameter_optional)
         {
             // TODO: Proper error reporting
             return {};
         }
-        FunctionParameter& function_paremeter = function_paremeter_optional.value();
+        FunctionParameter& function_parameter = function_parameter_optional.value();
 
-        function_definition->m_Parameters.emplace_back(phi::move(function_paremeter));
+        function_definition->m_Parameters.emplace_back(phi::move(function_parameter));
 
         // Parse comma
-        if (m_TokenStream->has_more() && CurrentToken().GetTokenKind() == TokenKind::Comma)
+        if (HasMoreTokens() && CurrentToken().GetTokenKind() == TokenKind::Comma)
         {
             ConsumeCurrent();
         }
@@ -352,7 +442,7 @@ phi::scope_ptr<ASTFunctionDefinition> Parser::ParseFunctionDefinition()
     }
 
     // Next parse Statements until EndFunc
-    while (m_TokenStream->has_more() && CurrentToken().GetTokenKind() != TokenKind::KW_EndFunc)
+    while (HasMoreTokens() && CurrentToken().GetTokenKind() != TokenKind::KW_EndFunc)
     {
         auto statement = ParseStatement();
         if (!statement)
@@ -380,10 +470,10 @@ phi::scope_ptr<ASTFunctionDefinition> Parser::ParseFunctionDefinition()
 
 phi::optional<FunctionParameter> Parser::ParseFunctionParameterDefinition()
 {
-    // TODO: This entire function requres more error checks
+    // TODO: This entire function requires more error checks
     FunctionParameter parameter;
 
-    while (m_TokenStream->has_more())
+    while (HasMoreTokens())
     {
         const Token& token = CurrentToken();
 
@@ -447,11 +537,113 @@ phi::optional<FunctionParameter> Parser::ParseFunctionParameterDefinition()
     return {};
 }
 
+void Parser::ParseIncludeDirective()
+{
+    if (!HasMoreTokens())
+    {
+        Diag().Error(DiagnosticId::UnexpectedEndOfFile, PreviousToken().GetBeginLocation(),
+                     "include directive");
+        return;
+    }
+
+    const Token&     token = CurrentToken();
+    phi::string_view file_name;
+    IncludeType      include_type = IncludeType::Local;
+
+    // Local include like this '#include "foo.au3"'
+    if (token.GetTokenKind() == TokenKind::StringLiteral)
+    {
+        ConsumeCurrent();
+
+        // Get the file name
+        file_name = token.GetText().substring_view(1u, token.GetText().length() - 2u);
+    }
+    // Global include like this '#include <foo.au3>'
+    else if (token.GetTokenKind() == TokenKind::OP_LessThan)
+    {
+        // FIXME: This is not really a nice way, but we essentially start from after the opening '<' and include everything upto the closing '>'
+        ConsumeCurrent();
+
+        include_type = IncludeType::Global;
+        file_name    = token.GetText().remove_prefix(1u);
+
+        phi::boolean found_end{false};
+        phi::boolean continue_parsing{true};
+        while (HasMoreTokens() && continue_parsing)
+        {
+            const Token& end_token = CurrentToken();
+
+            if (end_token.GetTokenKind() == TokenKind::OP_GreaterThan)
+            {
+                found_end        = true;
+                continue_parsing = false;
+                const phi::usize difference =
+                        phi::narrow_cast<phi::usize>(end_token.GetText().data() - file_name.data());
+                file_name.add_postfix(difference);
+            }
+            else if (end_token.GetTokenKind() == TokenKind::NewLine)
+            {
+                // Stop once we hit a newline
+                continue_parsing = false;
+            }
+
+            ConsumeCurrent();
+        }
+
+        if (!found_end)
+        {
+            Diag().Error(DiagnosticId::Expected, PreviousToken().GetEndLocation(), "'>'")
+                    .Note(token.GetBeginLocation(), "to match this '<'");
+            return;
+        }
+    }
+    else
+    {
+        Diag().Error(DiagnosticId::Expected, token.GetEndLocation(), "\"Filename\" or <Filename>");
+        return;
+    }
+
+    // Limit include nesting
+    if (m_ParsingContextStack.size() >= MaxNumberOfIncludeNesting)
+    {
+        Diag().FatalError(DiagnosticId::IncludeNestingTooDeeply, token.GetBeginLocation());
+        return;
+    }
+
+    // Emit error for empty file names
+    if (file_name.is_empty())
+    {
+        Diag().FatalError(DiagnosticId::EmptyFilename, token.GetBeginLocation());
+        return;
+    }
+
+    // Emit error if the file name is too long
+    if (file_name.length() > 255u)
+    {
+        Diag().FatalError(DiagnosticId::FileNameTooLong, token.GetBeginLocation(),
+                          std::string_view(file_name));
+        return;
+    }
+
+    // Load the file from the SourceManager
+    phi::observer_ptr<const SourceFile> include_file =
+            m_SourceManager->LoadFile(std::string_view(file_name), include_type);
+    if (!include_file)
+    {
+        Diag().FatalError(DiagnosticId::FileNotFound, token.GetBeginLocation(),
+                          std::string_view(file_name));
+        return;
+    }
+
+    // Append the file
+    AppendSourceFileToDocument(include_file.release_not_null(), token.GetBeginLocation());
+}
+
 phi::scope_ptr<ASTStatement> Parser::ParseStatement()
 {
     ConsumeNewLineAndComments();
 
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         // TODO: Report proper error
         return {};
@@ -526,7 +718,7 @@ phi::scope_ptr<ASTStatement> Parser::ParseStatement()
 
     ConsumeComments();
 
-    if (m_TokenStream->has_more() && !MustParse(TokenKind::NewLine))
+    if (HasMoreTokens() && !MustParse(TokenKind::NewLine))
     {
         err("Requires newline after statement\n");
         return {};
@@ -557,7 +749,7 @@ phi::scope_ptr<ASTWhileStatement> Parser::ParseWhileStatement()
             phi::make_scope<ASTWhileStatement>(while_condition_expression.release_not_null());
 
     // Parse statements until KW_WEnd
-    while (m_TokenStream->has_more() && CurrentToken().GetTokenKind() != TokenKind::KW_WEnd)
+    while (HasMoreTokens() && CurrentToken().GetTokenKind() != TokenKind::KW_WEnd)
     {
         // Skip NewLines and comments
         if (CurrentToken().GetTokenKind() == TokenKind::NewLine ||
@@ -578,7 +770,7 @@ phi::scope_ptr<ASTWhileStatement> Parser::ParseWhileStatement()
         while_statement->m_Statements.emplace_back(statement.release_not_null());
     }
 
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         // TODO: Proper error
         return {};
@@ -602,7 +794,7 @@ phi::scope_ptr<ASTVariableAssignment> Parser::ParseVariableAssignment()
 
     phi::boolean parsed_identifier = false;
     // Parse all specifiers until we hit a VariableIdentifier
-    while (m_TokenStream->has_more() && !parsed_identifier)
+    while (HasMoreTokens() && !parsed_identifier)
     {
         const Token& current_token = CurrentToken();
         ConsumeCurrent();
@@ -682,7 +874,7 @@ phi::scope_ptr<ASTVariableAssignment> Parser::ParseVariableAssignment()
     }
 
     // Next me must parse a OP_Equals/'=', a new line, comment or finish parsing
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         return variable_declaration;
     }
@@ -759,7 +951,7 @@ phi::scope_ptr<ASTIfStatement> Parser::ParseIfStatement()
     IfCase if_case{.condition{if_condition.release_not_null()}, .body{}};
 
     // Next parse statements until we hit and EndIf, ElseIf or Else
-    while (m_TokenStream->has_more() && CurrentToken().GetTokenKind() != TokenKind::KW_EndIf &&
+    while (HasMoreTokens() && CurrentToken().GetTokenKind() != TokenKind::KW_EndIf &&
            CurrentToken().GetTokenKind() != TokenKind::KW_Else &&
            CurrentToken().GetTokenKind() != TokenKind::KW_ElseIf)
     {
@@ -778,7 +970,7 @@ phi::scope_ptr<ASTIfStatement> Parser::ParseIfStatement()
     auto if_statement = phi::make_not_null_scope<ASTIfStatement>(phi::move(if_case));
 
     // Handle all ElseIf cases which are optional
-    while (m_TokenStream->has_more() && CurrentToken().GetTokenKind() == TokenKind::KW_ElseIf)
+    while (HasMoreTokens() && CurrentToken().GetTokenKind() == TokenKind::KW_ElseIf)
     {
         // Consume KW_ElseIf token
         ConsumeCurrent();
@@ -807,7 +999,7 @@ phi::scope_ptr<ASTIfStatement> Parser::ParseIfStatement()
     }
 
     // Handle optional else case
-    if (m_TokenStream->has_more() && CurrentToken().GetTokenKind() == TokenKind::KW_Else)
+    if (HasMoreTokens() && CurrentToken().GetTokenKind() == TokenKind::KW_Else)
     {
         // Consume KW_Else token
         ConsumeCurrent();
@@ -832,7 +1024,7 @@ std::vector<phi::not_null_scope_ptr<ASTStatement>> Parser::ParseIfCaseStatements
     std::vector<phi::not_null_scope_ptr<ASTStatement>> statements;
 
     // Parse statements until KW_EndIf, KW_Else, KW_ElseIf
-    while (m_TokenStream->has_more() && CurrentToken().GetTokenKind() != TokenKind::KW_EndIf &&
+    while (HasMoreTokens() && CurrentToken().GetTokenKind() != TokenKind::KW_EndIf &&
            CurrentToken().GetTokenKind() != TokenKind::KW_Else &&
            CurrentToken().GetTokenKind() != TokenKind::KW_ElseIf)
     {
@@ -932,7 +1124,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpression()
 
 phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
 {
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         // TODO: Proper error
         return {};
@@ -957,7 +1149,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
     if (token.GetTokenKind() == TokenKind::LParen)
     {
         // Consume the LParen
-        m_TokenStream->consume();
+        ConsumeCurrent();
 
         phi::scope_ptr<ASTExpression> paren_expression = ParseParenExpression();
         if (!paren_expression)
@@ -1093,7 +1285,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionRhs(phi::not_null_scope_ptr
 {
     while (true)
     {
-        if (!m_TokenStream->has_more())
+        if (!HasMoreTokens())
         {
             return phi::move(lhs);
         }
@@ -1135,7 +1327,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionRhs(phi::not_null_scope_ptr
         }
 
         // Nothing left to parse so directly return from here
-        if (!m_TokenStream->has_more())
+        if (!HasMoreTokens())
         {
             return phi::make_not_null_scope<ASTBinaryExpression>(phi::move(lhs),
                                                                  operator_token.GetTokenKind(),
@@ -1198,7 +1390,7 @@ phi::scope_ptr<ASTFunctionCallExpression> Parser::ParseFunctionCallExpression()
 
     // TODO: These 2 checks should be combined
     // Now me MUST parse an LParen
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         // TODO: Give proper error
         err(fmt::format("ERR: Expected opening parenthesis for function call '{:s}'\n",
@@ -1220,7 +1412,7 @@ phi::scope_ptr<ASTFunctionCallExpression> Parser::ParseFunctionCallExpression()
     function_call_expression->m_Arguments = ParseFunctionCallArguments();
 
     // Finally we MUST parse an RParen
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         err(fmt::format("ERR: Expected closing parenthesis for function call '{:s}'\n",
                         std::string_view{function_call_expression->FunctionName()}));
@@ -1246,7 +1438,7 @@ std::vector<phi::not_null_scope_ptr<ASTExpression>> Parser::ParseFunctionCallArg
 {
     std::vector<phi::not_null_scope_ptr<ASTExpression>> arguments;
 
-    while (m_TokenStream->has_more() && CurrentToken().GetTokenKind() != TokenKind::RParen)
+    while (HasMoreTokens() && CurrentToken().GetTokenKind() != TokenKind::RParen)
     {
         // Parse the expression
         phi::scope_ptr<ASTExpression> expression = ParseExpression();
@@ -1262,7 +1454,7 @@ std::vector<phi::not_null_scope_ptr<ASTExpression>> Parser::ParseFunctionCallArg
         arguments.emplace_back(expression.release_not_null());
 
         // Next Token MUST be a comma followed by another expression or RParen
-        if (m_TokenStream->has_more() && CurrentToken().GetTokenKind() == TokenKind::Comma)
+        if (HasMoreTokens() && CurrentToken().GetTokenKind() == TokenKind::Comma)
         {
             ConsumeCurrent();
         }
@@ -1273,7 +1465,7 @@ std::vector<phi::not_null_scope_ptr<ASTExpression>> Parser::ParseFunctionCallArg
 
 phi::scope_ptr<ASTVariableExpression> Parser::ParseVariableExpression()
 {
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         // TODO: Proper error
         return {};
@@ -1299,7 +1491,7 @@ PHI_GCC_SUPPRESS_WARNING("-Wsuggest-attribute=pure")
 
 phi::scope_ptr<ASTArraySubscriptExpression> Parser::ParseArraySubscriptExpression()
 {
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         return {};
     }
@@ -1347,7 +1539,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseParenExpression()
 
 phi::scope_ptr<ASTExitStatement> Parser::ParseExitStatement()
 {
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         return {};
     }
@@ -1367,7 +1559,7 @@ phi::scope_ptr<ASTUnaryExpression> Parser::ParseUnaryExpression(const TokenKind 
 {
     PHI_ASSERT(IsUnaryOperator(operator_kind));
 
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         return {};
     }
@@ -1387,7 +1579,7 @@ phi::scope_ptr<ASTUnaryExpression> Parser::ParseUnaryExpression(const TokenKind 
 phi::scope_ptr<ASTTernaryIfExpression> Parser::ParseTernaryIfExpression(
         phi::not_null_scope_ptr<ASTExpression>&& condition)
 {
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         return {};
     }
@@ -1426,7 +1618,7 @@ phi::scope_ptr<ASTMacroExpression> Parser::ParseMacroExpression(const TokenKind 
 
 phi::scope_ptr<ASTBooleanLiteral> Parser::ParseBooleanLiteral()
 {
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         // TODO: Proper error
         return {};
@@ -1452,7 +1644,7 @@ phi::scope_ptr<ASTBooleanLiteral> Parser::ParseBooleanLiteral()
 
 phi::scope_ptr<ASTKeywordLiteral> Parser::ParseKeywordLiteral()
 {
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         // TODO: Proper error
         return {};
@@ -1471,7 +1663,7 @@ phi::scope_ptr<ASTKeywordLiteral> Parser::ParseKeywordLiteral()
 
 phi::scope_ptr<ASTFloatLiteral> Parser::ParseFloatLiteral()
 {
-    if (!m_TokenStream->has_more())
+    if (!HasMoreTokens())
     {
         // TODO: Proper error
         return {};

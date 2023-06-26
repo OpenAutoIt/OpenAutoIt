@@ -41,6 +41,8 @@ public:
 
     [[nodiscard]] const Token& look_ahead() const;
 
+    [[nodiscard]] const Token& look_behind() const;
+
     void consume();
 
     void skip(phi::usize n = 1u);

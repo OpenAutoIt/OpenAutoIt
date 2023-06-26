@@ -50,3 +50,5 @@ endfunction()
 oa_define_fuzzer("OpenAutoItFuzzer_Lexer" "src/Lexer.fuzz.cpp" "OpenAutoItParser")
 oa_define_fuzzer("OpenAutoItFuzzer_Parser" "src/Parser.fuzz.cpp" "OpenAutoItParser")
 oa_define_fuzzer("OpenAutoItFuzzer_Interpreter" "src/Interpreter.fuzz.cpp" "OpenAutoItRuntime")
+oa_define_fuzzer("OpenAutoItFuzzer_IncludeInterpreter" "src/IncludeInterpreter.fuzz.cpp"
+                 "OpenAutoItRuntime")

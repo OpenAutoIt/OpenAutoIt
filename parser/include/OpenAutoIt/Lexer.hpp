@@ -26,7 +26,7 @@ public:
 
     TokenStream ProcessString(phi::string_view file_name, phi::string_view source);
 
-    TokenStream ProcessFile(phi::observer_ptr<const SourceFile> source);
+    TokenStream ProcessFile(phi::not_null_observer_ptr<const SourceFile> source);
 
 private:
     void Reset();

@@ -92,6 +92,21 @@ PHI_ATTRIBUTE_PURE const Token& TokenStream::look_ahead() const
     return m_Tokens[m_Index.unsafe()];
 }
 
+PHI_ATTRIBUTE_PURE const Token& TokenStream::look_behind() const
+{
+    PHI_ASSERT(!m_Tokens.empty());
+#if defined(PHI_DEBUG)
+    PHI_ASSERT(m_Finalized);
+#endif
+
+    if (m_Index == 0u)
+    {
+        return m_Tokens[0u];
+    }
+
+    return m_Tokens[m_Index.unsafe() - 1u];
+}
+
 void TokenStream::consume()
 {
     PHI_ASSERT(!reached_end());

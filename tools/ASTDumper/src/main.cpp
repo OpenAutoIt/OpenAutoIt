@@ -22,11 +22,11 @@ DefaultDiagnosticConsumer diagnostic_consumer;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 DiagnosticEngine diagnostic_engine{&diagnostic_consumer};
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-SourceManager source_manager;
+RealFSSourceManager source_manager;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Lexer lexer{&diagnostic_engine};
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-Parser parser{source_manager, &diagnostic_engine};
+Parser parser{&source_manager, &diagnostic_engine, &lexer};
 
 PHI_CLANG_SUPPRESS_WARNING_POP()
 
@@ -35,7 +35,7 @@ phi::boolean process_file(const std::filesystem::path& file_path)
     const std::string base_name = file_path.filename().replace_extension().string();
     auto              document  = phi::make_not_null_scope<ASTDocument>();
 
-    parser.ParseFile(document, file_path);
+    parser.ParseFile(document, phi::string_view(file_path.string()));
 
     if (diagnostic_engine.HasErrorOccurred())
     {

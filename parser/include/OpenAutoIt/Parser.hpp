@@ -1,31 +1,13 @@
 #pragma once
 
-#include "OpenAutoIt/AST/ASTArraySubscriptExpression.hpp"
-#include "OpenAutoIt/AST/ASTBinaryExpression.hpp"
-#include "OpenAutoIt/AST/ASTBooleanLiteral.hpp"
 #include "OpenAutoIt/AST/ASTDocument.hpp"
-#include "OpenAutoIt/AST/ASTExitStatement.hpp"
-#include "OpenAutoIt/AST/ASTExpression.hpp"
-#include "OpenAutoIt/AST/ASTExpressionStatement.hpp"
-#include "OpenAutoIt/AST/ASTFloatLiteral.hpp"
-#include "OpenAutoIt/AST/ASTFunctionCallExpression.hpp"
-#include "OpenAutoIt/AST/ASTFunctionDefinition.hpp"
-#include "OpenAutoIt/AST/ASTIfStatement.hpp"
-#include "OpenAutoIt/AST/ASTIntegerLiteral.hpp"
-#include "OpenAutoIt/AST/ASTKeywordLiteral.hpp"
-#include "OpenAutoIt/AST/ASTMacroExpression.hpp"
-#include "OpenAutoIt/AST/ASTNode.hpp"
-#include "OpenAutoIt/AST/ASTStatement.hpp"
-#include "OpenAutoIt/AST/ASTStringLiteral.hpp"
-#include "OpenAutoIt/AST/ASTTernaryIfExpression.hpp"
-#include "OpenAutoIt/AST/ASTUnaryExpression.hpp"
-#include "OpenAutoIt/AST/ASTVariableAssignment.hpp"
-#include "OpenAutoIt/AST/ASTVariableExpression.hpp"
-#include "OpenAutoIt/AST/ASTWhileStatement.hpp"
+#include "OpenAutoIt/ASTForward.hpp"
 #include "OpenAutoIt/Associativity.hpp"
 #include "OpenAutoIt/DiagnosticBuilder.hpp"
 #include "OpenAutoIt/DiagnosticEngine.hpp"
 #include "OpenAutoIt/Lexer.hpp"
+#include "OpenAutoIt/SourceFile.hpp"
+#include "OpenAutoIt/SourceLocation.hpp"
 #include "OpenAutoIt/SourceManager.hpp"
 #include "OpenAutoIt/Token.hpp"
 #include "OpenAutoIt/TokenKind.hpp"
@@ -36,20 +18,30 @@
 #include <phi/core/optional.hpp>
 #include <phi/core/scope_ptr.hpp>
 #include <filesystem>
+#include <stack>
 
 namespace OpenAutoIt
 {
+
+struct ParsingContext
+{
+    phi::observer_ptr<const SourceFile> source_file;
+    TokenStream                         token_stream;
+    SourceLocation                      included_from;
+};
+
 class Parser
 {
 public:
-    Parser(SourceManager&                               source_manager,
-           phi::not_null_observer_ptr<DiagnosticEngine> diagnostic_engine);
+    Parser(phi::not_null_observer_ptr<SourceManager>    source_manager,
+           phi::not_null_observer_ptr<DiagnosticEngine> diagnostic_engine,
+           phi::not_null_observer_ptr<Lexer>            lexer);
 
-    void ParseTokenStream(phi::not_null_observer_ptr<ASTDocument> document, TokenStream& stream);
+    void ParseTokenStream(phi::not_null_observer_ptr<ASTDocument> document, TokenStream&& stream,
+                          phi::not_null_observer_ptr<const SourceFile> source_file);
     void ParseString(phi::not_null_observer_ptr<ASTDocument> document, phi::string_view file_name,
                      phi::string_view source);
-    void ParseFile(phi::not_null_observer_ptr<ASTDocument> document,
-                   const std::filesystem::path&            path);
+    void ParseFile(phi::not_null_observer_ptr<ASTDocument> document, const phi::string_view path);
 
 private:
     void ParseDocument(phi::not_null_observer_ptr<ASTDocument> document);
@@ -119,7 +111,22 @@ private:
         }
     }
 
+    void PushParsingContext(phi::not_null_observer_ptr<const SourceFile> source_file,
+                            TokenStream&&                                token_stream);
+    void PushParsingContext(phi::not_null_observer_ptr<const SourceFile> source_file,
+                            TokenStream&& token_stream, SourceLocation included_from);
+
+    void PopParsingContext();
+
+    [[nodiscard]] TokenStream&       CurrentTokenStream();
+    [[nodiscard]] const TokenStream& CurrentTokenStream() const;
+
+    [[nodiscard]] phi::boolean HasMoreTokens() const;
+
     [[nodiscard]] const Token& CurrentToken() const;
+    [[nodiscard]] const Token& PreviousToken() const;
+
+    [[nodiscard]] phi::boolean ShouldContinueParsing() const;
 
     void ConsumeCurrent();
 
@@ -141,6 +148,9 @@ private:
         m_Document->AppendFunction(phi::move(function));
     }
 
+    void AppendSourceFileToDocument(phi::not_null_observer_ptr<const SourceFile> source_file,
+                                    SourceLocation                               included_from);
+
     DiagnosticBuilder Diag();
 
     // Main nodes
@@ -148,6 +158,8 @@ private:
     phi::scope_ptr<ASTFunctionDefinition> ParseFunctionDefinition();
 
     phi::optional<FunctionParameter> ParseFunctionParameterDefinition();
+
+    void ParseIncludeDirective();
 
     // Statements
     phi::scope_ptr<ASTStatement> ParseStatement();
@@ -183,11 +195,12 @@ private:
     phi::scope_ptr<ASTKeywordLiteral> ParseKeywordLiteral();
     phi::scope_ptr<ASTFloatLiteral>   ParseFloatLiteral();
 
-    SourceManager&                               m_SourceManager;
+    phi::not_null_observer_ptr<SourceManager>    m_SourceManager;
     phi::not_null_observer_ptr<DiagnosticEngine> m_DiagnosticEngine;
-    Lexer                                        m_Lexer;
+    phi::not_null_observer_ptr<Lexer>            m_Lexer;
     phi::observer_ptr<ASTDocument>               m_Document;
 
-    TokenStream* m_TokenStream;
+    std::stack<ParsingContext> m_ParsingContextStack;
 };
+
 } // namespace OpenAutoIt

@@ -1,6 +1,7 @@
 #include "OpenAutoIt/AST/ASTDocument.hpp"
 #include "OpenAutoIt/DiagnosticConsumer.hpp"
 #include "OpenAutoIt/DiagnosticEngine.hpp"
+#include "OpenAutoIt/IncludeType.hpp"
 #include "OpenAutoIt/Interpreter.hpp"
 #include "OpenAutoIt/Lexer.hpp"
 #include "OpenAutoIt/Parser.hpp"
@@ -202,13 +203,16 @@ ExpectedBlock extract_expected_block(const TokenStream& tokens)
     const std::string base_name = file_path.filename().replace_extension().string();
 
     // Load file
-    SourceManager                       source_manager;
-    phi::observer_ptr<const SourceFile> source_file = source_manager.LoadFile(file_path);
-    if (!source_file)
+    RealFSSourceManager                 source_manager;
+    phi::observer_ptr<const SourceFile> maybe_source_file =
+            source_manager.LoadFile(file_path.string(), IncludeType::Local);
+    if (!maybe_source_file)
     {
         std::cerr << "Failed to load file: " << file_path << '\n';
         return false;
     }
+
+    phi::not_null_observer_ptr<const SourceFile> source_file = maybe_source_file.release_not_null();
 
     TestRunnerDiagnosticConsumer diagnostic_consumer;
     DiagnosticEngine             diagnostic_engine{&diagnostic_consumer};
@@ -218,12 +222,12 @@ ExpectedBlock extract_expected_block(const TokenStream& tokens)
     OpenAutoIt::Lexer lexer{&diagnostic_engine};
     TokenStream       stream = lexer.ProcessFile(source_file);
 
-    // Parse the source file
-    Parser parser{source_manager, &diagnostic_engine};
-    parser.ParseTokenStream(document, stream);
-
     // Extract expected block
     const ExpectedBlock expected_block = extract_expected_block(stream);
+
+    // Parse the source file
+    Parser parser{&source_manager, &diagnostic_engine, &lexer};
+    parser.ParseTokenStream(document, phi::move(stream), source_file);
 
     // Setup interpreter
     Interpreter interpreter;

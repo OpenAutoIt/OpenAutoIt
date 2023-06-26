@@ -40,6 +40,11 @@ phi::boolean DiagnosticEngine::HasErrorOccurred() const
     return m_ErrorOccurred;
 }
 
+phi::boolean DiagnosticEngine::HasFatalErrorOccurred() const
+{
+    return m_FatalErrorOccurred;
+}
+
 phi::boolean DiagnosticEngine::GetIgnoreAllWarnings() const
 {
     return m_IgnoreAllWarnings;
@@ -78,6 +83,11 @@ void DiagnosticEngine::Report(Diagnostic diagnostic)
     {
         m_ErrorOccurred = true;
         ++m_NumberOfErrors;
+    }
+
+    if (diagnostic.IsFatalError())
+    {
+        m_FatalErrorOccurred = true;
     }
 
     if (diagnostic.IsWarning())

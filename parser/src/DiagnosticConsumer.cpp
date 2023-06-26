@@ -43,12 +43,14 @@ void DefaultDiagnosticConsumer::Report(const Diagnostic& diagnostic)
 
     std::ostream& output = diagnostic.IsErrorOrFatal() ? std::cerr : std::cout;
 
+    const DiagnosticId id = diagnostic.GetId();
+
     // Print the diagnostic itself
     output << diagnostic.GetLocation() << ": " << GetDiagnosticLevelName(diagnostic) << ": "
            << diagnostic.GetMessage();
-    if (diagnostic.GetId() != DiagnosticId::None)
+    if (id != DiagnosticId::None && DiagnosticIdHasFlagName(id))
     {
-        output << " [" << DiagnosticIdFlagName(diagnostic.GetId()) << "]";
+        output << " [" << DiagnosticIdFlagName(id) << "]";
     }
     output << '\n';
 
