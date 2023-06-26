@@ -201,6 +201,8 @@ void Parser::ParseDocument(phi::not_null_observer_ptr<ASTDocument> document)
             }
 
             case TokenKind::Comment:
+            case TokenKind::PP_CommentsStart:
+            case TokenKind::PP_CommentsEnd:
             case TokenKind::NewLine: {
                 // Simply ignore and consume newlines and comments
                 ConsumeCurrent();
@@ -329,6 +331,8 @@ void Parser::ConsumeComments()
         switch (CurrentToken().GetTokenKind())
         {
             case TokenKind::Comment:
+            case TokenKind::PP_CommentsStart:
+            case TokenKind::PP_CommentsEnd:
                 ConsumeCurrent();
                 break;
 
@@ -344,8 +348,10 @@ void Parser::ConsumeNewLineAndComments()
     {
         switch (CurrentToken().GetTokenKind())
         {
-            case TokenKind::NewLine:
             case TokenKind::Comment:
+            case TokenKind::PP_CommentsStart:
+            case TokenKind::PP_CommentsEnd:
+            case TokenKind::NewLine:
                 ConsumeCurrent();
                 break;
 
@@ -751,13 +757,7 @@ phi::scope_ptr<ASTWhileStatement> Parser::ParseWhileStatement()
     // Parse statements until KW_WEnd
     while (HasMoreTokens() && CurrentToken().GetTokenKind() != TokenKind::KW_WEnd)
     {
-        // Skip NewLines and comments
-        if (CurrentToken().GetTokenKind() == TokenKind::NewLine ||
-            CurrentToken().GetTokenKind() == TokenKind::Comment)
-        {
-            ConsumeCurrent();
-            continue;
-        }
+        ConsumeNewLineAndComments();
 
         // Parse statements
         auto statement = ParseStatement();
