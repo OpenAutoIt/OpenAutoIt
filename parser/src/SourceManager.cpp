@@ -34,7 +34,8 @@ phi::observer_ptr<const SourceFile> RealFSSourceManager::LoadFile(const phi::str
 
 void RealFSSourceManager::SetLocalSearchPath(const std::filesystem::path& search_path)
 {
-    m_LocalSearchPath = std::filesystem::absolute(search_path);
+    std::error_code error_code;
+    m_LocalSearchPath = std::filesystem::absolute(search_path, error_code);
 }
 
 phi::boolean RealFSSourceManager::LoadFileFromDisk(const std::filesystem::path& file_path)
