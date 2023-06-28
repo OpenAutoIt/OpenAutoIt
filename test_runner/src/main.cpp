@@ -204,15 +204,13 @@ ExpectedBlock extract_expected_block(const TokenStream& tokens)
 
     // Load file
     RealFSSourceManager                 source_manager;
-    phi::observer_ptr<const SourceFile> maybe_source_file =
+    phi::observer_ptr<const SourceFile> source_file =
             source_manager.LoadFile(file_path.string(), IncludeType::Local);
-    if (!maybe_source_file)
+    if (!source_file)
     {
         std::cerr << "Failed to load file: " << file_path << '\n';
         return false;
     }
-
-    phi::not_null_observer_ptr<const SourceFile> source_file = maybe_source_file.release_not_null();
 
     TestRunnerDiagnosticConsumer diagnostic_consumer;
     DiagnosticEngine             diagnostic_engine{&diagnostic_consumer};
@@ -220,14 +218,14 @@ ExpectedBlock extract_expected_block(const TokenStream& tokens)
 
     // Lex the source file
     OpenAutoIt::Lexer lexer{&diagnostic_engine};
-    TokenStream       stream = lexer.ProcessFile(source_file);
+    TokenStream       stream = lexer.ProcessFile(source_file.not_null());
 
     // Extract expected block
     const ExpectedBlock expected_block = extract_expected_block(stream);
 
     // Parse the source file
     Parser parser{&source_manager, &diagnostic_engine, &lexer};
-    parser.ParseTokenStream(document, phi::move(stream), source_file);
+    parser.ParseTokenStream(document, phi::move(stream), source_file.not_null());
 
     // Setup interpreter
     Interpreter interpreter;

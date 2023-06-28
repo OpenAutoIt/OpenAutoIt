@@ -19,6 +19,7 @@
 #include <phi/core/scope_ptr.hpp>
 #include <filesystem>
 #include <stack>
+#include <unordered_set>
 
 namespace OpenAutoIt
 {
@@ -118,6 +119,10 @@ private:
 
     void PopParsingContext();
 
+    [[nodiscard]] ParsingContext& CurrentParsingContext();
+
+    [[nodiscard]] phi::not_null_observer_ptr<const SourceFile> CurrentSourceFile();
+
     [[nodiscard]] TokenStream&       CurrentTokenStream();
     [[nodiscard]] const TokenStream& CurrentTokenStream() const;
 
@@ -200,7 +205,8 @@ private:
     phi::not_null_observer_ptr<Lexer>            m_Lexer;
     phi::observer_ptr<ASTDocument>               m_Document;
 
-    std::stack<ParsingContext> m_ParsingContextStack;
+    std::stack<ParsingContext>            m_ParsingContextStack;
+    std::unordered_set<const SourceFile*> m_IncludeOnceFiles;
 };
 
 } // namespace OpenAutoIt

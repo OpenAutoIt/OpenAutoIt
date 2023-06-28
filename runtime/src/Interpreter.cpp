@@ -151,8 +151,7 @@ Interpreter::StatementFinished Interpreter::InterpretStatement(
                     variable_assignment->m_InitialValueExpression;
             if (initial_expression)
             {
-                const Variant expression_value =
-                        InterpretExpression(initial_expression.release_not_null());
+                const Variant expression_value = InterpretExpression(initial_expression.not_null());
 
                 vm().PushOrAssignVariable(variable_name, expression_value);
                 return StatementFinished::Yes;

@@ -161,23 +161,22 @@ void Parser::ParseFile(phi::not_null_observer_ptr<ASTDocument> document,
         return;
     }
 
-    phi::not_null_observer_ptr<const SourceFile> not_null_source_file =
-            source_file.release_not_null();
+    TokenStream stream = m_Lexer->ProcessFile(source_file.not_null());
 
-    TokenStream stream = m_Lexer->ProcessFile(not_null_source_file);
-
-    ParseTokenStream(phi::move(document), phi::move(stream), not_null_source_file);
+    ParseTokenStream(phi::move(document), phi::move(stream), source_file.not_null());
 }
 
 void Parser::ParseDocument(phi::not_null_observer_ptr<ASTDocument> document)
 {
     m_Document = phi::move(document);
 
+    m_IncludeOnceFiles.clear();
+
     while (ShouldContinueParsing())
     {
         if (!CurrentTokenStream().has_more())
         {
-            m_ParsingContextStack.pop();
+            PopParsingContext();
             continue;
         }
 
@@ -219,6 +218,14 @@ void Parser::ParseDocument(phi::not_null_observer_ptr<ASTDocument> document)
                 ConsumeCurrent();
 
                 ParseIncludeDirective();
+
+                break;
+            }
+
+            case TokenKind::PP_IncludeOnce: {
+                ConsumeCurrent();
+
+                m_IncludeOnceFiles.emplace(CurrentSourceFile().get());
 
                 break;
             }
@@ -274,6 +281,18 @@ void Parser::PopParsingContext()
     {
         m_SourceManager->SetLocalSearchPath("");
     }
+}
+
+ParsingContext& Parser::CurrentParsingContext()
+{
+    PHI_ASSERT(!m_ParsingContextStack.empty());
+
+    return m_ParsingContextStack.top();
+}
+
+phi::not_null_observer_ptr<const SourceFile> Parser::CurrentSourceFile()
+{
+    return CurrentParsingContext().source_file.not_null();
 }
 
 TokenStream& Parser::CurrentTokenStream()
@@ -384,7 +403,14 @@ phi::optional<const Token&> Parser::MustParse(TokenKind kind)
 void Parser::AppendSourceFileToDocument(phi::not_null_observer_ptr<const SourceFile> source_file,
                                         SourceLocation                               included_from)
 {
-    PushParsingContext(source_file, m_Lexer->ProcessFile(source_file), included_from);
+    // Don't include the file if it's already included with #include-once set in the file
+    if (m_IncludeOnceFiles.contains(source_file.get()))
+    {
+        return;
+    }
+
+    PushParsingContext(phi::move(source_file), m_Lexer->ProcessFile(source_file),
+                       phi::move(included_from));
 }
 
 DiagnosticBuilder Parser::Diag()
@@ -642,7 +668,7 @@ void Parser::ParseIncludeDirective()
     }
 
     // Append the file
-    AppendSourceFileToDocument(include_file.release_not_null(), token.GetBeginLocation());
+    AppendSourceFileToDocument(include_file.not_null(), token.GetBeginLocation());
 }
 
 phi::scope_ptr<ASTStatement> Parser::ParseStatement()
