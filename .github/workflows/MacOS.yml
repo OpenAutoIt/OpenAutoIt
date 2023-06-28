@@ -39,8 +39,8 @@ jobs:
 
       matrix:
         cfg:
-          # gcc-12
-          - { compiler: g++, compiler_version: "12" }
+          # gcc-13
+          - { compiler: g++, compiler_version: "13" }
           # AppleClang 14.2
           - { compiler: clang++, compiler_version: "14.2" }
 

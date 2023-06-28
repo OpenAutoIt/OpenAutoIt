@@ -39,7 +39,7 @@ jobs:
 
       - name: Install
         env:
-          CPPCHECK_VERSION: "2.9"
+          CPPCHECK_VERSION: "2.11"
         run: external/Phi/scripts/ci/InstallTools.sh clang-${{ env.LLVM_VERSION }} cppcheck-${{ env.CPPCHECK_VERSION }} ninja
 
       - name: Configure
@@ -137,7 +137,7 @@ jobs:
   include-what-you-use:
     runs-on: ubuntu-20.04
     env:
-      LLVM_VERSION: 15
+      LLVM_VERSION: 16
       CMAKE_BUILD_PARALLEL_LEVEL: "2"
 
     steps:
@@ -313,8 +313,8 @@ jobs:
         language: [ 'cpp' ]
 
         compiler:
-          - 'gcc-12'
-          - 'clang-15'
+          - 'gcc-13'
+          - 'clang-16'
 
         build_type:
           - 'RelWithDebInfo'
