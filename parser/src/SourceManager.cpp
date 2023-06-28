@@ -66,13 +66,13 @@ phi::boolean RealFSSourceManager::LoadFileFromDisk(const std::filesystem::path& 
 
 phi::boolean RealFSSourceManager::IsFileLoaded(const std::filesystem::path& file_path) const
 {
-    return m_SourceFiles.contains(file_path);
+    return m_SourceFiles.contains(file_path.string());
 }
 
 phi::observer_ptr<const SourceFile> RealFSSourceManager::GetSourceFile(
         const std::filesystem::path& file_path) const
 {
-    auto iterator = m_SourceFiles.find(file_path);
+    auto iterator = m_SourceFiles.find(file_path.string());
     if (iterator != m_SourceFiles.end())
     {
         return &iterator->second;
@@ -83,9 +83,9 @@ phi::observer_ptr<const SourceFile> RealFSSourceManager::GetSourceFile(
 
 void RealFSSourceManager::AppendSourceFile(SourceFile&& file)
 {
-    PHI_ASSERT(!m_SourceFiles.contains(file.m_FilePath));
+    PHI_ASSERT(!m_SourceFiles.contains(file.m_FilePath.string()));
 
-    m_SourceFiles.emplace(file.m_FilePath, phi::move(file));
+    m_SourceFiles.emplace(file.m_FilePath.string(), phi::move(file));
 }
 
 std::filesystem::path RealFSSourceManager::FindFile(const phi::string_view file_path,

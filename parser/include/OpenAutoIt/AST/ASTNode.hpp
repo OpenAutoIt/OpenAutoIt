@@ -2,6 +2,7 @@
 
 #include "OpenAutoIt/TokenKind.hpp"
 #include "OpenAutoIt/Utililty.hpp"
+#include <phi/compiler_support/warning.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/observer_ptr.hpp>
 #include <phi/core/types.hpp>
@@ -42,6 +43,8 @@ enum class ASTNodeType
     COUNT,
 };
 
+PHI_MSVC_SUPPRESS_WARNING_WITH_PUSH(4702) // unreachable code
+
 [[nodiscard]] PHI_ATTRIBUTE_PURE constexpr const char* enum_name(ASTNodeType node_type)
 {
     switch (node_type)
@@ -59,6 +62,8 @@ enum class ASTNodeType
             return "";
     }
 }
+
+PHI_MSVC_SUPPRESS_WARNING_POP()
 
 class ASTNode
 {

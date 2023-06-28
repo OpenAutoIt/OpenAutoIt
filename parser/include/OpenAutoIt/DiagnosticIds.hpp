@@ -35,6 +35,7 @@ enum class DiagnosticId
 
 PHI_CLANG_SUPPRESS_WARNING_WITH_PUSH("-Wcovered-switch-default")
 PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wreturn-type")
+PHI_MSVC_SUPPRESS_WARNING_WITH_PUSH(4702) // unreachable code
 
 [[nodiscard]] constexpr phi::boolean DiagnosticIdHasFlagName(const DiagnosticId id)
 {
@@ -96,6 +97,7 @@ PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wreturn-type")
     }
 }
 
+PHI_MSVC_SUPPRESS_WARNING_POP()
 PHI_GCC_SUPPRESS_WARNING_POP()
 PHI_CLANG_SUPPRESS_WARNING_POP()
 

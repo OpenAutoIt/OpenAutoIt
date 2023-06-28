@@ -8,6 +8,7 @@
 #include "OpenAutoIt/SourceManager.hpp"
 #include "REPLInterpreter.hpp"
 #include <phi/core/boolean.hpp>
+#include <phi/core/narrow_cast.hpp>
 #include <phi/core/scope_ptr.hpp>
 #include <iostream>
 
@@ -74,5 +75,5 @@ int main(int argc, char* argv[])
 
     const phi::u32 exit_code = interpreter.vm().GetExitCode();
 
-    return exit_code.unsafe();
+    return phi::narrow_cast<int>(exit_code);
 }

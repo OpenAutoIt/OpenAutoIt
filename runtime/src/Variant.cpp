@@ -547,10 +547,10 @@ Variant Variant::CastToNumeric() const
             string_t value = AsString();
 
             // First attempt to convert to a double
-            char*        double_end_ptr = value.end().base();
+            char*        double_end_ptr = value.data() + value.length();
             const double double_value   = strtod(value.c_str(), &double_end_ptr);
 
-            char*              int64_end_ptr = value.end().base();
+            char*              int64_end_ptr = value.data() + value.length();
             const phi::int64_t int64_value   = std::strtol(value.c_str(), &int64_end_ptr, 10);
 
             // Use the double value if that parsed more otherwise use the int64
@@ -601,9 +601,9 @@ Variant Variant::Concatenate(const Variant& other) const
     const Variant this_string  = CastToString();
     const Variant other_string = other.CastToString();
 
-    const string_t string = this_string.AsString() + other_string.AsString();
+    const string_t string_value = this_string.AsString() + other_string.AsString();
 
-    return Variant::MakeString(phi::move(string));
+    return Variant::MakeString(phi::move(string_value));
 }
 
 // https://www.autoitscript.com/autoit3/docs/functions/Abs.htm

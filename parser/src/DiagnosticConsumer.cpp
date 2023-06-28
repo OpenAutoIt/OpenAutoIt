@@ -11,6 +11,7 @@ namespace OpenAutoIt
 namespace
 {
     PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wreturn-type")
+    PHI_MSVC_SUPPRESS_WARNING_WITH_PUSH(4702) // unreachable code
 
     const char* GetDiagnosticLevelName(const Diagnostic& diagnostic)
     {
@@ -30,6 +31,7 @@ namespace
         }
     }
 
+    PHI_MSVC_SUPPRESS_WARNING_POP()
     PHI_GCC_SUPPRESS_WARNING_POP()
 } // namespace
 
