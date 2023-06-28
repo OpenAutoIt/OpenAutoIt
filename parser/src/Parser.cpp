@@ -227,6 +227,8 @@ void Parser::ParseDocument(phi::not_null_observer_ptr<ASTDocument> document)
 
                 m_IncludeOnceFiles.emplace(CurrentSourceFile().get());
 
+                RequireNewLine();
+
                 break;
             }
 
@@ -246,6 +248,8 @@ void Parser::ParseDocument(phi::not_null_observer_ptr<ASTDocument> document)
                 }
 
                 AppendStatementToDocument(statement.release_not_null());
+
+                RequireNewLine();
                 break;
             }
         }
@@ -378,6 +382,25 @@ void Parser::ConsumeNewLineAndComments()
                 return;
         }
     }
+}
+
+void Parser::RequireNewLine()
+{
+    ConsumeComments();
+
+    if (!HasMoreTokens())
+    {
+        return;
+    }
+
+    const Token& token = CurrentToken();
+
+    if (token.GetTokenKind() != TokenKind::NewLine)
+    {
+        Diag().Error(DiagnosticId::Expected, PreviousToken().GetBeginLocation(), "new line");
+    }
+
+    ConsumeCurrent();
 }
 
 phi::optional<const Token&> Parser::MustParse(TokenKind kind)
@@ -667,6 +690,8 @@ void Parser::ParseIncludeDirective()
         return;
     }
 
+    RequireNewLine();
+
     // Append the file
     AppendSourceFileToDocument(include_file.not_null(), token.GetBeginLocation());
 }
@@ -746,14 +771,6 @@ phi::scope_ptr<ASTStatement> Parser::ParseStatement()
             }
             break;
         }
-    }
-
-    ConsumeComments();
-
-    if (HasMoreTokens() && !MustParse(TokenKind::NewLine))
-    {
-        err("Requires newline after statement\n");
-        return {};
     }
 
     return phi::move(ret_statement);

@@ -235,13 +235,16 @@ ExpectedBlock extract_expected_block(const TokenStream& tokens)
     out_buffer.std_err.clear();
     out_buffer.std_out.clear();
 
-    // Setup VM
-    VirtualMachine& vm = interpreter.vm();
+    if (!diagnostic_engine.HasErrorOccurred())
+    {
+        // Setup VM
+        VirtualMachine& vm = interpreter.vm();
 
-    vm.SetupOutputHandler(standard_output_handler, error_output_handler);
+        vm.SetupOutputHandler(standard_output_handler, error_output_handler);
 
-    // Interpret the code
-    interpreter.Run();
+        // Interpret the code
+        interpreter.Run();
+    }
 
     // Check expected
     return expects_matched(expected_block, out_buffer);

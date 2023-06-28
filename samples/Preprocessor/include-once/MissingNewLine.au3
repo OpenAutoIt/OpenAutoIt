@@ -1,0 +1,1 @@
+#include-once ConsoleWrite("FAIL")

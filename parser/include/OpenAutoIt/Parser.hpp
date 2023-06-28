@@ -139,6 +139,8 @@ private:
 
     void ConsumeNewLineAndComments();
 
+    void RequireNewLine();
+
     [[nodiscard]] phi::optional<const Token&> MustParse(TokenKind kind);
 
     template <typename TypeT>
