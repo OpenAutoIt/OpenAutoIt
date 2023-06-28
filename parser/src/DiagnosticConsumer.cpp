@@ -1,6 +1,7 @@
 #include "OpenAutoIt/DiagnosticConsumer.hpp"
 
 #include "OpenAutoIt/DiagnosticIds.hpp"
+#include <phi/compiler_support/warning.hpp>
 #include <phi/core/assert.hpp>
 #include <iostream>
 
@@ -9,6 +10,8 @@ namespace OpenAutoIt
 
 namespace
 {
+    PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wreturn-type")
+
     const char* GetDiagnosticLevelName(const Diagnostic& diagnostic)
     {
         switch (diagnostic.GetLevel())
@@ -26,6 +29,8 @@ namespace
                 PHI_ASSERT_NOT_REACHED();
         }
     }
+
+    PHI_GCC_SUPPRESS_WARNING_POP()
 } // namespace
 
 void IgnoreDiagnosticConsumer::Report(const Diagnostic& /*diagnostic*/)

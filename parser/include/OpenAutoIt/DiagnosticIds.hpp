@@ -34,6 +34,7 @@ enum class DiagnosticId
 };
 
 PHI_CLANG_SUPPRESS_WARNING_WITH_PUSH("-Wcovered-switch-default")
+PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wreturn-type")
 
 [[nodiscard]] constexpr phi::boolean DiagnosticIdHasFlagName(const DiagnosticId id)
 {
@@ -95,6 +96,7 @@ PHI_CLANG_SUPPRESS_WARNING_WITH_PUSH("-Wcovered-switch-default")
     }
 }
 
+PHI_GCC_SUPPRESS_WARNING_POP()
 PHI_CLANG_SUPPRESS_WARNING_POP()
 
 } // namespace OpenAutoIt
