@@ -7,7 +7,9 @@
 #include <phi/core/observer_ptr.hpp>
 #include <phi/forward/string_view.hpp>
 #include <filesystem>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace OpenAutoIt
 {
