@@ -662,22 +662,22 @@ void Parser::ParseIncludeDirective()
     // Limit include nesting
     if (m_ParsingContextStack.size() >= MaxNumberOfIncludeNesting)
     {
-        Diag().FatalError(DiagnosticId::IncludeNestingTooDeeply, token.GetBeginLocation());
+        Diag().Error(DiagnosticId::IncludeNestingTooDeeply, token.GetBeginLocation());
         return;
     }
 
     // Emit error for empty file names
     if (file_name.is_empty())
     {
-        Diag().FatalError(DiagnosticId::EmptyFilename, token.GetBeginLocation());
+        Diag().Error(DiagnosticId::EmptyFilename, token.GetBeginLocation());
         return;
     }
 
     // Emit error if the file name is too long
     if (file_name.length() > 255u)
     {
-        Diag().FatalError(DiagnosticId::FileNameTooLong, token.GetBeginLocation(),
-                          std::string_view(file_name));
+        Diag().Error(DiagnosticId::FileNameTooLong, token.GetBeginLocation(),
+                     std::string_view(file_name));
         return;
     }
 
@@ -686,8 +686,8 @@ void Parser::ParseIncludeDirective()
             m_SourceManager->LoadFile(std::string_view(file_name), include_type);
     if (!include_file)
     {
-        Diag().FatalError(DiagnosticId::FileNotFound, token.GetBeginLocation(),
-                          std::string_view(file_name));
+        Diag().Error(DiagnosticId::FileNotFound, token.GetBeginLocation(),
+                     std::string_view(file_name));
         return;
     }
 
