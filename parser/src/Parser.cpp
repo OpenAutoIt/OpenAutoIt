@@ -19,6 +19,7 @@
 #include <phi/compiler_support/warning.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/boolean.hpp>
+#include <phi/core/integer.hpp>
 #include <phi/core/move.hpp>
 #include <phi/core/narrow_cast.hpp>
 #include <phi/core/observer_ptr.hpp>
@@ -1094,17 +1095,11 @@ phi::scope_ptr<ASTIntegerLiteral> Parser::ParseIntegerLiteral()
         return {};
     }
 
-    if (token.GetText().length() > 18u)
-    {
-        // TODO: Better check and proper error
-        return {};
-    }
-
     phi::int64_t value{0};
     phi::boolean parsing_hex{false};
     for (phi::usize index{0u}; index < token.GetText().length(); ++index)
     {
-        char character = token.GetText().at(index);
+        const char character = token.GetText().at(index);
 
         // Checking the second character
         if (index == 1u)
@@ -1120,12 +1115,32 @@ phi::scope_ptr<ASTIntegerLiteral> Parser::ParseIntegerLiteral()
         {
             PHI_ASSERT(phi::is_hex_digit(character));
 
+            if (phi::detail::will_multiplication_error(phi::detail::unsigned_integer_tag{}, value,
+                                                       phi::int64_t(16)) ||
+                phi::detail::will_addition_error(phi::detail::unsigned_integer_tag{}, value * 16,
+                                                 phi::int64_t(character - '0')))
+            {
+                Diag().Error(DiagnosticId::IntegerLiteralTooLarge, token.GetBeginLocation());
+                ConsumeCurrent();
+                return {};
+            }
+
             value <<= 4;
             value |= phi::hex_digit_value(character).unsafe();
         }
         else
         {
             PHI_ASSERT(character >= '0' && character <= '9');
+
+            if (phi::detail::will_multiplication_error(phi::detail::signed_integer_tag{}, value,
+                                                       phi::int64_t(10)) ||
+                phi::detail::will_addition_error(phi::detail::signed_integer_tag{}, value * 10,
+                                                 phi::int64_t(character - '0')))
+            {
+                Diag().Error(DiagnosticId::IntegerLiteralTooLarge, token.GetBeginLocation());
+                ConsumeCurrent();
+                return {};
+            }
 
             value *= 10;
             value += (character - '0');
@@ -1487,8 +1502,6 @@ std::vector<phi::not_null_scope_ptr<ASTExpression>> Parser::ParseFunctionCallArg
         phi::scope_ptr<ASTExpression> expression = ParseExpression();
         if (!expression)
         {
-            err("ERR: While parsing expression for function call arguments\n");
-            // TODO: Give Prober error
             arguments.clear();
             return arguments;
         }

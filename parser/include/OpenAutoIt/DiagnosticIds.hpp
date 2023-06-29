@@ -17,6 +17,8 @@ namespace OpenAutoIt
     OPENAUTOIT_ENUM_DIAGNOSTIC_IDS_IMPL(UnexpectedEndOfFile, "",                                   \
                                         "unexpected end of file while parsing {:s}")               \
     OPENAUTOIT_ENUM_DIAGNOSTIC_IDS_IMPL(Expected, "", "expected {:s}")                             \
+    OPENAUTOIT_ENUM_DIAGNOSTIC_IDS_IMPL(IntegerLiteralTooLarge, "",                                \
+                                        "integer literal is too large.")                           \
     /* Parser fatal error */                                                                       \
     OPENAUTOIT_ENUM_DIAGNOSTIC_IDS_IMPL(FileNotFound, "", "'{:s}' file not found")                 \
     OPENAUTOIT_ENUM_DIAGNOSTIC_IDS_IMPL(EmptyFilename, "", "empty filename")                       \
