@@ -55,6 +55,11 @@ jobs:
           - "tsan"
           - "ubsan"
 
+        exclude:
+        - compiler: "clang-16"
+          dynamic_test: "coverage"
+
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
