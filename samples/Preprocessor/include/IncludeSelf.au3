@@ -1,1 +1,1 @@
-#include "IncludeSelf.au3"
+#include "IncludeSelf.au3" ; expect-error: "#include nested too deeply"

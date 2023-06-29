@@ -52,8 +52,10 @@ public:
 
 struct ExpectedBlock
 {
-    std::string std_out;
-    std::string std_err;
+    std::string              std_out;
+    std::string              std_err;
+    std::vector<std::string> warnings;
+    std::vector<std::string> errors;
 };
 
 struct OutputBuffer
@@ -69,8 +71,10 @@ PHI_CLANG_SUPPRESS_WARNING("-Wglobal-constructors")
 static OutputBuffer out_buffer;
 
 // Regexes
-static const std::regex expected_std_out_regex{R"regex(expect-stdout:\s*"(.*)")regex"};
-static const std::regex expected_std_err_regex{R"regex(expect-stderr:\s*"(.*)")regex"};
+static const std::regex expect_std_out_regex{R"regex(expect-stdout:\s*"(.*)")regex"};
+static const std::regex expect_std_err_regex{R"regex(expect-stderr:\s*"(.*)")regex"};
+static const std::regex expect_warning_regex{R"regex(expect-warning:\s*"(.*)")regex"};
+static const std::regex expect_error_regex{R"regex(expect-error:\s*"(.*)")regex"};
 
 PHI_CLANG_SUPPRESS_WARNING_POP()
 
@@ -108,8 +112,9 @@ void basic_trim(std::string& str)
     }
 }
 
-PHI_ATTRIBUTE_PURE phi::boolean expects_matched(const ExpectedBlock& expected_block,
-                                                const OutputBuffer&  buffer)
+PHI_ATTRIBUTE_PURE phi::boolean expects_matched(
+        const ExpectedBlock& expected_block, const OutputBuffer& buffer,
+        const TestRunnerDiagnosticConsumer& diagnostic_consumer)
 {
     phi::boolean return_value{true};
 
@@ -141,6 +146,68 @@ PHI_ATTRIBUTE_PURE phi::boolean expects_matched(const ExpectedBlock& expected_bl
         return_value = false;
     }
 
+    // Check warnings
+    for (const std::string& warning : expected_block.warnings)
+    {
+        phi::boolean found = false;
+        for (const Diagnostic& diagnostic : diagnostic_consumer.diagnostics)
+        {
+            if (diagnostic.IsWarning() && phi::string_equals(diagnostic.GetMessage(), warning))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            std::cout << "Expected warning not found:\n";
+            std::cout << '\'' << warning << "'\n";
+
+            std::cout << "Possible intended matches:\n";
+            for (const Diagnostic& diagnostic : diagnostic_consumer.diagnostics)
+            {
+                if (diagnostic.IsWarning())
+                {
+                    std::cout << '\'' << diagnostic.GetMessage() << "'\n";
+                }
+            }
+
+            return_value = false;
+        }
+    }
+
+    // Check errors
+    for (const std::string& error : expected_block.errors)
+    {
+        phi::boolean found = false;
+        for (const Diagnostic& diagnostic : diagnostic_consumer.diagnostics)
+        {
+            if (diagnostic.IsErrorOrFatal() && phi::string_equals(diagnostic.GetMessage(), error))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            std::cout << "Expected error not found:\n";
+            std::cout << '\'' << error << "'\n";
+
+            std::cout << "Possible intended matches:\n";
+            for (const Diagnostic& diagnostic : diagnostic_consumer.diagnostics)
+            {
+                if (diagnostic.IsErrorOrFatal())
+                {
+                    std::cout << '\'' << diagnostic.GetMessage() << "'\n";
+                }
+            }
+
+            return_value = false;
+        }
+    }
+
     return return_value;
 }
 
@@ -159,7 +226,7 @@ ExpectedBlock extract_expected_block(const TokenStream& tokens)
         std::match_results<phi::string_view::const_iterator> match;
 
         // stdout
-        if (std::regex_search(text.begin(), text.end(), match, expected_std_out_regex))
+        if (std::regex_search(text.begin(), text.end(), match, expect_std_out_regex))
         {
             // Ignore empty strings
             if (match[1].length() == 0u)
@@ -175,7 +242,7 @@ ExpectedBlock extract_expected_block(const TokenStream& tokens)
         }
 
         // stderr
-        if (std::regex_search(text.begin(), text.end(), match, expected_std_err_regex))
+        if (std::regex_search(text.begin(), text.end(), match, expect_std_err_regex))
         {
             // Ignore empty strings
             if (match[1].length() == 0u)
@@ -189,11 +256,41 @@ ExpectedBlock extract_expected_block(const TokenStream& tokens)
             block.std_err += match[1];
             block.std_err.push_back('\0');
         }
+
+        // warning
+        if (std::regex_search(text.begin(), text.end(), match, expect_warning_regex))
+        {
+            if (match[1].length() == 0u)
+            {
+                break;
+            }
+
+            block.warnings.push_back(match[1]);
+        }
+
+        // error
+        if (std::regex_search(text.begin(), text.end(), match, expect_error_regex))
+        {
+            if (match[1].length() == 0u)
+            {
+                break;
+            }
+
+            block.errors.push_back(match[1]);
+        }
     }
 
     // Trim output
     basic_trim(block.std_out);
     basic_trim(block.std_err);
+    for (auto& warning : block.warnings)
+    {
+        basic_trim(warning);
+    }
+    for (auto& error : block.errors)
+    {
+        basic_trim(error);
+    }
 
     return block;
 }
@@ -247,7 +344,7 @@ ExpectedBlock extract_expected_block(const TokenStream& tokens)
     }
 
     // Check expected
-    return expects_matched(expected_block, out_buffer);
+    return expects_matched(expected_block, out_buffer, diagnostic_consumer);
 }
 
 int main(int argc, char* argv[])

@@ -1085,7 +1085,9 @@ phi::optional<Token> Lexer::GetNextToken()
                 {
                     if (parsing_float)
                     {
-                        // TODO: Error hexliteral not allowed for floats
+                        // TODO: Fix include and enable this warning
+                        //Diag().Error(DiagnosticId::FloatHexLiteral, CurrentSourceLocation());
+
                         return ConstructToken(TokenKind::Garbage, begin_of_token);
                     }
 
@@ -1105,7 +1107,8 @@ phi::optional<Token> Lexer::GetNextToken()
                 {
                     if (parsing_float)
                     {
-                        // TODO: Error more than one dot in float literal
+                        //Diag().Error(DiagnosticId::InvalidFloatLiteral, CurrentSourceLocation());
+
                         return ConstructToken(TokenKind::Garbage, begin_of_token);
                     }
 
@@ -1123,7 +1126,8 @@ phi::optional<Token> Lexer::GetNextToken()
                 // TODO: This is very hacky and looks nasty
                 if (*(m_Iterator - 1) == '.')
                 {
-                    // TODO: Prober error
+                    //Diag().Error(DiagnosticId::InvalidFloatLiteral, CurrentSourceLocation());
+
                     return ConstructToken(TokenKind::Garbage, begin_of_token);
                 }
 

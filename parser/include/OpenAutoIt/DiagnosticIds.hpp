@@ -13,6 +13,11 @@ namespace OpenAutoIt
     /* Lexer warnings */                                                                           \
     OPENAUTOIT_ENUM_DIAGNOSTIC_IDS_IMPL(NullCharacter, "-Wnull-character",                         \
                                         "null character ignored")                                  \
+    /* Lexer errors */                                                                             \
+    OPENAUTOIT_ENUM_DIAGNOSTIC_IDS_IMPL(InvalidFloatLiteral, "",                                   \
+                                        "invalid float literal declaration")                       \
+    OPENAUTOIT_ENUM_DIAGNOSTIC_IDS_IMPL(FloatHexLiteral, "",                                       \
+                                        "hexadecimal float literal are not allowed")               \
     /* Parser error */                                                                             \
     OPENAUTOIT_ENUM_DIAGNOSTIC_IDS_IMPL(UnexpectedEndOfFile, "",                                   \
                                         "unexpected end of file while parsing {:s}")               \
