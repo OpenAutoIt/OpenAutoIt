@@ -11,6 +11,7 @@
 
 namespace OpenAutoIt
 {
+
 class Variant;
 
 using array_t  = std::vector<Variant>;
@@ -151,6 +152,8 @@ private:
     void copy_from(const Variant& other);
 
     void move_from(Variant&& other);
+
+    [[nodiscard]] phi::i64 ConvertDoubleToInt64() const;
 
     Type m_Type;
 

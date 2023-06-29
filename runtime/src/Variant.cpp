@@ -1,13 +1,16 @@
 #include "OpenAutoIt/Variant.hpp"
 
 #include "OpenAutoIt/UnsafeOperations.hpp"
+#include <phi/algorithm/clamp.hpp>
 #include <phi/compiler_support/extended_attributes.hpp>
 #include <phi/compiler_support/warning.hpp>
 #include <phi/container/string_view.hpp>
 #include <phi/core/assert.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/move.hpp>
+#include <phi/core/narrow_cast.hpp>
 #include <phi/core/types.hpp>
+#include <phi/core/unsafe_cast.hpp>
 #include <phi/math/abs.hpp>
 #include <functional>
 #include <string>
@@ -17,6 +20,7 @@ PHI_GCC_SUPPRESS_WARNING("-Wsuggest-attribute=const")
 
 namespace OpenAutoIt
 {
+
 PHI_MSVC_SUPPRESS_WARNING_PUSH()
 PHI_MSVC_SUPPRESS_WARNING(4582) // constructor is not implicitly called
 PHI_MSVC_SUPPRESS_WARNING(4583) // destructor is not implicitly called
@@ -419,8 +423,7 @@ PHI_ATTRIBUTE_CONST Variant Variant::CastToInt64() const
         }
 
         case Type::Double:
-            // TODO: Documentation talks about "correcting" floating point errors when converting
-            return MakeInt(static_cast<phi::int64_t>(AsDouble().unsafe()));
+            return MakeInt(ConvertDoubleToInt64());
 
         // Nothing todo here since we're already an int
         case Type::Int64:
@@ -854,4 +857,18 @@ void Variant::move_from(Variant&& other)
 
     PHI_ASSERT_NOT_REACHED();
 }
+
+// TODO: Documentation talks about "correcting" floating point errors when converting to int64
+phi::i64 Variant::ConvertDoubleToInt64() const
+{
+    PHI_ASSERT(IsDouble());
+
+    static constexpr const phi::f64 low_bound  = phi::narrow_cast<phi::f64>(phi::i64::min());
+    static constexpr const phi::f64 high_bound = phi::unsafe_cast<phi::f64>(phi::i64::max());
+
+    const phi::f64 double_value = phi::clamp(AsDouble(), low_bound, high_bound);
+
+    return phi::unsafe_cast<phi::i64>(double_value);
+}
+
 } // namespace OpenAutoIt
