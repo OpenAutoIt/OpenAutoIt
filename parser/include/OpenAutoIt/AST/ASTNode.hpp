@@ -10,6 +10,7 @@
 
 namespace OpenAutoIt
 {
+
 #define OPENAUTOIT_ENUM_AST_NODE_TYPE()                                                            \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(ArraySubscriptExpression)                                   \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(BinaryExpression)                                           \
@@ -18,6 +19,7 @@ namespace OpenAutoIt
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(ExpressionStatement)                                        \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(FloatLiteral)                                               \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(FunctionCallExpression)                                     \
+    OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(FunctionReferenceExpression)                                \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(IfStatement)                                                \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(IntegerLiteral)                                             \
     OPENAUTOIT_ENUM_AST_NODE_TYPE_IMPL(KeywordLiteral)                                             \
@@ -102,4 +104,5 @@ public:
 protected:
     ASTNodeType m_NodeType{ASTNodeType::NONE};
 };
+
 } // namespace OpenAutoIt

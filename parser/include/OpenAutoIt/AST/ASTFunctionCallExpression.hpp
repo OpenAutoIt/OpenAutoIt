@@ -2,12 +2,10 @@
 
 #include "OpenAutoIt/AST/ASTExpression.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
-#include "OpenAutoIt/TokenKind.hpp"
+#include "OpenAutoIt/FunctionReference.hpp"
 #include "OpenAutoIt/Utililty.hpp"
-#include <phi/container/string_view.hpp>
 #include <phi/core/boolean.hpp>
 #include <phi/core/scope_ptr.hpp>
-#include <string_view>
 #include <vector>
 
 namespace OpenAutoIt
@@ -15,20 +13,25 @@ namespace OpenAutoIt
 class ASTFunctionCallExpression final : public ASTExpression
 {
 public:
-    ASTFunctionCallExpression()
-        : m_FunctionName{}
+    ASTFunctionCallExpression(FunctionReference function_reference)
+        : m_FunctionReference{phi::move(function_reference)}
     {
         m_NodeType = ASTNodeType::FunctionCallExpression;
     }
 
+    [[nodiscard]] phi::boolean IsBuiltIn() const
+    {
+        return m_FunctionReference.IsBuiltIn();
+    }
+
     [[nodiscard]] phi::string_view FunctionName() const
     {
-        if (m_IsBuiltIn)
-        {
-            return enum_name(m_BuiltInFunction);
-        }
+        return m_FunctionReference.FunctionName();
+    }
 
-        return m_FunctionName;
+    [[nodiscard]] const FunctionReference& FunctionRef() const
+    {
+        return m_FunctionReference;
     }
 
     [[nodiscard]] std::string DumpAST(phi::usize indent = 0u) const override
@@ -60,12 +63,8 @@ public:
         return ret;
     }
 
-    phi::boolean m_IsBuiltIn{false};
-    union
-    {
-        TokenKind        m_BuiltInFunction;
-        phi::string_view m_FunctionName;
-    };
+    FunctionReference                                   m_FunctionReference;
     std::vector<phi::not_null_scope_ptr<ASTExpression>> m_Arguments;
 };
+
 } // namespace OpenAutoIt

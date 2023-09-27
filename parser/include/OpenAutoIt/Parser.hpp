@@ -1,6 +1,7 @@
 #pragma once
 
 #include "OpenAutoIt/AST/ASTDocument.hpp"
+#include "OpenAutoIt/AST/ASTExpression.hpp"
 #include "OpenAutoIt/ASTForward.hpp"
 #include "OpenAutoIt/Associativity.hpp"
 #include "OpenAutoIt/DiagnosticBuilder.hpp"
@@ -184,7 +185,7 @@ private:
     phi::scope_ptr<ASTExpression> ParseExpressionRhs(phi::not_null_scope_ptr<ASTExpression> lhs,
                                                      int precedence);
 
-    phi::scope_ptr<ASTFunctionCallExpression>           ParseFunctionCallExpression();
+    phi::scope_ptr<ASTExpression>                       ParseFunctionExpression();
     std::vector<phi::not_null_scope_ptr<ASTExpression>> ParseFunctionCallArguments();
     phi::scope_ptr<ASTVariableExpression>               ParseVariableExpression();
     phi::scope_ptr<ASTArraySubscriptExpression>         ParseArraySubscriptExpression();

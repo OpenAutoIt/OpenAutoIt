@@ -6,6 +6,7 @@
 #include "OpenAutoIt/AST/ASTFloatLiteral.hpp"
 #include "OpenAutoIt/AST/ASTFunctionCallExpression.hpp"
 #include "OpenAutoIt/AST/ASTFunctionDefinition.hpp"
+#include "OpenAutoIt/AST/ASTFunctionReferenceExpression.hpp"
 #include "OpenAutoIt/AST/ASTKeywordLiteral.hpp"
 #include "OpenAutoIt/AST/ASTMacroExpression.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
@@ -238,13 +239,22 @@ Variant Interpreter::InterpretExpression(phi::not_null_observer_ptr<ASTExpressio
                     InterpretExpressions(function_call_expression->m_Arguments);
 
             // Handle builtin functions seperately
-            if (function_call_expression->m_IsBuiltIn)
+            if (function_call_expression->IsBuiltIn())
             {
-                return InterpretBuiltInFunctionCall(function_call_expression->m_BuiltInFunction,
-                                                    arguments);
+                return InterpretBuiltInFunctionCall(
+                        function_call_expression->FunctionRef().BuiltIn(), arguments);
             }
 
-            return InterpretFunctionCall(function_call_expression->m_FunctionName, arguments);
+            return InterpretFunctionCall(function_call_expression->FunctionRef().Function(),
+                                         arguments);
+        }
+
+        case ASTNodeType::FunctionReferenceExpression: {
+            auto function_reference_expression = expression->as<ASTFunctionReferenceExpression>();
+            (void)function_reference_expression;
+
+            // TODO: Support function references
+            return {};
         }
 
         case ASTNodeType::IntegerLiteral: {

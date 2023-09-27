@@ -1,6 +1,5 @@
 #pragma once
 
-#include "OpenAutoIt/AST/ASTExpression.hpp"
 #include "OpenAutoIt/AST/ASTNode.hpp"
 #include "OpenAutoIt/AST/ASTStatement.hpp"
 #include "OpenAutoIt/Statements.hpp"
@@ -12,6 +11,7 @@
 
 namespace OpenAutoIt
 {
+
 struct FunctionParameter
 {
     phi::string_view name; // Parameter name without the $
@@ -80,4 +80,5 @@ public:
     std::vector<FunctionParameter>                     m_Parameters;
     std::vector<phi::not_null_scope_ptr<ASTStatement>> m_FunctionBody;
 };
+
 } // namespace OpenAutoIt

@@ -1,10 +1,13 @@
 #include "OpenAutoIt/Parser.hpp"
 
 #include "OpenAutoIt/AST.hpp"
+#include "OpenAutoIt/AST/ASTExpression.hpp"
+#include "OpenAutoIt/AST/ASTFunctionReferenceExpression.hpp"
 #include "OpenAutoIt/Associativity.hpp"
 #include "OpenAutoIt/DiagnosticBuilder.hpp"
 #include "OpenAutoIt/DiagnosticEngine.hpp"
 #include "OpenAutoIt/DiagnosticIds.hpp"
+#include "OpenAutoIt/FunctionReference.hpp"
 #include "OpenAutoIt/IncludeType.hpp"
 #include "OpenAutoIt/SourceFile.hpp"
 #include "OpenAutoIt/SourceLocation.hpp"
@@ -1254,18 +1257,18 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionLhs()
         return phi::move(boolean_literal);
     }
 
-    // Function call expression
+    // Function call/reference expression
     if (token.GetTokenKind() == TokenKind::FunctionIdentifier || token.IsBuiltInFunction())
     {
-        auto function_call_expression = ParseFunctionCallExpression();
-        if (!function_call_expression)
+        auto function_expression = ParseFunctionExpression();
+        if (!function_expression)
         {
             // TODO: Proper error
-            err("ERR: Failed to parse function call expression!\n");
+            err("ERR: Failed to parse function expression!\n");
             return {};
         }
 
-        return phi::move(function_call_expression);
+        return phi::move(function_expression);
     }
     // Variable expression
     if (token.GetTokenKind() == TokenKind::VariableIdentifier)
@@ -1414,7 +1417,7 @@ phi::scope_ptr<ASTExpression> Parser::ParseExpressionRhs(phi::not_null_scope_ptr
     }
 }
 
-phi::scope_ptr<ASTFunctionCallExpression> Parser::ParseFunctionCallExpression()
+phi::scope_ptr<ASTExpression> Parser::ParseFunctionExpression()
 {
     // Parse the function name
     const Token& function_identifier_token = CurrentToken();
@@ -1425,44 +1428,22 @@ phi::scope_ptr<ASTFunctionCallExpression> Parser::ParseFunctionCallExpression()
     }
     ConsumeCurrent();
 
+    const FunctionReference function_reference =
+            function_identifier_token.IsBuiltInFunction() ?
+                    FunctionReference{function_identifier_token} :
+                    FunctionReference{function_identifier_token.GetText()};
+
+    // If we parse an opening parenthesis we have a function call expression otherwise just a function reference
+    if (!MustParse(TokenKind::LParen))
+    {
+        return phi::make_scope<ASTFunctionReferenceExpression>(function_reference);
+    }
+
     phi::scope_ptr<ASTFunctionCallExpression> function_call_expression =
-            phi::make_scope<ASTFunctionCallExpression>();
+            phi::make_scope<ASTFunctionCallExpression>(function_reference);
     if (!function_call_expression)
     {
         // TODO: Proper error
-        return {};
-    }
-
-    if (function_identifier_token.IsBuiltInFunction())
-    {
-        function_call_expression->m_IsBuiltIn       = true;
-        function_call_expression->m_BuiltInFunction = function_identifier_token.GetTokenKind();
-    }
-    else
-    {
-        const phi::string_view function_name = function_identifier_token.GetText();
-
-        function_call_expression->m_IsBuiltIn    = false;
-        function_call_expression->m_FunctionName = function_name;
-    }
-
-    // TODO: These 2 checks should be combined
-    // Now me MUST parse an LParen
-    if (!HasMoreTokens())
-    {
-        // TODO: Give proper error
-        err(fmt::format("ERR: Expected opening parenthesis for function call '{:s}'\n",
-                        std::string_view{function_call_expression->FunctionName()}));
-        return {};
-    }
-
-    const Token& left_paren_token = CurrentToken();
-    ConsumeCurrent();
-    if (left_paren_token.GetTokenKind() != TokenKind::LParen)
-    {
-        // TODO: Give error
-        err(fmt::format("ERR: Expected opening parenthesis for function call '{:s}'\n",
-                        std::string_view{function_call_expression->FunctionName()}));
         return {};
     }
 
@@ -1470,21 +1451,11 @@ phi::scope_ptr<ASTFunctionCallExpression> Parser::ParseFunctionCallExpression()
     function_call_expression->m_Arguments = ParseFunctionCallArguments();
 
     // Finally we MUST parse an RParen
-    if (!HasMoreTokens())
+    if (!MustParse(TokenKind::RParen))
     {
         err(fmt::format("ERR: Expected closing parenthesis for function call '{:s}'\n",
                         std::string_view{function_call_expression->FunctionName()}));
         // TODO: Give proper error
-        return {};
-    }
-
-    const Token& right_paren_token = CurrentToken();
-    ConsumeCurrent();
-    if (right_paren_token.GetTokenKind() != TokenKind::RParen)
-    {
-        err(fmt::format("ERR: Expected closing parenthesis for function call '{:s}'\n",
-                        std::string_view{function_call_expression->FunctionName()}));
-        // TODO: Give Error
         return {};
     }
 
