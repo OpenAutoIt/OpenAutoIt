@@ -60,10 +60,12 @@ TEST_CASE("Variant - const Default constructor")
 TEST_CASE("Variant - Copy constructor")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         const OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeBoolean(true);
         OpenAutoIt::Variant       var{base};
@@ -85,8 +87,9 @@ TEST_CASE("Variant - Copy constructor")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         const OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeInt(21);
         OpenAutoIt::Variant       var{base};
@@ -128,10 +131,12 @@ TEST_CASE("Variant - Copy constructor")
 TEST_CASE("Variant - Move constructor")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeBoolean(true);
         OpenAutoIt::Variant var{phi::move(base)};
@@ -153,8 +158,9 @@ TEST_CASE("Variant - Move constructor")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeInt(21);
         OpenAutoIt::Variant var{phi::move(base)};
@@ -724,10 +730,12 @@ TEST_CASE("Variant - Copy assignment Binary")
 TEST_CASE("Variant - Copy assignment Boolean")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant       base = OpenAutoIt::Variant::MakeBoolean(true);
         const OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeBoolean(false);
@@ -752,8 +760,9 @@ TEST_CASE("Variant - Copy assignment Boolean")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant       base = OpenAutoIt::Variant::MakeBoolean(true);
         const OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeInt(21);
@@ -799,10 +808,12 @@ TEST_CASE("Variant - Copy assignment Boolean")
 TEST_CASE("Variant - Copy assignment Double")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant       base = OpenAutoIt::Variant::MakeDouble(3.14);
         const OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeBoolean(false);
@@ -827,8 +838,9 @@ TEST_CASE("Variant - Copy assignment Double")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant       base = OpenAutoIt::Variant::MakeDouble(3.14);
         const OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeInt(21);
@@ -879,10 +891,12 @@ TEST_CASE("Variant - Copy assignment Function")
 TEST_CASE("Variant - Copy assignment Double")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant       base = OpenAutoIt::Variant::MakeInt(1);
         const OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeBoolean(false);
@@ -907,8 +921,9 @@ TEST_CASE("Variant - Copy assignment Double")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant       base = OpenAutoIt::Variant::MakeInt(1);
         const OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeInt(21);
@@ -954,10 +969,12 @@ TEST_CASE("Variant - Copy assignment Double")
 TEST_CASE("Variant - Copy assignment Keyword")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeKeyword(OpenAutoIt::TokenKind::KW_Null);
         const OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeBoolean(false);
@@ -982,8 +999,9 @@ TEST_CASE("Variant - Copy assignment Keyword")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeKeyword(OpenAutoIt::TokenKind::KW_Null);
         const OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeInt(21);
@@ -1029,10 +1047,12 @@ TEST_CASE("Variant - Copy assignment Keyword")
 TEST_CASE("Variant - Copy assignment Pointer")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant       base = OpenAutoIt::Variant::MakePointer(123);
         const OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeBoolean(false);
@@ -1057,8 +1077,9 @@ TEST_CASE("Variant - Copy assignment Pointer")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant       base = OpenAutoIt::Variant::MakePointer(123);
         const OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeInt(21);
@@ -1104,10 +1125,12 @@ TEST_CASE("Variant - Copy assignment Pointer")
 TEST_CASE("Variant - Copy assignment String")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant       base = OpenAutoIt::Variant::MakeString(long_string2);
         const OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeBoolean(false);
@@ -1132,8 +1155,9 @@ TEST_CASE("Variant - Copy assignment String")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant       base = OpenAutoIt::Variant::MakeString(long_string2);
         const OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeInt(21);
@@ -1189,10 +1213,12 @@ TEST_CASE("Variant - Move assignment Binary")
 TEST_CASE("Variant - Move assignment Boolean")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeBoolean(true);
         OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeBoolean(false);
@@ -1217,8 +1243,9 @@ TEST_CASE("Variant - Move assignment Boolean")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeBoolean(true);
         OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeInt(21);
@@ -1264,10 +1291,12 @@ TEST_CASE("Variant - Move assignment Boolean")
 TEST_CASE("Variant - Move assignment Double")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeDouble(3.14);
         OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeBoolean(false);
@@ -1292,8 +1321,9 @@ TEST_CASE("Variant - Move assignment Double")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeDouble(3.14);
         OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeInt(21);
@@ -1344,10 +1374,12 @@ TEST_CASE("Variant - Move assignment Function")
 TEST_CASE("Variant - Move assignment Double")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeInt(1);
         OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeBoolean(false);
@@ -1372,8 +1404,9 @@ TEST_CASE("Variant - Move assignment Double")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeInt(1);
         OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeInt(21);
@@ -1419,10 +1452,12 @@ TEST_CASE("Variant - Move assignment Double")
 TEST_CASE("Variant - Move assignment Keyword")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeKeyword(OpenAutoIt::TokenKind::KW_Null);
         OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeBoolean(false);
@@ -1447,8 +1482,9 @@ TEST_CASE("Variant - Move assignment Keyword")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeKeyword(OpenAutoIt::TokenKind::KW_Null);
         OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeInt(21);
@@ -1494,10 +1530,12 @@ TEST_CASE("Variant - Move assignment Keyword")
 TEST_CASE("Variant - Move assignment Pointer")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakePointer(123);
         OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeBoolean(false);
@@ -1522,8 +1560,9 @@ TEST_CASE("Variant - Move assignment Pointer")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakePointer(123);
         OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeInt(21);
@@ -1569,10 +1608,12 @@ TEST_CASE("Variant - Move assignment Pointer")
 TEST_CASE("Variant - Move assignment String")
 {
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeString(long_string2);
         OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeBoolean(false);
@@ -1597,8 +1638,9 @@ TEST_CASE("Variant - Move assignment String")
         PHI_CLANG_AND_GCC_SUPPRESS_WARNING_POP()
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant base = OpenAutoIt::Variant::MakeString(long_string2);
         OpenAutoIt::Variant copy = OpenAutoIt::Variant::MakeInt(21);
@@ -1657,10 +1699,12 @@ TEST_CASE("Variant - CastToBoolean")
         CHECK_FALSE(casted.AsBoolean());
     }
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         const OpenAutoIt::Variant base   = OpenAutoIt::Variant::MakeBoolean(true);
         const OpenAutoIt::Variant casted = base.CastToBoolean();
@@ -1683,8 +1727,9 @@ TEST_CASE("Variant - CastToBoolean")
         CHECK_FALSE(casted.AsBoolean());
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant base   = OpenAutoIt::Variant::MakeInt(21);
         OpenAutoIt::Variant casted = base.CastToBoolean();
@@ -1776,10 +1821,12 @@ TEST_CASE("Variant - CastToString")
         CHECK(base.AsString().empty());
     }
     {
-            // TODO: Array
-    } {
-            // TODO: Binary
-    } {
+        // TODO: Array
+    }
+    {
+        // TODO: Binary
+    }
+    {
         // Boolean
         OpenAutoIt::Variant base   = OpenAutoIt::Variant::MakeBoolean(false);
         OpenAutoIt::Variant casted = base.CastToString();
@@ -1803,8 +1850,9 @@ TEST_CASE("Variant - CastToString")
         //CHECK(phi::string_equals(casted.AsString().c_str(), "3.14"));
     }
     {
-            // TODO: Function
-    } {
+        // TODO: Function
+    }
+    {
         // Int64
         OpenAutoIt::Variant base   = OpenAutoIt::Variant::MakeInt(21);
         OpenAutoIt::Variant casted = base.CastToString();
@@ -1834,8 +1882,9 @@ TEST_CASE("Variant - CastToString")
         CHECK(casted.AsString().empty());
     }
     {
-            // TODO: Pointer
-    } {
+        // TODO: Pointer
+    }
+    {
         // String
         OpenAutoIt::Variant base   = OpenAutoIt::Variant::MakeString(long_string);
         OpenAutoIt::Variant casted = base.CastToString();

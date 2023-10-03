@@ -60,6 +60,7 @@ private:
                 return Associativity::Left;
         }
     }
+
     [[nodiscard]] PHI_ATTRIBUTE_CONST constexpr static Associativity GetTokenAssociativity(
             const Token& token)
     {
