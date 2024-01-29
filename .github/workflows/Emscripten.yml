@@ -62,7 +62,7 @@ jobs:
           key: emscripten-${{ matrix.em_version }}
 
       - name: Setup Emscripten
-        uses: mymindstorm/setup-emsdk@v13
+        uses: mymindstorm/setup-emsdk@v14
         # Continue on error to ignore problems with caching
         continue-on-error: true
         with:
