@@ -17,6 +17,7 @@
 
 PHI_MSVC_SUPPRESS_WARNING(4702) // unreachable code
 PHI_GCC_SUPPRESS_WARNING("-Wsuggest-attribute=const")
+PHI_CLANG_SUPPRESS_WARNING("-Wswitch-default")
 
 namespace OpenAutoIt
 {
