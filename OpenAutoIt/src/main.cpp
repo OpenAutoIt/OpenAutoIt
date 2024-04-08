@@ -55,7 +55,6 @@ int main(int argc, char* argv[])
 
         std::cout << diagnostic_engine.GetNumberOfWarnings().unsafe() << " warning"
                   << (multiple_warnings ? "s" : "") << " generated.\n";
-        return 1;
     }
 
     if (diagnostic_engine.HasErrorOccurred())
