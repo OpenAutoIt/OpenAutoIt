@@ -62,7 +62,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-${{ matrix.cfg.compiler }}-${{ matrix.cfg.compiler_version }}
+          key: ${{ runner.os }}-${{ matrix.cfg.compiler }}-${{ matrix.cfg.compiler_version }}
 
       - name: Setup XCode
         if: matrix.cfg.compiler == 'clang++'

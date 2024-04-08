@@ -60,7 +60,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-msvc
+          key: ${{ runner.os }}-msvc
           variant: sccache
 
       - name: Setup msvc dev

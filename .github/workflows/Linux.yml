@@ -75,7 +75,7 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-${{ matrix.compiler }}
+          key: ${{ runner.os }}-${{ matrix.compiler }}
 
       - name: Install gcovr
         if: ${{ matrix.dynamic_test == 'coverage' }}
