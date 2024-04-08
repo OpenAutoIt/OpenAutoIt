@@ -1,5 +1,6 @@
 #include "OpenAutoIt/DiagnosticConsumer.hpp"
 
+#include "OpenAutoIt/Diagnostic.hpp"
 #include "OpenAutoIt/DiagnosticIds.hpp"
 #include <phi/compiler_support/warning.hpp>
 #include <phi/core/assert.hpp>
@@ -13,9 +14,10 @@ namespace
     PHI_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wreturn-type")
     PHI_MSVC_SUPPRESS_WARNING_WITH_PUSH(4702) // unreachable code
 
-    const char* GetDiagnosticLevelName(const Diagnostic& diagnostic)
+    [[nodiscard]] constexpr const char* GetDiagnosticLevelName(
+            const DiagnosticLevel& diagnostic_level)
     {
-        switch (diagnostic.GetLevel())
+        switch (diagnostic_level)
         {
             case DiagnosticLevel::Note:
                 return "note";
@@ -33,6 +35,12 @@ namespace
 
     PHI_MSVC_SUPPRESS_WARNING_POP()
     PHI_GCC_SUPPRESS_WARNING_POP()
+
+    [[nodiscard]] const char* GetDiagnosticLevelName(const Diagnostic& diagnostic)
+    {
+        return GetDiagnosticLevelName(diagnostic.GetLevel());
+    }
+
 } // namespace
 
 void IgnoreDiagnosticConsumer::Report(const Diagnostic& /*diagnostic*/)
@@ -66,8 +74,10 @@ void DefaultDiagnosticConsumer::Report(const Diagnostic& diagnostic)
     // Print any attached notes
     for (const auto& note : diagnostic.GetNotes())
     {
-        output << note.GetLocation() << ": " << GetDiagnosticLevelName(note) << ": "
-               << note.GetMessage() << '\n';
+        PHI_ASSERT(note.IsNote());
+
+        output << note.GetLocation() << ": " << GetDiagnosticLevelName(DiagnosticLevel::Note)
+               << ": " << note.GetMessage() << '\n';
     }
 }
 
