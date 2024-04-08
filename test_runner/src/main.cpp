@@ -391,15 +391,11 @@ int main(int argc, char* argv[])
         number_of_tests += 1u;
         if (result)
         {
-            std::cout << "\033[32m"
-                      << "[PASS]"
-                      << "\033[0m\n";
+            std::cout << "\033[32m" << "[PASS]" << "\033[0m\n";
         }
         else
         {
-            std::cout << "\033[31m"
-                      << "[FAIL]"
-                      << "\033[0m\n";
+            std::cout << "\033[31m" << "[FAIL]" << "\033[0m\n";
             number_of_test_failures += 1u;
         }
     }
