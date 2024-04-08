@@ -32,7 +32,7 @@ concurrency:
 
 jobs:
   Build:
-    runs-on: macos-12
+    runs-on: macos-14
 
     strategy:
       fail-fast: false
@@ -41,8 +41,8 @@ jobs:
         cfg:
           # gcc-13
           - { compiler: g++, compiler_version: "13" }
-          # AppleClang 14.2
-          - { compiler: clang++, compiler_version: "14.2" }
+          # AppleClang 15.3
+          - { compiler: clang++, compiler_version: "15.3" }
 
         build_type:
           - "Debug"
