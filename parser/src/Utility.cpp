@@ -14,12 +14,6 @@ static phi::boolean output_enabled{true};
 
 phi::optional<std::string> read_file(const std::filesystem::path& file_path)
 {
-    // Check that the file actually exists
-    if (!std::filesystem::exists(file_path))
-    {
-        return {};
-    }
-
     std::FILE* file =
 #if PHI_PLATFORM_IS(WINDOWS)
             _wfopen(file_path.c_str(), L"r");
