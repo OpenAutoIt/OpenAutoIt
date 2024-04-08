@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   cppcheck:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       LLVM_VERSION: 18
 
@@ -75,7 +75,7 @@ jobs:
           cat cppcheck.log | reviewdog -efm="%f:%l:%c: %m" -diff="git diff HEAD~1" -reporter=${{ steps.reporter.outputs.value }} -name CppCheck -level warning
 
   clang-tidy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       LLVM_VERSION: 18
 
@@ -135,7 +135,7 @@ jobs:
           cat build/clang_tidy_output.log | reviewdog -efm="%f:%l:%c: warning: %m" -diff="git diff HEAD~1" -reporter=${{ steps.reporter.outputs.value }} -name Clang-Tidy -level warning
 
   include-what-you-use:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       LLVM_VERSION: 18
       CMAKE_BUILD_PARALLEL_LEVEL: "2"
@@ -192,7 +192,7 @@ jobs:
           cat build/iwyu_filtered.log | reviewdog -efm="%Z%A%f:%l:%c: error: %m" -efm="%C%m" -diff="git diff HEAD~1" -reporter=${{ steps.reporter.outputs.value }} -name include-what-you-use -level warning
 
   cmake-lint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -234,7 +234,7 @@ jobs:
           cat cmake_lint.log | reviewdog -efm="%f:%l: %m" -diff="git diff HEAD~1" -reporter=${{ steps.reporter.outputs.value }} -name cmake-lint -level warning
 
   pvs-studio:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       LLVM_VERSION: 18
 
@@ -374,7 +374,7 @@ jobs:
           sarif_file: sarif-results/${{ matrix.language }}.sarif
 
   mull:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       LLVM_VERSION: 12
       MULL_VERSION: 12
@@ -517,7 +517,7 @@ jobs:
 
   dev-skim:
     name: DevSkim
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     permissions:
       actions: read

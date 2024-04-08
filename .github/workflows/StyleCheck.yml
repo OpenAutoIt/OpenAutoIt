@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   clang-format:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     env:
       LLVM_VERSION: 18
@@ -50,7 +50,7 @@ jobs:
           fi
 
   cmake-format:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -84,7 +84,7 @@ jobs:
           fi
 
   spacing:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -119,7 +119,7 @@ jobs:
           fi
 
   encoding:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -151,7 +151,7 @@ jobs:
           fi
 
   misspell:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -174,7 +174,7 @@ jobs:
           level: warning
 
   yamllint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -197,7 +197,7 @@ jobs:
           level: warning
 
   markdownlint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -219,7 +219,7 @@ jobs:
           level: warning
 
   remark-lint:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -241,7 +241,7 @@ jobs:
           level: warning
 
   languagetool:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -263,7 +263,7 @@ jobs:
           level: warning
 
   alex:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
