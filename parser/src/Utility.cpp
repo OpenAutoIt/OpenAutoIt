@@ -39,7 +39,7 @@ phi::optional<std::string> read_file(const std::filesystem::path& file_path)
     const long ftell_size = std::ftell(file);
     if (ftell_size == -1L)
     {
-        // Failed to optain size
+        // Failed to obtain size
         return {};
     }
     const std::size_t size = static_cast<std::size_t>(ftell_size);
