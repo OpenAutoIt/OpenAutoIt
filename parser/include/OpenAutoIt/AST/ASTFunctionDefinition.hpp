@@ -15,9 +15,12 @@ namespace OpenAutoIt
 struct FunctionParameter
 {
     phi::string_view name; // Parameter name without the $
-    Statements       default_value_init;
-    phi::boolean     by_ref   = false;
-    phi::boolean     as_const = false;
+
+    // TODO: Why is this a vector and not a single pointer?
+    // TODO: Why even a statement and not an expresion?
+    Statements   default_value_init;
+    phi::boolean by_ref   = false;
+    phi::boolean as_const = false;
 };
 
 class ASTFunctionDefinition final : public ASTNode
